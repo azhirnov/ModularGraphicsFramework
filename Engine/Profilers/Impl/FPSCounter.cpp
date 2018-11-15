@@ -40,7 +40,6 @@ namespace Profilers
 		
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -72,7 +71,6 @@ namespace Profilers
 
 
 	
-	const TypeIdList	FPSCounter::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	FPSCounter::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -81,7 +79,7 @@ namespace Profilers
 =================================================
 */
 	FPSCounter::FPSCounter (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::FPSCounter &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_interval{ ci.interval },	_frameCounter{ 0 }
 	{
 		SetDebugName( "FPSCounter" );
@@ -117,7 +115,7 @@ namespace Profilers
 
 		// must be attached to window
 		CHECK_LINKING( _GetParents().Count() == 1 );
-		CHECK_LINKING( _GetParents().Front()->GetSupportedMessages().HasAllTypes< WindowMsgList_t >() );
+		CHECK_LINKING( _GetParents().Front()->SupportsAllMessages< WindowMsgList_t >() );
 
 		// find gpu thread
 		ModulePtr	gthread;

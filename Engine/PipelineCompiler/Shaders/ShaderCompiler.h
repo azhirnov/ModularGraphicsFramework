@@ -33,11 +33,7 @@ namespace PipelineCompiler
 	{
 	// types
 	public:
-		static constexpr uint	GLSL_VERSION	= 450;
-		static constexpr uint	GLSL_ES_VERSION	= 320;
-		static constexpr uint	HLSL_VERSION	= 1100;
-		static constexpr uint	VULKAN_VERSION	= 100;	// 100, 110
-		static constexpr uint	SPIRV_VERSION	= 100;	// 100, 130
+		static constexpr uint	SPIRV_VERSION	= 110;
 
 		struct FieldTypeInfo
 		{
@@ -55,10 +51,10 @@ namespace PipelineCompiler
 		struct Config
 		{
 			ReplaceStructTypesFunc_t	typeReplacer;
-			EShaderSrcFormat::type		source				= EShaderSrcFormat::GXSL;
-			EShaderDstFormat::type		target				= EShaderDstFormat::GLSL_Source;
+			EShaderFormat::type			source				= Uninitialized;
+			EShaderFormat::type			target				= Uninitialized;
 			bool						skipExternals		= false;		// uniforms, buffers, in/out
-			bool						optimize			= false;		// SPRIV only
+			bool						optimize			= false;		// SPIRV, HLSL bytecode/IL
 			bool						inlineAll			= false;
 		};
 
@@ -106,11 +102,11 @@ namespace PipelineCompiler
 		bool Translate (EShader::type shaderType, ArrayCRef<StringCRef> source, StringCRef entryPoint, StringCRef baseFolder,
 						const Config &cfg, OUT String &log, OUT BinaryArray &result);
 
-		bool Deserialize (EShaderSrcFormat::type shaderFmt, EShader::type shaderType, ArrayCRef<StringCRef> source,
+		bool Deserialize (EShaderFormat::type shaderFmt, EShader::type shaderType, ArrayCRef<StringCRef> source,
 						  StringCRef entryPoint, StringCRef baseFolder,
 						  OUT String &log, OUT DeserializedShader &result);
 
-		bool Validate (EShaderDstFormat::type shaderFmt, EShader::type shaderType, BinArrayCRef data);
+		bool Validate (EShaderFormat::type shaderFmt, EShader::type shaderType, BinArrayCRef data);
 		
 		bool InitializeContext ();
 		void DestroyContext ();
@@ -127,11 +123,17 @@ namespace PipelineCompiler
 
 		bool _CheckGLAErrors (OUT String *log = null) const;
 		
-		bool _OnCompilationFailed (EShader::type shaderType, EShaderSrcFormat::type fmt, ArrayCRef<StringCRef> source,
+		bool _OnCompilationFailed (EShader::type shaderType, EShaderFormat::type fmt, ArrayCRef<StringCRef> source,
 								   const ShaderIncluder &includer, INOUT String &log) const;
 
 		static void _GenerateResources (OUT TBuiltInResource& resources);
 		
+		bool _TranslateToGLSL (const _ShaderData &data, StringCRef baseFolder, const Config &cfg, OUT String &log, OUT BinaryArray &result);
+		bool _TranslateToHLSL (const _ShaderData &data, StringCRef baseFolder, const Config &cfg, OUT String &log, OUT BinaryArray &result);
+		bool _TranslateToSPV (const _ShaderData &data, StringCRef baseFolder, const Config &cfg, OUT String &log, OUT BinaryArray &result);
+		bool _TranslateToCL (const _ShaderData &data, StringCRef baseFolder, const Config &cfg, OUT String &log, OUT BinaryArray &result);
+		bool _TranslateToCPP (const _ShaderData &data, StringCRef baseFolder, const Config &cfg, OUT String &log, OUT BinaryArray &result);
+
 
 	// Replace types
 	private:
@@ -202,8 +204,11 @@ namespace PipelineCompiler
 
 	// SPIRV
 	private:
-		bool _CompileSPIRV (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const;
-		bool _ValidateSPIRV (EShader::type shaderType, BinArrayCRef bin) const;
+		bool _CompileHLSLtoSPIRV (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const;	// TODO
+		bool _CompileGLSLtoSPIRV (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const;
+		bool _CompileSPIRVAsm (const Config &cfg, StringCRef spirvAsm, OUT String &log, OUT BinaryArray &result) const;
+		bool _DisasambleSPIRV (const Config &cfg, ArrayCRef<uint> spirv, OUT String &log, OUT BinaryArray &result) const;
+		bool _ValidateSPIRV (EShader::type shaderType, EShaderFormat::type api, BinArrayCRef bin) const;
 	};
 
 }	// PipelineCompiler

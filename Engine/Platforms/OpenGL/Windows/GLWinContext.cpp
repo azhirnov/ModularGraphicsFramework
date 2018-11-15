@@ -37,14 +37,14 @@ namespace PlatformGL
 	Create
 =================================================
 */
-	bool GLWinContext::Create (const HWND_t &wnd, INOUT GraphicsSettings &vs)
+	bool GLWinContext::Create (const PlatformTools::WindowHelper::WinAPIWindow &wnd, INOUT GraphicsSettings &vs)
 	{
 		Destroy();
 		
-		_window = wnd;
+		_window = wnd.window;
 		CHECK_ERR( _window.IsNotNull<HWND>() );
 
-		_deviceContext = ::GetDC( wnd.Get<HWND>() );
+		_deviceContext = ::GetDC( _window.Get<HWND>() );
 		CHECK_ERR( _deviceContext.IsNotNull<HDC>() );
 
 		CHECK_ERR( _InitOpenGL( vs ) );
@@ -76,6 +76,7 @@ namespace PlatformGL
 		wglChoosePixelFormat	= null;
 		wglCreateContextAttribs	= null;
 		swapControlSupported	= false;
+
 		_deviceContext			= null;
 		_renderContext			= null;
 		_window					= null;
@@ -109,11 +110,11 @@ namespace PlatformGL
 
 			if ( rc != null and wglMakeCurrent( dc, rc ) != FALSE )
 			{
-				wglChoosePixelFormat	= reinterpret_cast<PFNWGLCHOOSEPIXELFORMATARBPROC>(wglGetProcAddress("wglChoosePixelFormatARB"));
-				wglCreateContextAttribs	= reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(wglGetProcAddress("wglCreateContextAttribsARB"));
+				wglChoosePixelFormat	= Cast<PFNWGLCHOOSEPIXELFORMATARBPROC>(wglGetProcAddress("wglChoosePixelFormatARB"));
+				wglCreateContextAttribs	= Cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(wglGetProcAddress("wglCreateContextAttribsARB"));
 		
-				wglSwapInterval			= reinterpret_cast<PFNWGLSWAPINTERVALEXTPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
-				wglGetSwapInterval		= reinterpret_cast<PFNWGLGETSWAPINTERVALEXTPROC>(wglGetProcAddress("wglGetSwapIntervalEXT"));
+				wglSwapInterval			= Cast<PFNWGLSWAPINTERVALEXTPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
+				wglGetSwapInterval		= Cast<PFNWGLGETSWAPINTERVALEXTPROC>(wglGetProcAddress("wglGetSwapIntervalEXT"));
 
 				swapControlSupported	= wglSwapInterval.IsNotNull<PFNWGLSWAPINTERVALEXTPROC>() and
 										  wglGetSwapInterval.IsNotNull<PFNWGLGETSWAPINTERVALEXTPROC>();
@@ -298,7 +299,7 @@ namespace PlatformGL
 				LOG( "Can't describe pixel format", ELog::Warning );
 		}
 
-		const bool	is_core_version =	( version > 330 );	// 3.3 or higher
+		const bool	is_core_version =	( version >= 330 );	// 3.3 or higher
 
 		const uint	CONTEXT_FLAG_NO_ERROR_BIT_KHR = 0x00000008;
 

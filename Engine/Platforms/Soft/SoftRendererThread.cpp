@@ -25,15 +25,11 @@ namespace Platforms
 	// types
 	private:
 		using QueueMsgList_t		= MessageListFrom<
-											GpuMsg::SubmitGraphicsQueueCommands,
-											GpuMsg::SubmitComputeQueueCommands
+											GpuMsg::SubmitCommands
 										>;
 		using QueueEventList_t		= MessageListFrom< GpuMsg::DeviceLost >;
 
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Compose
-										> >
-										::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
@@ -48,7 +44,7 @@ namespace Platforms
 											GpuMsg::GetSWDeviceInfo,
 											GpuMsg::GetSWPrivateClasses,
 											GpuMsg::GetDeviceProperties
-										> >::Append< QueueMsgList_t >;
+										>;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::ThreadBeginFrame,
@@ -64,7 +60,6 @@ namespace Platforms
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		static constexpr uint		_ver_major		= 0;
@@ -132,7 +127,6 @@ namespace Platforms
 
 
 	
-	const TypeIdList	SoftRendererThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SoftRendererThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 	
 	const char			SoftRendererThread::_renderer_name[]	= "gx-soft";
@@ -143,7 +137,7 @@ namespace Platforms
 =================================================
 */
 	SoftRendererThread::SoftRendererThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_device{ gs },				_settings{ ci.settings },
 		_isFrameStarted{ false },	_isWindowVisible{ false }
 	{
@@ -172,6 +166,8 @@ namespace Platforms
 		_SubscribeOnMsg( this, &SoftRendererThread::_GetGraphicsSettings );
 		_SubscribeOnMsg( this, &SoftRendererThread::_GetComputeSettings );
 		_SubscribeOnMsg( this, &SoftRendererThread::_GetDeviceProperties );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		CHECK( ci.shared.IsNull() );	// sharing is not supported yet
 
@@ -185,7 +181,7 @@ namespace Platforms
 */
 	SoftRendererThread::~SoftRendererThread ()
 	{
-		LOG( "SoftRendererThread finalized", ELog::Debug );
+		//LOG( "SoftRendererThread finalized", ELog::Debug );
 
 		ASSERT( _window.IsNull() );
 	}
@@ -227,7 +223,7 @@ namespace Platforms
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 											SWCommandQueueModuleID,
 											GlobalSystems(),
-											CreateInfo::GpuCommandQueue{ this, EQueueFamily::Default },
+											CreateInfo::GpuCommandQueue{ this, { EQueueFamily::Default, 1.0f } },
 											OUT _cmdQueue ) );
 			
 			CHECK_ERR( _Attach( "queue", _cmdQueue ) );
@@ -242,7 +238,7 @@ namespace Platforms
 		// if window already created
 		if ( _IsComposedState( _window->GetState() ) )
 		{
-			_SendMsg( OSMsg::WindowCreated{} );
+			Send( OSMsg::WindowCreated{} );
 		}
 		return true;
 	}
@@ -307,8 +303,8 @@ namespace Platforms
 */	
 	bool SoftRendererThread::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg.compute.Set( SoftRendererObjectsConstructor::GetComputeModules() );
-		msg.graphics.Set( SoftRendererObjectsConstructor::GetGraphicsModules() );
+		msg.result.Set({ SoftRendererObjectsConstructor::GetComputeModules(),
+						 SoftRendererObjectsConstructor::GetGraphicsModules() });
 		return true;
 	}
 
@@ -324,7 +320,7 @@ namespace Platforms
 		
 		_isFrameStarted = true;
 
-		msg.result.Set({ _framebuffer, 0u });
+		msg.result.Set({ _framebuffer, null, 0u });		// TODO
 		return true;
 	}
 
@@ -342,7 +338,7 @@ namespace Platforms
 
 		_isFrameStarted = false;
 
-		_cmdQueue->Send( msg._Cast<GpuMsg::SubmitGraphicsQueueCommands>() );
+		_cmdQueue->Send( Cast<GpuMsg::SubmitCommands const &>( msg ));
 
 		_cmdQueue->Send( GpuMsg::SWPresent{ LAMBDA(this) () {{ _surface.SwapBuffers(); }} });
 		return true;
@@ -368,9 +364,6 @@ namespace Platforms
 */
 	bool SoftRendererThread::_CreateDevice ()
 	{
-		OSMsg::WindowGetDescription	req_descr;
-		_window->Send( req_descr );
-		
 		// choose version
 		switch ( _settings.version )
 		{

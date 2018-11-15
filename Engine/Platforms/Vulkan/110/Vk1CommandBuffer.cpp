@@ -41,7 +41,6 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -91,7 +90,6 @@ namespace PlatformVK
 
 
 
-	const TypeIdList	Vk1CommandBuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1CommandBuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -100,7 +98,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1CommandBuffer::Vk1CommandBuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),		_cmdId( VK_NULL_HANDLE ),	
 		_recordingState( ERecordingState::Deleted )
 	{
@@ -125,7 +123,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_SetCommandBufferState );
 		_SubscribeOnMsg( this, &Vk1CommandBuffer::_GetCommandBufferState );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
@@ -188,7 +186,7 @@ namespace PlatformVK
 	{
 		if ( msg.attachedModule == this			and
 			 _OnAttachedToParent( msg.parent )		and
-			 msg.parent->GetSupportedMessages().HasAllTypes< CmdPoolMsgList_t >() )
+			 msg.parent->SupportsAllMessages< CmdPoolMsgList_t >() )
 		{
 			CHECK( _SetState( EState::Initial ) );
 		}
@@ -206,7 +204,7 @@ namespace PlatformVK
 		{
 			if ( msg.isLast )
 			{
-				if ( msg.parent->GetSupportedMessages().HasAllTypes< CmdPoolMsgList_t >() )
+				if ( msg.parent->SupportsAllMessages< CmdPoolMsgList_t >() )
 				{
 					_DestroyCmdBuffer();
 					CHECK( _SetState( EState::Initial ) );
@@ -401,7 +399,7 @@ namespace PlatformVK
 	bool Vk1CommandBuffer::_Submit ()
 	{
 		CHECK_ERR( _IsCreated() );
-		CHECK_ERR( _recordingState == ERecordingState::Executable );
+		//CHECK_ERR( _recordingState == ERecordingState::Executable );
 
 		_ChangeState( ERecordingState::Pending );
 		return true;

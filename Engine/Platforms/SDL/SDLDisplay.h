@@ -39,8 +39,6 @@ namespace PlatformSDL
 		bool Update ();
 
 		ArrayCRef<Display> GetDisplays () const		{ return _displays; }
-
-	private:
 	};
 
 

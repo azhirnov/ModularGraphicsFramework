@@ -48,7 +48,6 @@ namespace PlatformSW
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -97,29 +96,30 @@ namespace PlatformSW
 		
 		bool _PrepareForCompute ();
 
-		bool _CmdBindComputePipeline (const Command_t &cmdData);
-		bool _CmdDispatch (const Command_t &cmdData);
-		bool _CmdExecute (const Command_t &cmdData);
-		bool _CmdBindComputeResourceTable (const Command_t &cmdData);
-		bool _CmdCopyBuffer (const Command_t &cmdData);
-		bool _CmdCopyImage (const Command_t &cmdData);
-		bool _CmdCopyBufferToImage (const Command_t &cmdData);
-		bool _CmdCopyImageToBuffer (const Command_t &cmdData);
-		bool _CmdUpdateBuffer (const Command_t &cmdData);
-		bool _CmdFillBuffer (const Command_t &cmdData);
-		bool _CmdClearColorImage (const Command_t &cmdData);
-		bool _CmdPipelineBarrier (const Command_t &cmdData);
-		bool _CmdPushConstants (const Command_t &cmdData);
-		bool _CmdPushNamedConstants (const Command_t &cmdData);
-		bool _CmdDebugMarker (const Command_t &cmdData);
-		bool _CmdPushDebugGroup (const Command_t &cmdData);
-		bool _CmdPopDebugGroup (const Command_t &cmdData);
+	public:
+		bool operator () (const GpuMsg::CmdBindComputePipeline &);
+		bool operator () (const GpuMsg::CmdDispatch &);
+		bool operator () (const GpuMsg::CmdDispatchIndirect &);
+		bool operator () (const GpuMsg::CmdExecute &);
+		bool operator () (const GpuMsg::CmdBindComputeResourceTable &);
+		bool operator () (const GpuMsg::CmdCopyBuffer &);
+		bool operator () (const GpuMsg::CmdCopyImage &);
+		bool operator () (const GpuMsg::CmdCopyBufferToImage &);
+		bool operator () (const GpuMsg::CmdCopyImageToBuffer &);
+		bool operator () (const GpuMsg::CmdUpdateBuffer &);
+		bool operator () (const GpuMsg::CmdFillBuffer &);
+		bool operator () (const GpuMsg::CmdClearColorImage &);
+		bool operator () (const GpuMsg::CmdPipelineBarrier &);
+		bool operator () (const GpuMsg::CmdPushConstants &);
+		bool operator () (const GpuMsg::CmdPushNamedConstants &);
+		bool operator () (const GpuMsg::CmdDebugMarker &);
+		bool operator () (const GpuMsg::CmdPushDebugGroup &);
+		bool operator () (const GpuMsg::CmdPopDebugGroup &);
 	};
 //-----------------------------------------------------------------------------
 
 
 
-	const TypeIdList	SWCommandBuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SWCommandBuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -128,7 +128,7 @@ namespace PlatformSW
 =================================================
 */
 	SWCommandBuffer::SWCommandBuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
-		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr{ ci.descr },			_recordingState{ ERecordingState::Deleted },
 		_computeShader{ null }
 	{
@@ -154,7 +154,7 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWCommandBuffer::_GetCommandBufferState );
 		_SubscribeOnMsg( this, &SWCommandBuffer::_ExecuteSWCommandBuffer );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -335,32 +335,9 @@ namespace PlatformSW
 		CHECK_ERR( msg.lastCmdIndex == 0 );
 
 		msg.completed = false;
-
-		FOR( i, _commands )
-		{
-			const auto&	data = _commands[i].data;
-
-			switch ( data.GetCurrentIndex() )
-			{
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdBindComputePipeline> :		_CmdBindComputePipeline( data );		break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdDispatch> :					_CmdDispatch( data );					break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdExecute> :					_CmdExecute( data );					break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdBindComputeResourceTable> :	_CmdBindComputeResourceTable( data );	break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyBuffer> :				_CmdCopyBuffer( data );					break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyImage> :				_CmdCopyImage( data );					break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyBufferToImage> :		_CmdCopyBufferToImage( data );			break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyImageToBuffer> :		_CmdCopyImageToBuffer( data );			break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdUpdateBuffer> :				_CmdUpdateBuffer( data );				break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdFillBuffer> :				_CmdFillBuffer( data );					break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdClearColorImage> :			_CmdClearColorImage( data );			break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPipelineBarrier> :			_CmdPipelineBarrier( data );			break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPushConstants> :			_CmdPushConstants( data );				break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPushNamedConstants> :		_CmdPushNamedConstants( data );			break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdDebugMarker> :				_CmdDebugMarker( data );				break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPushDebugGroup> :			_CmdPushDebugGroup( data );				break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPopDebugGroup> :			_CmdPopDebugGroup( data );				break;
-				default :															WARNING( "unknown command!" );
-			}
+		
+		FOR( i, _commands ) {
+			_commands[i].data.Accept( *this );
 		}
 
 		msg.completed = true;
@@ -463,111 +440,107 @@ namespace PlatformSW
 
 /*
 =================================================
-	_CmdBindComputePipeline
+	operator (CmdBindComputePipeline)
 =================================================
 */
-	bool SWCommandBuffer::_CmdBindComputePipeline (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdBindComputePipeline &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdBindComputePipeline >();
-		
-		_computeShader = cmd.pipeline;
+		_computeShader = msg.pipeline;
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdDispatch
+	operator (CmdDispatch)
 =================================================
 */
-	bool SWCommandBuffer::_CmdDispatch (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdDispatch &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdDispatch >();
-		
 		_PrepareForCompute();
 
-		CHECK_ERR( GetDevice()->DispatchCompute( cmd.groupCount, _computeShader, _computeResTable ) );
+		CHECK_ERR( GetDevice()->DispatchCompute( msg.groupCount, _computeShader, _computeResTable ) );
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdExecute
+	operator (CmdDispatchIndirect)
 =================================================
 */
-	bool SWCommandBuffer::_CmdExecute (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdDispatchIndirect &)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdExecute >();
-		
-		ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Pending });
-		ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::ExecuteSWCommandBuffer{} );
-		//ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Completed });
+		TODO( "" );
+		//_PrepareForCompute();
+
+		//CHECK_ERR( GetDevice()->DispatchComputeIndirect( msg.groupCount, _computeShader, _computeResTable ) );
+		return true;
+	}
+
+/*
+=================================================
+	operator (CmdExecute)
+=================================================
+*/
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdExecute &msg)
+	{
+		ModuleUtils::Send( msg.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Pending });
+		ModuleUtils::Send( msg.cmdBuffers, GpuMsg::ExecuteSWCommandBuffer{} );
+		//ModuleUtils::Send( msg.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Completed });
 
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdBindComputeResourceTable
+	operator (CmdBindComputeResourceTable)
 =================================================
 */
-	bool SWCommandBuffer::_CmdBindComputeResourceTable (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdBindComputeResourceTable &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdBindComputeResourceTable >();
-		
-		ASSERT( cmd.index == 0 );
+		ASSERT( msg.index == 0 );
 
-		_computeResTable = cmd.resourceTable;
+		_computeResTable = msg.resourceTable;
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdCopyBuffer
+	operator (CmdCopyBuffer)
 =================================================
 */
-	bool SWCommandBuffer::_CmdCopyBuffer (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdCopyBuffer &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyBuffer >();
-		
-		for (auto& reg : cmd.regions)
+		for (auto& reg : msg.regions)
 		{
-			GpuMsg::GetSWBufferMemoryLayout	req_src_mem { BytesU(reg.srcOffset), BytesU(reg.size), EPipelineAccess::TransferRead, EPipelineStage::Transfer };
-			GpuMsg::GetSWBufferMemoryLayout	req_dst_mem { BytesU(reg.dstOffset), BytesU(reg.size), EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
+			auto	src_mem = msg.srcBuffer->Request(GpuMsg::GetSWBufferMemoryLayout{ reg.srcOffset, reg.size, EPipelineAccess::TransferRead, EPipelineStage::Transfer });
+			auto	dst_mem = msg.dstBuffer->Request(GpuMsg::GetSWBufferMemoryLayout{ reg.dstOffset, reg.size, EPipelineAccess::TransferWrite, EPipelineStage::Transfer });
 
-			cmd.srcBuffer->Send( req_src_mem );
-			cmd.dstBuffer->Send( req_dst_mem );
-
-			CHECK_ERR( req_src_mem.result and req_src_mem.result->memAccess[ EMemoryAccess::GpuRead ] );
-			CHECK_ERR( req_dst_mem.result and req_dst_mem.result->memAccess[ EMemoryAccess::GpuWrite ] );
+			CHECK_ERR( src_mem.memAccess[ EMemoryAccess::GpuRead ] );
+			CHECK_ERR( dst_mem.memAccess[ EMemoryAccess::GpuWrite ] );
 			
-			BinArrayCRef	src_reg = req_src_mem.result->memory;
-			BinArrayRef		dst_reg = req_dst_mem.result->memory;
+			CHECK_ERR( src_mem.memory.Size() == dst_mem.memory.Size() );
 
-			CHECK_ERR( src_reg.Size() == dst_reg.Size() );
-
-			MemCopy( dst_reg, src_reg );
+			MemCopy( OUT BinArrayRef(dst_mem.memory), BinArrayCRef(src_mem.memory) );
 		}
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdCopyImage
+	operator (CmdCopyImage)
 =================================================
 */
-	bool SWCommandBuffer::_CmdCopyImage (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdCopyImage &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyImage >();
-		
 		GpuMsg::GetSWImageMemoryLayout	req_src_mem { EPipelineAccess::TransferRead, EPipelineStage::Transfer };
 		GpuMsg::GetSWImageMemoryLayout	req_dst_mem { EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
 		GpuMsg::GetImageDescription		req_src_descr;
 		GpuMsg::GetImageDescription		req_dst_descr;
 
-		cmd.srcImage->Send( req_src_mem );
-		cmd.dstImage->Send( req_dst_mem );
-		cmd.srcImage->Send( req_src_descr );
-		cmd.dstImage->Send( req_dst_descr );
+		msg.srcImage->Send( req_src_mem );
+		msg.dstImage->Send( req_dst_mem );
+		msg.srcImage->Send( req_src_descr );
+		msg.dstImage->Send( req_dst_descr );
 
 		CHECK_ERR( req_src_mem.result and req_src_mem.result->memAccess[ EMemoryAccess::GpuRead ] );
 		CHECK_ERR( req_dst_mem.result and req_dst_mem.result->memAccess[ EMemoryAccess::GpuWrite ] );
@@ -575,7 +548,7 @@ namespace PlatformSW
 		CHECK_ERR( req_dst_descr.result and req_dst_descr.result->usage[ EImageUsage::TransferDst ] );
 		CHECK_ERR( req_src_descr.result->samples == req_dst_descr.result->samples );
 		
-		for (auto& reg : cmd.regions)
+		for (auto& reg : msg.regions)
 		{
 			// find array layer or z-slice
 			CHECK_ERR( (reg.srcLayers.baseLayer.Get() == 0 and reg.srcLayers.layerCount == 1) or
@@ -642,24 +615,22 @@ namespace PlatformSW
 	
 /*
 =================================================
-	_CmdCopyBufferToImage
+	operator (CmdCopyBufferToImage)
 =================================================
 */
-	bool SWCommandBuffer::_CmdCopyBufferToImage (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdCopyBufferToImage &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyBufferToImage >();
-		
 		GpuMsg::GetBufferDescription	req_src_descr;
 		GpuMsg::GetImageDescription		req_dst_descr;
-		cmd.srcBuffer->Send( req_src_descr );
-		cmd.dstImage->Send( req_dst_descr );
+		msg.srcBuffer->Send( req_src_descr );
+		msg.dstImage->Send( req_dst_descr );
 		
 		CHECK_ERR( req_src_descr.result and req_src_descr.result->usage[ EBufferUsage::TransferSrc ] );
 		CHECK_ERR( req_dst_descr.result and req_dst_descr.result->usage[ EImageUsage::TransferDst ] );
 
 		const BytesU	bpp	= BytesU(EPixelFormat::BitPerPixel( req_dst_descr.result->format ));
 
-		for (auto& reg : cmd.regions)
+		for (auto& reg : msg.regions)
 		{
 			// find array layer or z-slice
 			CHECK_ERR( (reg.imageLayers.baseLayer.Get() == 0 and reg.imageLayers.layerCount == 1) or
@@ -678,7 +649,7 @@ namespace PlatformSW
 				req_dst_mem.viewDescr.format	= req_dst_descr.result->format;
 				req_dst_mem.viewDescr.baseLevel	= reg.imageLayers.mipLevel;
 				req_dst_mem.viewDescr.baseLayer	= reg.imageLayers.baseLayer;
-				cmd.dstImage->Send( req_dst_mem );
+				msg.dstImage->Send( req_dst_mem );
 
 				CHECK_ERR( z + reg.imageOffset.z < req_dst_mem.result->layers.Count() );
 				CHECK_ERR( reg.imageLayers.mipLevel.Get() < req_dst_mem.result->layers[z + reg.imageOffset.z].mipmaps.Count() );
@@ -689,11 +660,11 @@ namespace PlatformSW
 
 				for (uint y = 0; y < reg.imageSize.y; ++y)
 				{
-					const BytesU	dst_offset = reg.imageOffset.x * bpp + dst_row_pitch * (y + reg.imageOffset.y);
-					const BytesU	src_offset	= BytesU(reg.bufferOffset) + z * src_slice_pitch + y * src_row_pitch;
+					const BytesU	dst_offset	= reg.imageOffset.x * bpp + dst_row_pitch * (y + reg.imageOffset.y);
+					const BytesU	src_offset	= reg.bufferOffset + z * src_slice_pitch + y * src_row_pitch;
 
 					GpuMsg::GetSWBufferMemoryLayout		req_src_mem { src_offset, row_size, EPipelineAccess::TransferRead, EPipelineStage::Transfer };
-					cmd.srcBuffer->Send( req_src_mem );
+					msg.srcBuffer->Send( req_src_mem );
 
 					SW_DEBUG_REPORT2( dst_level.layout == EImageLayout::TransferDstOptimal or dst_level.layout == EImageLayout::General, EDbgReport::Error );
 
@@ -709,24 +680,22 @@ namespace PlatformSW
 	
 /*
 =================================================
-	_CmdCopyImageToBuffer
+	operator (CmdCopyImageToBuffer)
 =================================================
 */
-	bool SWCommandBuffer::_CmdCopyImageToBuffer (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdCopyImageToBuffer &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyImageToBuffer >();
-		
 		GpuMsg::GetImageDescription		req_src_descr;
 		GpuMsg::GetBufferDescription	req_dst_descr;
-		cmd.srcImage->Send( req_src_descr );
-		cmd.dstBuffer->Send( req_dst_descr );
+		msg.srcImage->Send( req_src_descr );
+		msg.dstBuffer->Send( req_dst_descr );
 		
 		CHECK_ERR( req_src_descr.result and req_src_descr.result->usage[ EImageUsage::TransferSrc ] );
 		CHECK_ERR( req_dst_descr.result and req_dst_descr.result->usage[ EBufferUsage::TransferDst ] );
 
 		const BytesU	bpp	= BytesU(EPixelFormat::BitPerPixel( req_src_descr.result->format ));
 
-		for (auto& reg : cmd.regions)
+		for (auto& reg : msg.regions)
 		{
 			// find array layer or z-slice
 			CHECK_ERR( (reg.imageLayers.baseLayer.Get() == 0 and reg.imageLayers.layerCount == 1) or
@@ -745,7 +714,7 @@ namespace PlatformSW
 				req_src_mem.viewDescr.format	= req_src_descr.result->format;
 				req_src_mem.viewDescr.baseLevel	= reg.imageLayers.mipLevel;
 				req_src_mem.viewDescr.baseLayer	= reg.imageLayers.baseLayer;
-				cmd.srcImage->Send( req_src_mem );
+				msg.srcImage->Send( req_src_mem );
 
 				CHECK_ERR( z + reg.imageOffset.z < req_src_mem.result->layers.Count() );
 				CHECK_ERR( reg.imageLayers.mipLevel.Get() < req_src_mem.result->layers[z + reg.imageOffset.z].mipmaps.Count() );
@@ -756,11 +725,11 @@ namespace PlatformSW
 
 				for (uint y = 0; y < reg.imageSize.y; ++y)
 				{
-					const BytesU	src_offset = reg.imageOffset.x * bpp + src_row_pitch * (y + reg.imageOffset.y);
-					const BytesU	dst_offset	= BytesU(reg.bufferOffset) + z * dst_slice_pitch + y * dst_row_pitch;
+					const BytesU	src_offset	= reg.imageOffset.x * bpp + src_row_pitch * (y + reg.imageOffset.y);
+					const BytesU	dst_offset	= reg.bufferOffset + z * dst_slice_pitch + y * dst_row_pitch;
 
 					GpuMsg::GetSWBufferMemoryLayout		req_dst_mem { dst_offset, row_size, EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
-					cmd.dstBuffer->Send( req_dst_mem );
+					msg.dstBuffer->Send( req_dst_mem );
 
 					SW_DEBUG_REPORT2( src_level.layout == EImageLayout::TransferSrcOptimal or src_level.layout == EImageLayout::General, EDbgReport::Error );
 
@@ -776,57 +745,53 @@ namespace PlatformSW
 	
 /*
 =================================================
-	_CmdUpdateBuffer
+	operator (CmdUpdateBuffer)
 =================================================
 */
-	bool SWCommandBuffer::_CmdUpdateBuffer (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdUpdateBuffer &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdUpdateBuffer >();
-		
-		GpuMsg::GetSWBufferMemoryLayout		req_mem { BytesU(cmd.dstOffset), cmd.data.Size(), EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
+		GpuMsg::GetSWBufferMemoryLayout		req_mem { msg.dstOffset, msg.data.Size(), EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
 		GpuMsg::GetBufferDescription		req_descr;
 		
-		cmd.dstBuffer->Send( req_mem );
-		cmd.dstBuffer->Send( req_descr );
+		msg.dstBuffer->Send( req_mem );
+		msg.dstBuffer->Send( req_descr );
 		
-		CHECK_ERR( cmd.dstOffset < req_descr.result->size );
+		CHECK_ERR( msg.dstOffset < req_descr.result->size );
 		CHECK_ERR( req_descr.result->usage[ EBufferUsage::TransferDst ] );
 		CHECK_ERR( req_mem.result->memAccess[ EMemoryAccess::GpuWrite ] );
-		CHECK_ERR( (BytesU(cmd.dstOffset) % req_mem.result->align) == 0 );
-		CHECK_ERR( req_mem.result->memory.Size() == cmd.data.Size() );
+		CHECK_ERR( (msg.dstOffset % req_mem.result->align) == 0 );
+		CHECK_ERR( req_mem.result->memory.Size() == msg.data.Size() );
 
-		MemCopy( OUT req_mem.result->memory, BinArrayCRef(cmd.data) );
+		MemCopy( OUT req_mem.result->memory, BinArrayCRef(msg.data) );
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdFillBuffer
+	operator (CmdFillBuffer)
 =================================================
 */
-	bool SWCommandBuffer::_CmdFillBuffer (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdFillBuffer &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdFillBuffer >();
-		
 		GpuMsg::GetBufferDescription	req_descr;
-		cmd.dstBuffer->Send( req_descr );
+		msg.dstBuffer->Send( req_descr );
 
-		CHECK_ERR( cmd.dstOffset < req_descr.result->size );
+		CHECK_ERR( msg.dstOffset < req_descr.result->size );
 		CHECK_ERR( req_descr.result->usage[ EBufferUsage::TransferDst ] );
 
-		const BytesUL	size = Min( req_descr.result->size - cmd.dstOffset, cmd.size );
+		const BytesU	size = Min( req_descr.result->size - msg.dstOffset, msg.size );
 		
-		GpuMsg::GetSWBufferMemoryLayout		req_mem { BytesU(cmd.dstOffset), BytesU(size), EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
-		cmd.dstBuffer->Send( req_mem );
+		GpuMsg::GetSWBufferMemoryLayout		req_mem { msg.dstOffset, size, EPipelineAccess::TransferWrite, EPipelineStage::Transfer };
+		msg.dstBuffer->Send( req_mem );
 
 		CHECK_ERR( req_mem.result->memAccess[ EMemoryAccess::GpuWrite ] );
-		CHECK_ERR( (BytesU(cmd.dstOffset) % req_mem.result->align) == 0 );
-		CHECK_ERR( req_mem.result->memory.Size() == BytesU(size) );
+		CHECK_ERR( (msg.dstOffset % req_mem.result->align) == 0 );
+		CHECK_ERR( req_mem.result->memory.Size() == size );
 		
-		const ubyte	pattern[4]	= {  cmd.pattern & 0xFF,
-									(cmd.pattern >> 8) & 0xFF,
-									(cmd.pattern >> 16) & 0xFF,
-									(cmd.pattern >> 24) & 0xFF };
+		const ubyte	pattern[4]	= {  msg.pattern & 0xFF,
+									(msg.pattern >> 8) & 0xFF,
+									(msg.pattern >> 16) & 0xFF,
+									(msg.pattern >> 24) & 0xFF };
 
 		for (usize i = 0; i < usize(size); ++i)
 		{
@@ -837,83 +802,73 @@ namespace PlatformSW
 	
 /*
 =================================================
-	_CmdClearColorImage
+	operator (CmdClearColorImage)
 =================================================
 */
-	bool SWCommandBuffer::_CmdClearColorImage (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdClearColorImage &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdClearColorImage >();
-		
+		ASSERT( not msg.ranges.Empty() );
+
 		TODO( "" );
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdPipelineBarrier
-----
-	https://gpuopen.com/vulkan-barriers-explained/
+	operator (CmdPipelineBarrier)
 =================================================
 */
-	bool SWCommandBuffer::_CmdPipelineBarrier (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdPipelineBarrier &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPipelineBarrier >();
-
-		for (auto& src : cmd.imageBarriers)
+		for (auto& src : msg.imageBarriers)
 		{
 			CHECK_ERR( src.image );
-			src.image->Send( GpuMsg::SWImageBarrier{ src, cmd.srcStageMask, cmd.dstStageMask });
+			src.image->Send( GpuMsg::SWImageBarrier{ src, msg.srcStageMask, msg.dstStageMask });
 		}
 
-		for (auto& src : cmd.bufferBarriers)
+		/*for (auto& src : msg.bufferBarriers)
 		{
 			CHECK_ERR( src.buffer );
-			src.buffer->Send( GpuMsg::SWBufferBarrier{ src, cmd.srcStageMask, cmd.dstStageMask });
-		}
+			src.buffer->Send( GpuMsg::SWBufferBarrier{ src, msg.srcStageMask, msg.dstStageMask });
+		}*/
 		
-		ASSERT( cmd.memoryBarriers.Empty() );	// not supported yet
+		ASSERT( msg.memoryBarriers.Empty() );	// not supported yet
 
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdPushConstants
+	operator (CmdPushConstants)
 =================================================
 */
-	bool SWCommandBuffer::_CmdPushConstants (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdPushConstants &)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPipelineBarrier >();
-		
 		TODO( "" );
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdPushNamedConstants
+	operator (CmdPushNamedConstants)
 =================================================
 */
-	bool SWCommandBuffer::_CmdPushNamedConstants (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdPushNamedConstants &)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPushNamedConstants >();
-		
 		TODO( "" );
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdDebugMarker
+	operator (CmdDebugMarker)
 =================================================
 */
-	bool SWCommandBuffer::_CmdDebugMarker (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdDebugMarker &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdDebugMarker >();
-		
-		LOG( "Debug marker: "_str << cmd.info, ELog::Debug );
+		LOG( "Debug marker: "_str << msg.info, ELog::Debug );
 
-		if ( cmd.breakPoint ) {
+		if ( msg.breakPoint ) {
 			GX_BREAK_POINT();
 		}
 		return true;
@@ -921,25 +876,23 @@ namespace PlatformSW
 
 /*
 =================================================
-	_CmdPushDebugGroup
+	operator (CmdPushDebugGroup)
 =================================================
 */
-	bool SWCommandBuffer::_CmdPushDebugGroup (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdPushDebugGroup &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPushDebugGroup >();
-		
-		LOG( "===================================================================\nDebug group begin: "_str << cmd.info, ELog::Debug );
+		LOG( "===================================================================\nDebug group begin: "_str << msg.info, ELog::Debug );
 		return true;
 	}
 
 /*
 =================================================
-	_CmdPopDebugGroup
+	operator (CmdPopDebugGroup)
 =================================================
 */
-	bool SWCommandBuffer::_CmdPopDebugGroup (const Command_t &cmdData)
+	bool SWCommandBuffer::operator () (const GpuMsg::CmdPopDebugGroup &)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPopDebugGroup >();
+		//const auto&	msg = cmdData.data.Get< GpuMsg::CmdPopDebugGroup >();
 		
 		LOG( "Debug group end\n===================================================================", ELog::Debug );
 		return true;

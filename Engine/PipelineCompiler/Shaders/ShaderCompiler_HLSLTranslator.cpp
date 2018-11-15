@@ -87,8 +87,8 @@ namespace PipelineCompiler
 		
 		bool _CreateStructRW (TypeInfo const& info);
 
-		bool _TranslateBuffer (glslang::TType const& type, Symbol const& info, OUT String &str);
-		bool _TranslateImage (glslang::TType const& type, Symbol const& info, OUT String &str);
+		bool _TranslateBuffer (Symbol const& info, OUT String &str);
+		bool _TranslateImage (Symbol const& info, OUT String &str);
 		bool _TranslateVarying (glslang::TType const& type, Symbol const& info, OUT String &str);
 		bool _TranslateConst (glslang::TIntermTyped* typed, Symbol const& info, OUT String &str);
 		bool _TranslateGlobal (glslang::TIntermTyped* typed, Symbol const& info, OUT String &str);
@@ -115,11 +115,11 @@ namespace PipelineCompiler
 */
 	bool ShaderCompiler::_TranslateGXSLtoHLSL (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const
 	{
-		CHECK_ERR(	cfg.source == EShaderSrcFormat::GXSL or
-					cfg.source == EShaderSrcFormat::GLSL or
-					cfg.source == EShaderSrcFormat::GXSL_Vulkan or
-					cfg.source == EShaderSrcFormat::GLSL_Vulkan );
-		CHECK_ERR(	cfg.target == EShaderDstFormat::HLSL_Source );
+		CHECK_ERR(	EShaderFormat::GetApiFormat( cfg.source ) == EShaderFormat::GXSL or
+					EShaderFormat::GetApiFormat( cfg.source ) == EShaderFormat::GLSL or
+					EShaderFormat::GetApiFormat( cfg.source ) == EShaderFormat::VKSL );
+
+		CHECK_ERR(	cfg.target == EShaderFormat::HLSL_11 );
 	
 		// not supported here
 		ASSERT( not cfg.optimize );
@@ -153,7 +153,7 @@ namespace PipelineCompiler
 =================================================
 */
 	HLSL_DstLanguage::HLSL_DstLanguage (EShader::type shaderType, const glslang::TIntermediate* intermediate) :
-		_nameValidator{EShaderDstFormat::HLSL_Source}, _shaderType{shaderType}, _intermediate{intermediate}
+		_nameValidator{EShaderFormat::HLSL_11}, _shaderType{shaderType}, _intermediate{intermediate}
 	{
 		switch ( _shaderType )
 		{
@@ -411,16 +411,22 @@ namespace PipelineCompiler
 		glslang::TType const&	type	= typed->getType();
 		
 		if ( EShaderVariable::IsBuffer( info.type ) ) {
-			CHECK_ERR( _TranslateBuffer( type, info, INOUT str ) );
+			CHECK_ERR( _TranslateBuffer( info, INOUT str ) );
 			CHECK_ERR( _CreateStructRW( info ) );
 		}
 		else
 		if ( EShaderVariable::IsImage( info.type ) or EShaderVariable::IsTexture( info.type ) ) {
-			CHECK_ERR( _TranslateImage( type, info, INOUT str ) );
+			CHECK_ERR( _TranslateImage( info, INOUT str ) );
 		}
 		else
 		if ( info.qualifier[ EVariableQualifier::Shared ] ) {
 			CHECK_ERR( _TranslateShared( info, INOUT str ) );
+		}
+		else
+		if ( info.type == EShaderVariable::SubpassInput ) {
+			Symbol	image = info;
+			image.type = EShaderVariable::Image2D;
+			CHECK_ERR( _TranslateImage( image, INOUT str ) );
 		}
 		else
 		if ( info.qualifier[ EVariableQualifier::In ] or info.qualifier[ EVariableQualifier::Out ] ) {
@@ -1361,7 +1367,7 @@ namespace PipelineCompiler
 	_TranslateBuffer
 =================================================
 */
-	bool HLSL_DstLanguage::_TranslateBuffer (glslang::TType const&, Symbol const& info, OUT String &str)
+	bool HLSL_DstLanguage::_TranslateBuffer (Symbol const& info, OUT String &str)
 	{
 		String	buf_name = info.name;
 
@@ -1437,12 +1443,12 @@ namespace PipelineCompiler
 	_TranslateImage
 =================================================
 */
-	bool HLSL_DstLanguage::_TranslateImage (glslang::TType const& type, Symbol const& info, OUT String &str)
+	bool HLSL_DstLanguage::_TranslateImage (Symbol const& info, OUT String &str)
 	{
 		CHECK_ERR( info.arraySize.IsNotArray() );
 		CHECK_ERR( not info.name.Empty() );
 		
-		if ( type.isImage() )
+		if ( EShaderVariable::IsImage( info.type ) )
 		{
 			if ( EShaderMemoryModel::HasWriteAccess( info.memoryModel ) )
 			{
@@ -1509,7 +1515,7 @@ namespace PipelineCompiler
 */
 	bool HLSL_DstLanguage::_TranslateVarying (glslang::TType const&, Symbol const&, OUT String &)
 	{
-		TODO( "" );
+		//TODO( "" );
 		return true;
 	}
 	
@@ -1553,7 +1559,7 @@ namespace PipelineCompiler
 					CU_ToArray_Func	func{ this, false };
 					
 					src << (j ? ", " : "");
-					values.Front().Apply( func );
+					values.Front().Accept( func );
 
 					CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												  field, func.GetStrings(), func.GetTypes(), INOUT src ) );
@@ -1589,7 +1595,7 @@ namespace PipelineCompiler
 				CU_ToArray_Func	func{ this, false };
 
 				str << (i ? ", " : "");
-				values[i].Apply( func );
+				values[i].Accept( func );
 
 				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												scalar_info, func.GetStrings(), func.GetTypes(), INOUT str ) );
@@ -1617,7 +1623,7 @@ namespace PipelineCompiler
 				CU_ToArray_Func	func{ this, false };
 
 				str << (i ? ", " : "");
-				values[i].Apply( func );
+				values[i].Accept( func );
 				
 				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												info, func.GetStrings(), func.GetTypes(), INOUT str ) );

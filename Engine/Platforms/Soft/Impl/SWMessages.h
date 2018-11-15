@@ -32,7 +32,7 @@ namespace GpuMsg
 	//
 	// Get GPU Device Info
 	//
-	struct GetSWDeviceInfo : _MessageBase_
+	struct GetSWDeviceInfo : _MsgBase_
 	{
 	};
 
@@ -40,7 +40,7 @@ namespace GpuMsg
 	//
 	// Get Image Memory Layout
 	//
-	struct GetSWImageMemoryLayout : _MessageBase_
+	struct GetSWImageMemoryLayout : _MsgBase_
 	{
 	// types
 		using EPixelFormat		= Platforms::EPixelFormat;
@@ -57,8 +57,6 @@ namespace GpuMsg
 			BytesU					size;
 			EPixelFormat::type		format	= Uninitialized;
 			EImageLayout::type		layout	= EImageLayout::Undefined;
-			EPipelineAccess::bits	access;								// last access type
-			EPipelineStage::type	stage	= EPipelineStage::Unknown;	// stage of last access
 
 		// methods
 			ImgLayer (GX_DEFCTOR) {}
@@ -116,7 +114,7 @@ namespace GpuMsg
 	//
 	// Get Image View Memory Layout
 	//
-	struct GetSWImageViewMemoryLayout : _MessageBase_
+	struct GetSWImageViewMemoryLayout : _MsgBase_
 	{
 	// types
 		using ImgLayers3D		= GetSWImageMemoryLayout::ImgLayers3D;
@@ -141,7 +139,7 @@ namespace GpuMsg
 	//
 	// Get Image Memory Requirements
 	//
-	struct GetSWImageMemoryRequirements : _MessageBase_
+	struct GetSWImageMemoryRequirements : _MsgBase_
 	{
 	// types
 		struct MemReq {
@@ -174,11 +172,11 @@ namespace GpuMsg
 	//
 	// Image Barrier
 	//
-	struct SWImageBarrier : _MessageBase_
+	struct SWImageBarrier : _MsgBase_
 	{
 	// types
 		using Barrier_t			= CmdPipelineBarrier::ImageMemoryBarrier;
-		using Barriers_t		= CmdPipelineBarrier::ImageMemoryBarriers;
+		using Barriers_t		= CmdPipelineBarrier::ImageMemoryBarriers_t;
 		using EPipelineStage	= Platforms::EPipelineStage;
 
 	// variables
@@ -197,7 +195,7 @@ namespace GpuMsg
 	//
 	// Get Buffer Memory Layout
 	//
-	struct GetSWBufferMemoryLayout : _MessageBase_
+	struct GetSWBufferMemoryLayout : _MsgBase_
 	{
 	// types
 		using EMemoryAccess		= Platforms::EMemoryAccess;
@@ -229,7 +227,7 @@ namespace GpuMsg
 	//
 	// Get Buffer Memory Requirements
 	//
-	struct GetSWBufferMemoryRequirements : _MessageBase_
+	struct GetSWBufferMemoryRequirements : _MsgBase_
 	{
 	// types
 		struct MemReq {
@@ -245,11 +243,11 @@ namespace GpuMsg
 	//
 	// Buffer Barrier
 	//
-	struct SWBufferBarrier : _MessageBase_
+	/*struct SWBufferBarrier : _MsgBase_
 	{
 	// types
 		using Barrier_t			= CmdPipelineBarrier::BufferMemoryBarrier;
-		using Barriers_t		= CmdPipelineBarrier::BufferMemoryBarriers;
+		using Barriers_t		= CmdPipelineBarrier::BufferMemoryBarriers_t;
 		using EPipelineStage	= Platforms::EPipelineStage;
 
 	// variables
@@ -262,13 +260,13 @@ namespace GpuMsg
 
 		explicit SWBufferBarrier (const Barrier_t &bufBarrier, EPipelineStage::bits srcStage, EPipelineStage::bits dstStage) :
 			srcStageMask{srcStage}, dstStageMask{dstStage} { barriers.PushBack(bufBarrier); }
-	};
+	};*/
 
 
 	//
 	// Get Memory Data
 	//
-	struct GetSWMemoryData : _MessageBase_
+	struct GetSWMemoryData : _MsgBase_
 	{
 		Out< BinArrayRef >	result;
 	};
@@ -277,11 +275,11 @@ namespace GpuMsg
 	//
 	// Memory Barrier
 	//
-	struct SWMemoryBarrier : _MessageBase_
+	/*struct SWMemoryBarrier : _MsgBase_
 	{
 	// types
 		using Barrier_t			= CmdPipelineBarrier::MemoryBarrier;
-		using Barriers_t		= CmdPipelineBarrier::MemoryBarriers;
+		using Barriers_t		= CmdPipelineBarrier::MemoryBarriers_t;
 		using EPipelineStage	= Platforms::EPipelineStage;
 
 	// variables
@@ -294,20 +292,20 @@ namespace GpuMsg
 
 		explicit SWMemoryBarrier (const Barrier_t &memBarrier, EPipelineStage::bits srcStage, EPipelineStage::bits dstStage) :
 			srcStageMask{srcStage}, dstStageMask{dstStage} { barriers.PushBack(memBarrier); }
-	};
+	};*/
 	
 
 	//
 	// Get GPU Shader Module IDs
 	//
-	struct GetSWShaderModuleIDs : _MessageBase_
+	struct GetSWShaderModuleIDs : _MsgBase_
 	{
 	// types
-		using SWInvoke		= Platforms::PipelineTemplateDescription::ShaderSource::SWInvoke;
+		using SWInvoke_t	= Platforms::PipelineTemplateDescription::ShaderSource::SWInvoke_t;
 
 		struct ShaderModule : CompileTime::PODStruct
 		{
-			SWInvoke					func	= null;
+			SWInvoke_t					func	= null;
 			Platforms::EShader::type	type	= Platforms::EShader::Unknown;
 		};
 		using Shaders_t		= FixedSizeArray< ShaderModule, Platforms::EShader::_Count >;
@@ -320,14 +318,14 @@ namespace GpuMsg
 	//
 	// Get Pipeline Stage
 	//
-	struct GetSWPipelineStage : _MessageBase_
+	struct GetSWPipelineStage : _MsgBase_
 	{
 	// types
-		using SWInvoke		= Platforms::PipelineTemplateDescription::ShaderSource::SWInvoke;
+		using SWInvoke_t	= Platforms::PipelineTemplateDescription::ShaderSource::SWInvoke_t;
 		using EShader		= Platforms::EShader;
 
 		struct Stage {
-			SWInvoke		func;
+			SWInvoke_t		func;
 		};
 
 	// variables
@@ -343,7 +341,7 @@ namespace GpuMsg
 	// Resource Table Forward Message to Resource
 	//
 	template <typename Msg>
-	struct ResourceTableForwardMsg : _MessageBase_
+	struct ResourceTableForwardMsg : _MsgBase_
 	{
 	// variables
 		mutable Msg		message;
@@ -362,7 +360,7 @@ namespace GpuMsg
 	//
 	// Sync Client With Device
 	//
-	struct SyncSWClientWithDevice : _MessageBase_
+	struct SyncSWClientWithDevice : _MsgBase_
 	{
 	// variables
 		Platforms::GpuFenceId		fenceId	= Uninitialized;
@@ -375,7 +373,7 @@ namespace GpuMsg
 	//
 	// Software Renderer Commands
 	//
-	struct SetSWCommandBufferQueue : _MessageBase_
+	struct SetSWCommandBufferQueue : _MsgBase_
 	{
 	// types
 		using Data_t	= Union< CmdBindComputePipeline,
@@ -437,7 +435,7 @@ namespace GpuMsg
 	//
 	// Execute Command Buffer
 	//
-	struct ExecuteSWCommandBuffer : _MessageBase_
+	struct ExecuteSWCommandBuffer : _MsgBase_
 	{
 	// variables
 		Editable< bool  >	completed;
@@ -451,7 +449,7 @@ namespace GpuMsg
 	//
 	// Present Frame
 	//
-	struct SWPresent : _MessageBase_
+	struct SWPresent : _MsgBase_
 	{
 	// variables
 		Function< void () >		callback;
@@ -464,7 +462,7 @@ namespace GpuMsg
 	//
 	// Get Fence
 	//
-	struct GetSWFence : _MessageBase_
+	struct GetSWFence : _MsgBase_
 	{
 	// variables
 		Platforms::GpuFenceId			id;
@@ -478,7 +476,7 @@ namespace GpuMsg
 	//
 	// Get Event
 	//
-	struct GetSWEvent : _MessageBase_
+	struct GetSWEvent : _MsgBase_
 	{
 	// variables
 		Platforms::GpuEventId			id;
@@ -492,7 +490,7 @@ namespace GpuMsg
 	//
 	// Get Semaphore
 	//
-	struct GetSWSemaphore : _MessageBase_
+	struct GetSWSemaphore : _MsgBase_
 	{
 	// variables
 		Platforms::GpuSemaphoreId			id;

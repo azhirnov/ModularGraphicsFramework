@@ -24,8 +24,9 @@ namespace PlatformSW
 	private:
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::Update,
-											GpuMsg::SubmitGraphicsQueueCommands,
-											GpuMsg::SubmitComputeQueueCommands,
+											GpuMsg::SubmitCommands,
+											GpuMsg::QueueBindSparse,
+											GpuMsg::GetCommandQueueDescription,
 											GpuMsg::SWPresent,
 											GpuMsg::ClientWaitFence,
 											GpuMsg::ClientWaitDeviceIdle
@@ -50,9 +51,9 @@ namespace PlatformSW
 		struct Submitted : CompileTime::FastCopyable
 		{
 		// types
-			static constexpr uint	CMD_SIZE	= GpuMsg::SubmitGraphicsQueueCommands::Commands_t::MemoryContainer_t::SIZE;
-			static constexpr uint	SS_SIZE		= GpuMsg::SubmitGraphicsQueueCommands::Semaphores_t::MemoryContainer_t::SIZE;
-			static constexpr uint	WS_SIZE		= GpuMsg::SubmitGraphicsQueueCommands::WaitSemaphores_t::MemoryContainer_t::SIZE;
+			static constexpr uint	CMD_SIZE	= GpuMsg::SubmitCommands::Commands_t::MemoryContainer_t::SIZE;
+			static constexpr uint	SS_SIZE		= GpuMsg::SubmitCommands::Semaphores_t::MemoryContainer_t::SIZE;
+			static constexpr uint	WS_SIZE		= GpuMsg::SubmitCommands::WaitSemaphores_t::MemoryContainer_t::SIZE;
 
 			using Commands_t		= FixedSizeArray<Pair< ModulePtr, ExecuteCmdBufferMsg >, CMD_SIZE >;
 			using SignalSemaphores_t= FixedSizeArray< SWSemaphorePtr, SS_SIZE >;
@@ -71,16 +72,15 @@ namespace PlatformSW
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
 	// variables
 	private:
-		ModulePtr			_syncManager;
-		CmdQueue_t			_queue;
-		EQueueFamily::bits	_family;
-		bool				_lockQueue;
+		ModulePtr					_syncManager;
+		CmdQueue_t					_queue;
+		CommandQueueDescription		_descr;
+		bool						_lockQueue;
 
 
 	// methods
@@ -95,21 +95,20 @@ namespace PlatformSW
 		bool _Delete (const ModuleMsg::Delete &);
 		bool _Update (const ModuleMsg::Update &);
 		
-		bool _SubmitGraphicsQueueCommands (const GpuMsg::SubmitGraphicsQueueCommands &);
-		bool _SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &);
+		bool _SubmitCommands (const GpuMsg::SubmitCommands &);
+		bool _QueueBindSparse (const GpuMsg::QueueBindSparse &);
+		bool _GetCommandQueueDescription (const GpuMsg::GetCommandQueueDescription &);
 		bool _SWPresent (const GpuMsg::SWPresent &);
 		bool _ClientWaitFence (const GpuMsg::ClientWaitFence &);
 		bool _ClientWaitDeviceIdle (const GpuMsg::ClientWaitDeviceIdle &);
 
 	private:
-		bool _Submit (const GpuMsg::SubmitGraphicsQueueCommands &msg);
 		bool _Execute (INOUT FencesSet_t &fences);
 		bool _Execute ();
 	};
 //-----------------------------------------------------------------------------
 
 	
-	const TypeIdList	SWCommandQueue::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SWCommandQueue::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -118,8 +117,8 @@ namespace PlatformSW
 =================================================
 */
 	SWCommandQueue::SWCommandQueue (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandQueue &ci) :
-		SWBaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
-		_family{ ci.family },	_lockQueue{ false }
+		SWBaseModule( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
+		_descr{ ci.descr },		_lockQueue{ false }
 	{
 		SetDebugName( "SWCommandQueue" );
 
@@ -137,13 +136,14 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWCommandQueue::_GetSWDeviceInfo );
 		_SubscribeOnMsg( this, &SWCommandQueue::_GetSWPrivateClasses );
 		_SubscribeOnMsg( this, &SWCommandQueue::_OnManagerChanged );
-		_SubscribeOnMsg( this, &SWCommandQueue::_SubmitGraphicsQueueCommands );
-		_SubscribeOnMsg( this, &SWCommandQueue::_SubmitComputeQueueCommands );
+		_SubscribeOnMsg( this, &SWCommandQueue::_SubmitCommands );
+		_SubscribeOnMsg( this, &SWCommandQueue::_QueueBindSparse );
+		_SubscribeOnMsg( this, &SWCommandQueue::_GetCommandQueueDescription );
 		_SubscribeOnMsg( this, &SWCommandQueue::_SWPresent );
 		_SubscribeOnMsg( this, &SWCommandQueue::_ClientWaitFence );
 		_SubscribeOnMsg( this, &SWCommandQueue::_ClientWaitDeviceIdle );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -166,6 +166,8 @@ namespace PlatformSW
 	bool SWCommandQueue::_Delete (const ModuleMsg::Delete &msg)
 	{
 		CHECK( _Execute() );
+
+		_descr = Uninitialized;
 
 		return Module::_Delete_Impl( msg );
 	}
@@ -205,37 +207,13 @@ namespace PlatformSW
 
 /*
 =================================================
-	_SubmitGraphicsQueueCommands
+	_SubmitCommands
 =================================================
 */
-	bool SWCommandQueue::_SubmitGraphicsQueueCommands (const GpuMsg::SubmitGraphicsQueueCommands &msg)
+	bool SWCommandQueue::_SubmitCommands (const GpuMsg::SubmitCommands &msg)
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
-		CHECK_ERR( _family[ EQueueFamily::Graphics ] );
-		
-		return _Submit( msg );
-	}
-	
-/*
-=================================================
-	_SubmitComputeQueueCommands
-=================================================
-*/
-	bool SWCommandQueue::_SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &msg)
-	{
-		CHECK_ERR( _IsComposedState( GetState() ) );
-		CHECK_ERR( _family[ EQueueFamily::Compute ] );
-		
-		return _Submit( msg._Cast<GpuMsg::SubmitGraphicsQueueCommands>() );
-	}
-	
-/*
-=================================================
-	_Submit
-=================================================
-*/
-	bool SWCommandQueue::_Submit (const GpuMsg::SubmitGraphicsQueueCommands &msg)
-	{
+		CHECK_ERR( _descr.family & (EQueueFamily::Graphics | EQueueFamily::Compute) );
 		CHECK_ERR( not _lockQueue );
 
 		Submitted	submit;
@@ -243,7 +221,7 @@ namespace PlatformSW
 		// copy command buffers
 		for (auto& cmd : msg.commands)
 		{
-			CHECK_ERR( cmd and cmd->GetSupportedMessages().HasAllTypes< CmdBufferMsgList_t >() );
+			CHECK_ERR( cmd and cmd->SupportsAllMessages< CmdBufferMsgList_t >() );
 
 			submit.commands.PushBack({ cmd, ExecuteCmdBufferMsg{} });
 			
@@ -253,28 +231,23 @@ namespace PlatformSW
 		// copy signal semaphores
 		for (auto& sem : msg.signalSemaphores)
 		{
-			GpuMsg::GetSWSemaphore	req_sem{ sem };
-			_syncManager->Send( req_sem );
+			const auto	id = _syncManager->Request(GpuMsg::GetSWSemaphore{ sem });
 
-			submit.signalSemaphores.PushBack( *req_sem.result );
+			submit.signalSemaphores.PushBack( id );
 		}
 
 		// copy wait semaphores
 		for (auto& sem : msg.waitSemaphores)
 		{
-			GpuMsg::GetSWSemaphore	req_sem{ sem.first };
-			_syncManager->Send( req_sem );
+			const auto	id = _syncManager->Request( GpuMsg::GetSWSemaphore{ sem.first } );
 
-			submit.waitSemaphores.PushBack({ *req_sem.result, sem.second });
+			submit.waitSemaphores.PushBack({ id, sem.second });
 		}
 
 		// copy fence
 		if ( msg.fence != GpuFenceId::Unknown )
 		{
-			GpuMsg::GetSWFence	req_fence{ msg.fence };
-			_syncManager->Send( req_fence );
-
-			submit.signalFence = *req_fence.result;
+			submit.signalFence = _syncManager->Request(GpuMsg::GetSWFence{ msg.fence });
 			submit.signalFence->Enqueue();
 		}
 
@@ -282,6 +255,32 @@ namespace PlatformSW
 		return true;
 	}
 	
+/*
+=================================================
+	_QueueBindSparse
+=================================================
+*/
+	bool SWCommandQueue::_QueueBindSparse (const GpuMsg::QueueBindSparse &)
+	{
+		CHECK_ERR( _IsComposedState( GetState() ) );
+		CHECK_ERR( _descr.family[EQueueFamily::SparseBinding] );
+		CHECK_ERR( not _lockQueue );
+
+		TODO( "" );
+		return true;
+	}
+
+/*
+=================================================
+	_GetCommandQueueDescription
+=================================================
+*/
+	bool SWCommandQueue::_GetCommandQueueDescription (const GpuMsg::GetCommandQueueDescription &msg)
+	{
+		msg.result.Set( _descr );
+		return true;
+	}
+
 /*
 =================================================
 	_Execute
@@ -414,11 +413,10 @@ namespace PlatformSW
 
 		for (auto& wfence : msg.fences)
 		{
-			GpuMsg::GetSWFence	req_fence{ wfence };
-			_syncManager->Send( req_fence );
+			const auto	fence = _syncManager->Request( GpuMsg::GetSWFence{ wfence } );
 
-			CHECK_ERR( req_fence.result and (*req_fence.result)->IsEnqueued() );
-			fences.Add( *req_fence.result );
+			CHECK_ERR( fence->IsEnqueued() );
+			fences.Add( fence );
 		}
 
 		if ( fences.Empty() )

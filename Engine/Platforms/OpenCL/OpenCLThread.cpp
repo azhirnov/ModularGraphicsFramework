@@ -33,13 +33,10 @@ namespace Platforms
 	{
 	// types
 	private:
-		using QueueMsgList_t		= MessageListFrom< GpuMsg::SubmitComputeQueueCommands >;
+		using QueueMsgList_t		= MessageListFrom< GpuMsg::SubmitCommands >;
 		using QueueEventList_t		= MessageListFrom< GpuMsg::DeviceLost >;
 
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >
-										::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
@@ -49,7 +46,7 @@ namespace Platforms
 											GpuMsg::GetCLDeviceInfo,
 											GpuMsg::GetCLPrivateClasses,
 											GpuMsg::GetDeviceProperties
-										> >::Append< QueueMsgList_t >;
+										>;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::DeviceCreated,
@@ -63,7 +60,6 @@ namespace Platforms
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		
@@ -114,7 +110,6 @@ namespace Platforms
 
 
 	
-	const TypeIdList	OpenCLThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	OpenCLThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -123,7 +118,7 @@ namespace Platforms
 =================================================
 */
 	OpenCLThread::OpenCLThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_settings( ci.settings.version, ci.settings.device, ci.settings.flags[ GraphicsSettings::EFlags::DebugContext ] ),
 		_device( GlobalSystems() ),		_sharedThread{ ci.shared }
 	{
@@ -147,6 +142,8 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenCLThread::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &OpenCLThread::_GetCLPrivateClasses );
 		_SubscribeOnMsg( this, &OpenCLThread::_GetDeviceProperties );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( ci.context, CLContextModuleID, false );
 	}
@@ -158,7 +155,7 @@ namespace Platforms
 */
 	OpenCLThread::~OpenCLThread ()
 	{
-		LOG( "OpenCLThread finalized", ELog::Debug );
+		//LOG( "OpenCLThread finalized", ELog::Debug );
 	}
 	
 /*
@@ -189,7 +186,7 @@ namespace Platforms
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 											CLCommandQueueModuleID,
 											GlobalSystems(),
-											CreateInfo::GpuCommandQueue{ this, EQueueFamily::Default },
+											CreateInfo::GpuCommandQueue{ this, { EQueueFamily::Default, 1.0f } },
 											OUT _cmdQueue ) );
 			
 			CHECK_ERR( _Attach( "queue", _cmdQueue ) );
@@ -305,7 +302,7 @@ namespace Platforms
 */
 	bool OpenCLThread::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg.compute.Set( OpenCLObjectsConstructor::GetComputeModules() );
+		msg.result.Set({ OpenCLObjectsConstructor::GetComputeModules(), Uninitialized });
 		return true;
 	}
 	
@@ -404,12 +401,12 @@ namespace Platforms
 		if ( _sharedThread )
 		{
 			#ifdef GRAPHICS_API_OPENGL
-				if ( _sharedThread->GetSupportedMessages().HasAllTypes<MessageListFrom< GpuMsg::GetGLDeviceInfo >>() )
+				if ( _sharedThread->SupportsAllMessages<MessageListFrom< GpuMsg::GetGLDeviceInfo >>() )
 					CHECK_ERR( _device.CreateGLSharedContext() );
 			#endif
 
 			#ifdef GRAPHICS_API_DIRECTX
-				if ( _sharedThread->GetSupportedMessages().HasAllTypes<MessageListFrom< GpuMsg::GetDXDeviceInfo >>() )
+				if ( _sharedThread->SupportsAllMessages<MessageListFrom< GpuMsg::GetDXDeviceInfo >>() )
 					CHECK_ERR( _device.CreateDXSharedContext() );
 			#endif
 		}

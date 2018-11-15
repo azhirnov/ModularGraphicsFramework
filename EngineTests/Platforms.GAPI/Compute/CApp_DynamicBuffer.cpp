@@ -65,7 +65,7 @@ bool CApp::_Test_DynamicBuffer ()
 
 	GpuMsg::WriteToGpuMemory	write_cmd{ BinArrayCRef::FromValue(st_buf) };
 	buffer->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL::SizeOf(st_buf) );
+	CHECK_ERR( *write_cmd.wasWritten == BytesU::SizeOf(st_buf) );
 
 
 	// build command buffer
@@ -82,7 +82,7 @@ bool CApp::_Test_DynamicBuffer ()
 
 
 	// submit and sync
-	gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
+	gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
 
 	syncManager->Send( GpuMsg::ClientWaitFence{ *fence_ctor.result });
 

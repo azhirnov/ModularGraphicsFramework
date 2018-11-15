@@ -18,9 +18,8 @@ namespace PlatformCL
 */
 	CL1BaseModule::CL1BaseModule (const GlobalSystemsRef gs,
 								  const ModuleConfig &config,
-								  const TypeIdList *msgTypes,
 								  const TypeIdList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes )
+		Module( gs, config, eventTypes )
 	{
 	}
 	
@@ -45,6 +44,7 @@ namespace PlatformCL
 		if ( msg.newManager )
 		{
 			msg.newManager->Subscribe( this, &CL1BaseModule::_DeviceBeforeDestroy );
+			msg.newManager->Subscribe( this, &CL1BaseModule::_DeviceDeleted );
 
 			GpuMsg::GetCLPrivateClasses		req_classes;
 			msg.newManager->Send( req_classes );
@@ -63,7 +63,7 @@ namespace PlatformCL
 */
 	bool CL1BaseModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg( ModuleMsg::Delete{} );
+		Send( ModuleMsg::Delete{} );
 		
 		if ( _clResourceCache )
 			_clResourceCache->Erase( this );
@@ -127,7 +127,7 @@ namespace PlatformCL
 */
 	ModulePtr CL1BaseModule::_GetGPUThread (const ModulePtr &thread)
 	{
-		using CThreadMsgList_t		= MessageListFrom< GpuMsg::SubmitComputeQueueCommands, GpuMsg::GetCLDeviceInfo, GpuMsg::GetCLPrivateClasses >;
+		using CThreadMsgList_t		= MessageListFrom< GpuMsg::SubmitCommands, GpuMsg::GetCLDeviceInfo, GpuMsg::GetCLPrivateClasses >;
 		using CThreadEventMsgList_t	= MessageListFrom< GpuMsg::DeviceBeforeDestroy, ModuleMsg::Delete >;
 
 		ModulePtr	result = thread;

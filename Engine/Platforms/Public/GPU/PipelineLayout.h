@@ -66,7 +66,8 @@ namespace Platforms
 		struct SubpassInput final : BaseUniform
 		{
 		// variables
-			// TODO
+			uint			attachmentIndex		= UMax;
+			bool			isMultisample		= false;
 
 		// methods
 			bool operator == (const SubpassInput &right) const;
@@ -105,8 +106,8 @@ namespace Platforms
 		// variables
 			// TODO: static buffer typename, dynamic buffer typename
 
-			BytesUL						staticSize;
-			BytesUL						arrayStride;
+			BytesU						staticSize;
+			BytesU						arrayStride;
 			EShaderMemoryModel::type	access;
 
 		// methods
@@ -182,6 +183,8 @@ namespace Platforms
 
 		Builder& AddImage (StringCRef name, EImage::type dimension, EPixelFormat::type format, EShaderMemoryModel::type access,
 						   uint binding, uint uniqueIndex, EShader::bits stageFlags);
+
+		Builder& AddSubpass (StringCRef name, uint attachmentIndex, bool isMultisample, uint binding, uint uniqueIndex, EShader::bits stageFlags);
 
 		Builder& AddUniformBuffer (StringCRef name, BytesU size, uint binding, uint uniqueIndex, EShader::bits stageFlags);
 		

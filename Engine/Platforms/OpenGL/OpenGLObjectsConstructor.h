@@ -16,6 +16,7 @@ namespace CreateInfo
 	struct GpuMemory;
 	struct GpuBuffer;
 	struct GpuSampler;
+	struct GpuQueryPool;
 	struct GpuRenderPass;
 	struct GpuFramebuffer;
 	struct GpuSyncManager;
@@ -49,6 +50,7 @@ namespace Platforms
 	static constexpr OModID::type  GLRenderPassModuleID				= "gl.renpass"_OModID;
 	static constexpr OModID::type  GLSamplerModuleID				= "gl.sampler"_OModID;
 	static constexpr OModID::type  GLSyncManagerModuleID			= "gl.sync"_OModID;
+	static constexpr OModID::type  GLQueryPoolModuleID				= "gl.query"_OModID;
 
 
 	//
@@ -71,6 +73,7 @@ namespace Platforms
 		static ModulePtr CreateGL4Memory (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemory &);
 		static ModulePtr CreateGL4Buffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuBuffer &);
 		static ModulePtr CreateGL4Sampler (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSampler &);
+		static ModulePtr CreateGL4QueryPool (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuQueryPool &);
 		static ModulePtr CreateGL4RenderPass (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
 		static ModulePtr CreateGL4Framebuffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuFramebuffer &);
 		static ModulePtr CreateGL4SyncManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSyncManager &);

@@ -81,7 +81,7 @@ bool CApp::_Test_BufferAlign ()
 	// write data to buffer
 	GpuMsg::WriteToGpuMemory	write_cmd{ BinArrayCRef::FromValue(st1) };
 	buffer->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL::SizeOf(st1) );
+	CHECK_ERR( *write_cmd.wasWritten == BytesU::SizeOf(st1) );
 
 
 	// build command buffer
@@ -96,7 +96,7 @@ bool CApp::_Test_BufferAlign ()
 
 
 	// submit and sync
-	gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
+	gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
 
 	syncManager->Send( GpuMsg::ClientWaitFence{ *fence_ctor.result });
 

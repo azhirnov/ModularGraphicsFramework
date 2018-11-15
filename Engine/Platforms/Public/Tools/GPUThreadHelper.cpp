@@ -17,7 +17,7 @@ namespace PlatformTools
 		using MsgList_t		= ModuleMsg::MessageListFrom<
 									GpuMsg::ThreadBeginFrame,
 									GpuMsg::ThreadEndFrame,
-									GpuMsg::SubmitGraphicsQueueCommands,
+									GpuMsg::SubmitCommands,
 									GpuMsg::GetDeviceInfo,
 									GpuMsg::GetGraphicsModules,
 									GpuMsg::GetGraphicsSettings
@@ -38,7 +38,7 @@ namespace PlatformTools
 	ModulePtr  GPUThreadHelper::FindComputeThread (GlobalSystemsRef gs)
 	{
 		using MsgList_t		= ModuleMsg::MessageListFrom<
-									GpuMsg::SubmitComputeQueueCommands,
+									GpuMsg::SubmitCommands,
 									GpuMsg::GetDeviceInfo,
 									GpuMsg::GetGraphicsModules,
 									GpuMsg::GetComputeSettings
@@ -61,7 +61,7 @@ namespace PlatformTools
 		using MsgList_t		= ModuleMsg::MessageListFrom<
 									GpuMsg::ThreadBeginVRFrame,
 									GpuMsg::ThreadEndVRFrame,
-									GpuMsg::SubmitGraphicsQueueCommands,
+									GpuMsg::SubmitCommands,
 									GpuMsg::GetVRDeviceInfo,
 									GpuMsg::GetGraphicsModules,
 									GpuMsg::GetGraphicsSettings

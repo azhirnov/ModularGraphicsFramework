@@ -24,7 +24,7 @@ namespace GpuMsg
 	//
 	// Get Private Classes
 	//
-	struct GetSWPrivateClasses : _MessageBase_
+	struct GetSWPrivateClasses : _MsgBase_
 	{
 		struct Classes {
 			PlatformSW::SWDevice *			device			= null;
@@ -49,15 +49,12 @@ namespace PlatformSW
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >
-										::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::OnManagerChanged,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetSWDeviceInfo,
 											GpuMsg::GetSWPrivateClasses
-										> >;
+										>;
 
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Link,
@@ -81,7 +78,6 @@ namespace PlatformSW
 	protected:
 		SWBaseModule  (const GlobalSystemsRef gs,
 					   const ModuleConfig &config,
-					   const TypeIdList *msgTypes,
 					   const TypeIdList *eventTypes);
 		
 		ND_ ModulePtr _GetGPUThread (const ModulePtr &);

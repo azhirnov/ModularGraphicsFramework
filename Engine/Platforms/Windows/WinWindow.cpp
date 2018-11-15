@@ -26,19 +26,14 @@ namespace PlatformWin
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Link,
-											ModuleMsg::Compose
-										> >
-										::Append< MessageListFrom<
-											ModuleMsg::OnManagerChanged,
+		using SupportedMessages_t	= MessageListFrom<
 											OSMsg::WindowSetDescription,
 											OSMsg::WindowGetDescription,
 											OSMsg::OnWinPlatformCreated,
 											OSMsg::GetWinWindowHandle,
 											OSMsg::GetDisplays,
 											OSMsg::GetOSModules
-										> >;
+										>;
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Update,
 											ModuleMsg::Delete,
@@ -59,7 +54,6 @@ namespace PlatformWin
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -117,7 +111,6 @@ namespace PlatformWin
 
 
 
-	const TypeIdList	WinWindow::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	WinWindow::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -126,7 +119,7 @@ namespace PlatformWin
 =================================================
 */
 	WinWindow::WinWindow (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Window &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_createInfo( ci ),
 		_wnd( UninitializedT< HWND >() ),
 		_requestQuit( false ),
@@ -150,7 +143,7 @@ namespace PlatformWin
 		_SubscribeOnMsg( this, &WinWindow::_GetDisplays );
 		_SubscribeOnMsg( this, &WinWindow::_GetOSModules );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( null, WinPlatformModuleID, false );
 	}
@@ -162,7 +155,7 @@ namespace PlatformWin
 */
 	WinWindow::~WinWindow ()
 	{
-		LOG( "WinWindow finalized", ELog::Debug );
+		//LOG( "WinWindow finalized", ELog::Debug );
 
 		CHECK( not _IsCreated() );
 		ASSERT( not _looping );

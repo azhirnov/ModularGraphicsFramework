@@ -32,7 +32,6 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -67,7 +66,6 @@ namespace PlatformVK
 
 
 
-	const TypeIdList	Vk1Sampler::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1Sampler::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -76,7 +74,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Sampler::Vk1Sampler (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),
 		_samplerId( VK_NULL_HANDLE )
 	{
@@ -98,7 +96,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Sampler::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Sampler::_GetVkPrivateClasses );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}

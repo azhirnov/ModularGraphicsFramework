@@ -4,8 +4,7 @@
 
 bool SApp::_Test_ImageSharing ()
 {
-	using ImageLayers	= GpuMsg::CmdCopyImage::ImageLayers;
-	using Pixel			= ubyte4;
+	using Pixel		= ubyte4;
 
 	const uint2		img_dim		{125, 125};
 	const uint2		img2_dim	= img_dim * 2;
@@ -87,7 +86,7 @@ bool SApp::_Test_ImageSharing ()
 	// write data to image
 	GpuMsg::WriteToImageMemory		write_cmd{ image_data, uint3(), uint3(img_dim), req_src_layout.result->rowPitch };
 	src_image->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL(image_data.Size()) );
+	CHECK_ERR( *write_cmd.wasWritten == image_data.Size() );
 
 
 	// build command buffer
@@ -111,14 +110,14 @@ bool SApp::_Test_ImageSharing ()
 
 	sharedGpu.cmdBuilder->Send( GpuMsg::CmdCopyImage{}.SetSource( src_image2, EImageLayout::TransferSrcOptimal )
 													.SetDestination( dst_image2, EImageLayout::TransferDstOptimal )
-													.AddRegion( ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 },
+													.AddRegion( ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 },
 																src_off1,
-																ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 },
+																ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 },
 																dst_off1,
 																size1 )
-													.AddRegion( ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 },
+													.AddRegion( ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 },
 																src_off2,
-																ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 },
+																ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 },
 																dst_off2,
 																size2 ));
 	
@@ -127,7 +126,7 @@ bool SApp::_Test_ImageSharing ()
 
 
 	// submit and sync
-	sharedGpu.gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence2_ctor.result ));
+	sharedGpu.gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence2_ctor.result ));
 
 	sharedGpu.syncManager->Send( GpuMsg::ClientWaitFence{ *fence2_ctor.result });
 

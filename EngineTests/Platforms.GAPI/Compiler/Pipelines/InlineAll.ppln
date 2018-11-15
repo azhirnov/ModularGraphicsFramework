@@ -4,7 +4,7 @@ void main ()
 {
 	ComputePipeline	self = ComputePipeline();
 	
-	self.shaderFormat = EShaderSrcFormat_GLSL;
+	self.shaderFormat = EShaderFormat_GLSL_450;
 	self.localGroupSize = uint3(4,4,0);
 	self.compute.LoadSelf();
 }

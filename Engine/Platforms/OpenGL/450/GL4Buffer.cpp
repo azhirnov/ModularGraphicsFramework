@@ -24,8 +24,8 @@ namespace PlatformGL
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
 											DSMsg::GetDataSourceDescription,
-											DSMsg::ReadRegion,
-											DSMsg::WriteRegion,
+											DSMsg::ReadMemRange,
+											DSMsg::WriteMemRange,
 											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
@@ -40,9 +40,8 @@ namespace PlatformGL
 		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GetBufferDescription,
 											GpuMsg::SetBufferDescription,
-											GpuMsg::GetGLBufferID,
-											GpuMsg::GpuMemoryRegionChanged
-										> >::Append< ForwardToMem_t >;
+											GpuMsg::GetGLBufferID
+										> >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::SetBufferDescription
@@ -53,7 +52,6 @@ namespace PlatformGL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 		
 		static const gl::GLenum		_defaultTarget = gl::GL_COPY_READ_BUFFER;
@@ -88,7 +86,6 @@ namespace PlatformGL
 		bool _GetGLBufferID (const GpuMsg::GetGLBufferID &);
 		bool _GetBufferDescription (const GpuMsg::GetBufferDescription &);
 		bool _SetBufferDescription (const GpuMsg::SetBufferDescription &);
-		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
 		
 	// event handlers
 		bool _OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &);
@@ -100,12 +97,14 @@ namespace PlatformGL
 
 		void _DestroyAll ();
 		void _OnMemoryUnbinded ();
+
+		static void _ValidateMemFlags (INOUT EGpuMemory::bits &flags);
+		static void _ValidateDescription (INOUT BufferDescription &descr);
 	};
 //-----------------------------------------------------------------------------
 
 
 	
-	const TypeIdList	GL4Buffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4Buffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -114,7 +113,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Buffer::GL4Buffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),				_bufferId( 0 ),
 		_memFlags( ci.memFlags ),		_memAccess( ci.access ),
 		_useMemMngr( ci.allocMem ),		_isBindedToMemory( false )
@@ -137,9 +136,13 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Buffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Buffer::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Buffer::_GetGLPrivateClasses );
-		_SubscribeOnMsg( this, &GL4Buffer::_GpuMemoryRegionChanged );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
+
+		_ValidateMemFlags( INOUT _memFlags );
+		_ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -317,7 +320,7 @@ namespace PlatformGL
 			}
 			else
 			{
-				_SendMsg( ModuleMsg::Delete{} );
+				Send( ModuleMsg::Delete{} );
 			}
 		}
 		return true;
@@ -346,7 +349,7 @@ namespace PlatformGL
 		CHECK_ERR( not _isBindedToMemory );
 
 		// create buffer
-		GL_CALL( glGenBuffers( 1, &_bufferId ) );
+		GL_CALL( glGenBuffers( 1, OUT &_bufferId ) );
 		CHECK_ERR( _bufferId != 0 );
 
 		GL_CALL( glBindBuffer( _defaultTarget, _bufferId ) );
@@ -393,17 +396,27 @@ namespace PlatformGL
 		}
 		_isBindedToMemory = false;
 	}
-
+	
 /*
 =================================================
-	_GpuMemoryRegionChanged
+	_ValidateMemFlags
 =================================================
 */
-	bool GL4Buffer::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
+	void GL4Buffer::_ValidateMemFlags (INOUT EGpuMemory::bits &flags)
 	{
-		// request buffer memory barrier
-		TODO( "" );
-		return false;
+		ASSERT( not flags[EGpuMemory::SupportAliasing] );	// not supported
+
+		flags[EGpuMemory::SupportAliasing]	= false;
+		flags[EGpuMemory::Dedicated]		= true;
+	}
+	
+/*
+=================================================
+	_ValidateDescription
+=================================================
+*/
+	void GL4Buffer::_ValidateDescription (INOUT BufferDescription &)
+	{
 	}
 
 }	// PlatformGL

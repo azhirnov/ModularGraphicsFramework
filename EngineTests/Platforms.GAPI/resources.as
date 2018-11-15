@@ -14,12 +14,12 @@ void main ()
 		cfg.optimizeBindings		= false;
 		cfg.minimalRebuild			= true;
 		cfg.nameSpace				= "Pipelines";
-		cfg.targets					|= EShaderDstFormat_GLSL_Source;
-		cfg.targets					|= EShaderDstFormat_SPIRV_Binary;
-		cfg.targets					|= EShaderDstFormat_CL_Source;
-		cfg.targets					|= EShaderDstFormat_CPP_Module;
-		//cfg.targets					|= EShaderDstFormat_HLSL_Source;
-		//cfg.targets					|= EShaderDstFormat_HLSL_Binary;
+		cfg.targets					|= EShaderFormat_GLSL_450;
+		cfg.targets					|= EShaderFormat_VK_100_SPIRV;
+		cfg.targets					|= EShaderFormat_CL_120;
+		cfg.targets					|= EShaderFormat_Soft_100_Exe;
+		//cfg.targets					|= EShaderFormat_HLSL_11;
+		//cfg.targets					|= EShaderFormat_HLSL_11_BC;
 		
 		rpack.SetConfig( cfg );
 	}
@@ -46,9 +46,9 @@ void main ()
 		cfg.optimizeBindings		= false;
 		cfg.minimalRebuild			= true;
 		cfg.nameSpace				= "Pipelines";
-		cfg.targets					|= EShaderDstFormat_GLSL_Source;
-		cfg.targets					|= EShaderDstFormat_SPIRV_Binary;
-		cfg.targets					|= EShaderDstFormat_CPP_Module;
+		cfg.targets					|= EShaderFormat_GLSL_450;
+		cfg.targets					|= EShaderFormat_VK_100_SPIRV;
+		cfg.targets					|= EShaderFormat_Soft_100_Exe;
 		
 		rpack.SetConfig( cfg );
 	}

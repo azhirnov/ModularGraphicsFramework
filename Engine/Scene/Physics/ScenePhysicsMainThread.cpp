@@ -17,19 +17,15 @@ namespace Scene
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
-											ModuleMsg::AddToManager,
-											ModuleMsg::RemoveFromManager,
-											ModuleMsg::OnManagerChanged,
+		using SupportedMessages_t	= MessageListFrom<
 											SceneMsg::GetScenePrivateClasses
-										> >;
+										>;
 		
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -56,7 +52,6 @@ namespace Scene
 
 
 	
-	const TypeIdList	ScenePhysicsMainThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	ScenePhysicsMainThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -65,7 +60,7 @@ namespace Scene
 =================================================
 */
 	ScenePhysicsMainThread::ScenePhysicsMainThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ScenePhysics &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes )
 	{
 		SetDebugName( "ScenePhysicsMainThread" );
 		
@@ -84,7 +79,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &ScenePhysicsMainThread::_OnManagerChanged_Empty );
 		_SubscribeOnMsg( this, &ScenePhysicsMainThread::_GetScenePrivateClasses );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( null, SceneManagerModuleID, false );
 	}

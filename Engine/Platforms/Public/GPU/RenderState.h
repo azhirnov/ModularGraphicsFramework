@@ -38,9 +38,9 @@ namespace Platforms
 				type	color;
 				type	alpha;
 
-				_Pair (GX_DEFCTOR) : color(T::Unknown), alpha(T::Unknown) {}
-				_Pair (type rgba) : color(rgba), alpha(rgba) {}
-				_Pair (type rgb, type a) : color(rgb), alpha(a) {}
+				_Pair (GX_DEFCTOR) : color{T::Unknown}, alpha{T::Unknown} {}
+				_Pair (type rgba) : color{rgba}, alpha{rgba} {}
+				_Pair (type rgb, type a) : color{rgb}, alpha{a} {}
 
 				ND_ bool operator == (const _Pair<T> &right) const;
 			};
@@ -55,10 +55,10 @@ namespace Platforms
 		
 		// methods
 			ColorBuffer (GX_DEFCTOR) :
-				blendFuncSrc( EBlendFunc::One, EBlendFunc::One ),
-				blendFuncDst( EBlendFunc::Zero,	EBlendFunc::Zero ),
-				blendMode( EBlendEq::Add, EBlendEq::Add ),
-				colorMask( true ),	blend( false )
+				blendFuncSrc{ EBlendFunc::One,  EBlendFunc::One },
+				blendFuncDst{ EBlendFunc::Zero,	EBlendFunc::Zero },
+				blendMode{ EBlendEq::Add, EBlendEq::Add },
+				colorMask{ true },	blend{ false }
 			{}
 
 			ND_ bool operator == (const Self &right) const;
@@ -82,7 +82,7 @@ namespace Platforms
 
 		// methods
 			ColorBuffersState (GX_DEFCTOR) :
-				logicOp(ELogicOp::None),	blendColor(1.0f)
+				logicOp{ ELogicOp::None },	blendColor{ 1.0f }
 			{}
 
 			Self& SetBlend (bool enabled);
@@ -125,10 +125,10 @@ namespace Platforms
 
 		// methods
 			StencilFaceState (GX_DEFCTOR) :
-				sfail( EStencilOp::Keep ),		dfail( EStencilOp::Keep ),
-				dppass( EStencilOp::Keep ),		func( ECompareFunc::Always ),
-				funcRef( 0 ),					funcMask( UMax ),
-				mask( UMax )
+				sfail{ EStencilOp::Keep },		dfail{ EStencilOp::Keep },
+				dppass{ EStencilOp::Keep },		func{ ECompareFunc::Always },
+				funcRef{ 0 },					funcMask{ UMax },
+				mask{ UMax }
 			{}
 			
 			ND_ bool operator == (const Self &right) const;
@@ -147,11 +147,11 @@ namespace Platforms
 		// variables
 			StencilFaceState	front;
 			StencilFaceState	back;
-			bool				enabled;
+			bool				enabled;	// stencil write/test
 
 		// methods
 			StencilBufferState (GX_DEFCTOR) :
-				front(), back(), enabled( false )
+				front{}, back{}, enabled{ false }
 			{}
 			
 			ND_ bool operator == (const Self &right) const;
@@ -168,15 +168,15 @@ namespace Platforms
 			using Self	= DepthBufferState;
 
 		// variables
-			ECompareFunc::type	func;
+			ECompareFunc::type	func;		// if 'test' enabled
 			Optional<float2>	range;
-			bool				write;
-			bool				enabled;
+			bool				write;		// depth write enabled
+			bool				test;		// depth test enabled
 
 		// methods
 			DepthBufferState (GX_DEFCTOR) :
-				func( ECompareFunc::LEqual ),	range(),
-				write( true ),					enabled( false )
+				func{ ECompareFunc::LEqual },	range{},
+				write{ false },					test{ false }
 			{}
 				
 			ND_ bool operator == (const Self &right) const;
@@ -198,8 +198,7 @@ namespace Platforms
 
 		// methods
 			InputAssemblyState (GX_DEFCTOR) :
-				topology( EPrimitive::Unknown ),
-				primitiveRestart( false )
+				topology{ EPrimitive::Unknown },	primitiveRestart{ false }
 			{}
 			
 			ND_ bool operator == (const Self &right) const;
@@ -233,11 +232,11 @@ namespace Platforms
 
 		// methods
 			RasterizationState (GX_DEFCTOR) :
-				polygonMode( EPolygonMode::Fill ),	lineWidth( 1.0f ),
-				depthBiasConstFactor( 0.0f ),		depthBiasClamp( 0.0f ),
-				depthBiasSlopeFactor( 0.0f ),		depthBias( false ),
-				depthClamp( false ),				rasterizerDiscard( false ),
-				cullMode( EPolygonFace::None ),		frontFaceCCW( true )
+				polygonMode{ EPolygonMode::Fill },	lineWidth{ 1.0f },
+				depthBiasConstFactor{ 0.0f },		depthBiasClamp{ 0.0f },
+				depthBiasSlopeFactor{ 0.0f },		depthBias{ false },
+				depthClamp{ false },				rasterizerDiscard{ false },
+				cullMode{ EPolygonFace::None },		frontFaceCCW{ true }
 			{}
 			
 			ND_ bool operator == (const Self &right) const;
@@ -266,9 +265,9 @@ namespace Platforms
 
 		// methods
 			MultisampleState (GX_DEFCTOR) :
-				sampleMask{ SampleMask{}.SetAll() },
-				samples( 1 ),				minSampleShading(),		sampleShading( false ),
-				alphaToCoverage( false ),	alphaToOne( false )
+				sampleMask{ SampleMask{}.SetAll() },	samples{ 1 },
+				minSampleShading{},						sampleShading{ false },
+				alphaToCoverage{ false },				alphaToOne{ false }
 			{}
 			
 			ND_ bool operator == (const Self &right) const;

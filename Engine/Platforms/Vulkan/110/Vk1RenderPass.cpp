@@ -31,7 +31,6 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -66,7 +65,6 @@ namespace PlatformVK
 
 
 
-	const TypeIdList	Vk1RenderPass::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1RenderPass::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -75,7 +73,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1RenderPass::Vk1RenderPass (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),
 		_renderPassId( VK_NULL_HANDLE )
 	{
@@ -97,7 +95,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1RenderPass::_GetVkPrivateClasses );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}

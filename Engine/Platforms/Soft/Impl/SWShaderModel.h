@@ -21,7 +21,7 @@ namespace PlatformSW
 	{
 	// types
 	private:
-		using ShaderFunc_t		= PipelineTemplateDescription::ShaderSource::SWInvoke;
+		using ShaderFunc_t		= PipelineTemplateDescription::ShaderSource::SWInvoke_t;
 
 		using Key_t				= Pair<uint, uint>;		// invocation, index
 
@@ -42,7 +42,7 @@ namespace PlatformSW
 		mutable SharedMemMap_t	_sharedMemory;
 		mutable BarrierMap_t	_barriers;
 
-		mutable OS::Mutex		_lock;
+		mutable Mutex			_lock;
 
 
 	// methods

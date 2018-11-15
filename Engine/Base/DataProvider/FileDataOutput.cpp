@@ -17,23 +17,16 @@ namespace Base
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >::Append< MessageListFrom< 
+		using SupportedMessages_t	= MessageListFrom< 
 											ModuleMsg::OnManagerChanged,
 											DSMsg::GetDataSourceDescription,
-											DSMsg::WriteRegion,
+											DSMsg::WriteMemRange,
 											DSMsg::ReleaseData
-										> >;
-
-		//using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
-		//									DSMsg::DataRegionChanged
-		//								> >;
+										>;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -55,15 +48,14 @@ namespace Base
 		bool _Delete (const ModuleMsg::Delete &);
 
 		bool _GetDataSourceDescription (const DSMsg::GetDataSourceDescription &);
-		bool _WriteRegion_Empty (const DSMsg::WriteRegion &);
-		bool _WriteRegion (const DSMsg::WriteRegion &);
+		bool _WriteMemRange_Empty (const DSMsg::WriteMemRange &);
+		bool _WriteMemRange (const DSMsg::WriteMemRange &);
 		bool _ReleaseData (const DSMsg::ReleaseData &);
 	};
 //-----------------------------------------------------------------------------
 
 
 	
-	const TypeIdList	FileDataOutput::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	FileDataOutput::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -72,9 +64,11 @@ namespace Base
 =================================================
 */
 	FileDataOutput::FileDataOutput (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::DataOutput &ci) :
-		Module( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_filename{ ci.uri }
 	{
+		SetDebugName( "FileDataOutput: "_str << _filename );
+
 		_SubscribeOnMsg( this, &FileDataOutput::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &FileDataOutput::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &FileDataOutput::_AttachModule_Empty );
@@ -86,10 +80,10 @@ namespace Base
 		_SubscribeOnMsg( this, &FileDataOutput::_Compose );
 		_SubscribeOnMsg( this, &FileDataOutput::_Delete );
 		_SubscribeOnMsg( this, &FileDataOutput::_GetDataSourceDescription );
-		_SubscribeOnMsg( this, &FileDataOutput::_WriteRegion_Empty );
+		_SubscribeOnMsg( this, &FileDataOutput::_WriteMemRange_Empty );
 		_SubscribeOnMsg( this, &FileDataOutput::_ReleaseData );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 		
 		_AttachSelfToManager( ci.provider, LocalStorageDataProviderModuleID, true );
 	}
@@ -149,8 +143,8 @@ namespace Base
 		DataSourceDescription	descr;
 
 		descr.memoryFlags	|= EMemoryAccess::CpuWrite;
-		descr.available		 = BytesUL();	// data is not cached
-		descr.totalSize		 = BytesUL( _file->Size() );
+		descr.available		 = 0_b;	// data is not cached
+		descr.totalSize		 = _file->Size();
 
 		msg.result.Set( descr );
 		return true;
@@ -158,16 +152,16 @@ namespace Base
 	
 /*
 =================================================
-	_WriteRegion_Empty
+	_WriteMemRange_Empty
 =================================================
 */
-	bool FileDataOutput::_WriteRegion_Empty (const DSMsg::WriteRegion &msg)
+	bool FileDataOutput::_WriteMemRange_Empty (const DSMsg::WriteMemRange &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
 
-		Unsubscribe( this, &FileDataOutput::_WriteRegion_Empty );
-		_SubscribeOnMsg( this, &FileDataOutput::_WriteRegion );
+		Unsubscribe( this, &FileDataOutput::_WriteMemRange_Empty );
+		_SubscribeOnMsg( this, &FileDataOutput::_WriteMemRange );
 		
 		DSMsg::OpenFileForWrite		open_file{ _filename };
 		CHECK( _GetManager()->Send( open_file ) );
@@ -175,19 +169,19 @@ namespace Base
 		_file = *open_file.result;
 		CHECK_ERR( _file );
 
-		return _WriteRegion( msg );
+		return _WriteMemRange( msg );
 	}
 	
 /*
 =================================================
-	_WriteRegion
+	_WriteMemRange
 =================================================
 */
-	bool FileDataOutput::_WriteRegion (const DSMsg::WriteRegion &msg)
+	bool FileDataOutput::_WriteMemRange (const DSMsg::WriteMemRange &msg)
 	{
-		CHECK( _file->SeekSet( BytesU(msg.position) ) );
+		CHECK( _file->SeekSet( msg.position ) );
 
-		msg.wasWritten.Set( BytesUL(_file->Write( msg.data )) );
+		msg.wasWritten.Set( _file->WriteBuf( msg.data.RawPtr(), msg.data.Size() ) );
 		return true;
 	}
 	
@@ -203,8 +197,8 @@ namespace Base
 			_file = null;
 		}
 		
-		Unsubscribe( this, &FileDataOutput::_WriteRegion );
-		_SubscribeOnMsg( this, &FileDataOutput::_WriteRegion_Empty );
+		Unsubscribe( this, &FileDataOutput::_WriteMemRange );
+		_SubscribeOnMsg( this, &FileDataOutput::_WriteMemRange_Empty );
 
 		return true;
 	}

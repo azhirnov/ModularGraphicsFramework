@@ -2,7 +2,7 @@
 /*
 #include "MApp.h"
 	
-extern void Test_MultiGPU (StringCRef device)
+extern void Test_MultiGPU (StringCRef device, bool debug)
 {
 	CHECK( OS::FileSystem::FindAndSetCurrentDir( "EngineTests/Platforms.GAPI/Compute" ) );
 
@@ -11,7 +11,6 @@ extern void Test_MultiGPU (StringCRef device)
 		CApp	app;
 		app.Initialize( "VK 1.0"_GAPI, device );
 
-		// main loop
 		for (; app.Update();) {}
 
 		app.Quit();
@@ -24,7 +23,6 @@ extern void Test_MultiGPU (StringCRef device)
 		CApp	app;
 		app.Initialize( "GL 4.5"_GAPI, device );
 
-		// main loop
 		for (; app.Update();) {}
 
 		app.Quit();
@@ -37,7 +35,6 @@ extern void Test_MultiGPU (StringCRef device)
 		CApp	app;
 		app.Initialize( "CL 1.2"_GAPI, device );
 
-		// main loop
 		for (; app.Update();) {}
 
 		app.Quit();
@@ -50,7 +47,6 @@ extern void Test_MultiGPU (StringCRef device)
 		CApp	app;
 		app.Initialize( "SW 1.0"_GAPI, device );
 
-		// main loop
 		for (; app.Update();) {}
 
 		app.Quit();

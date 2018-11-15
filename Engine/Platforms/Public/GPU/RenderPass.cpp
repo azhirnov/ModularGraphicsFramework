@@ -588,7 +588,7 @@ namespace Platforms
 
 		SubpassBuilder	subpass{ _builder._state._subpasses.Back() };
 
-		if ( EPixelFormat::HasDepth( format ) or EPixelFormat::HasStencil( format ) )
+		if ( EPixelFormat::HasDepthOrStencil( format ) )
 		{
 			CHECK_ERR( not _hasDepth and not _hasStencil, *this );
 

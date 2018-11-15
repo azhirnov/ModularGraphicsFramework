@@ -17,23 +17,16 @@ namespace Base
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >::Append< MessageListFrom< 
+		using SupportedMessages_t	= MessageListFrom< 
 											ModuleMsg::OnManagerChanged,
 											DSMsg::GetDataSourceDescription,
 											DSMsg::ReadFromStream,
 											DSMsg::ReleaseData
-										> >;
-
-		//using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
-		//									DSMsg::DataRegionChanged
-		//								> >;
+										>;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -68,7 +61,6 @@ namespace Base
 
 
 	
-	const TypeIdList	FileInputStream::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	FileInputStream::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -77,9 +69,11 @@ namespace Base
 =================================================
 */
 	FileInputStream::FileInputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InputStream &ci) :
-		Module( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_filename{ ci.uri }
 	{
+		SetDebugName( "FileInputStream: "_str << _filename );
+
 		_SubscribeOnMsg( this, &FileInputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &FileInputStream::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &FileInputStream::_AttachModule_Empty );
@@ -94,7 +88,7 @@ namespace Base
 		_SubscribeOnMsg( this, &FileInputStream::_ReadFromStream_Empty );
 		_SubscribeOnMsg( this, &FileInputStream::_ReleaseData );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( ci.provider, LocalStorageDataProviderModuleID, true );
 	}
@@ -165,8 +159,8 @@ namespace Base
 		DataSourceDescription	descr;
 
 		descr.memoryFlags	|= EMemoryAccess::CpuRead | EMemoryAccess::SequentialOnly;
-		descr.available		 = BytesUL();	// data is not cached
-		descr.totalSize		 = BytesUL( _file->Size() );
+		descr.available		 = 0_b;	// data is not cached
+		descr.totalSize		 = _file->Size();
 
 		msg.result.Set( descr );
 		return true;
@@ -208,14 +202,14 @@ namespace Base
 		/*BytesU	size	= msg.writableBuffer->Size();
 		BytesU	readn;
 
-		_pos += BytesU(msg.offset);
+		_pos += msg.offset;
 
 		// is full or partialy cached
 		if ( _pos < _cachePos + _cache.Size() and _pos > _cachePos )
 		{
 			BinArrayCRef	cached = _cache.SubArray( usize(_pos - _cachePos), usize(size) );
 
-			MemCopy( *msg.writableBuffer, cached );
+			MemCopy( OUT *msg.writableBuffer, cached );
 
 			_pos	+= cached.Size();
 			readn	+= cached.Size();
@@ -230,7 +224,7 @@ namespace Base
 
 			BinArrayCRef	cached	= _cache.SubArray( 0, usize(size) );
 			
-			MemCopy( msg.writableBuffer->SubArray( usize(readn) ), cached );
+			MemCopy( OUT msg.writableBuffer->SubArray( usize(readn) ), cached );
 
 			readn += cached.Size();
 		}

@@ -34,14 +34,6 @@ namespace SWShaderLang
 
 	template <typename GenType, size_t Count>	using SArr = Impl::SWArray< GenType, Count >;
 
-	// TODO
-	//inline void memoryBarrier () {}
-	//inline void memoryBarrierAtomicCounter () {}
-	//inline void memoryBarrierBuffer () {}
-	//inline void memoryBarrierImage () {}
-	//inline void memoryBarrierShared () {}
-	//inline void groupMemoryBarrier () {}
-
 }	// SWShaderLang
 
 #define _RCast		GX_STL::GXTypes::ReferenceCast

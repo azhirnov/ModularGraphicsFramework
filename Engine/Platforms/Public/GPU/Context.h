@@ -47,6 +47,7 @@ namespace Platforms
 		{
 			enum type : uint
 			{
+				None = 0,
 				DebugContext,	// create debug context
 				NoErrorContext,	// OpenGL only
 				VSync,			// enable vertical synchronization
@@ -84,6 +85,14 @@ namespace Platforms
 			samples{ samples },		swapchainLength{ swapchainLength }
 		{}
 
+		explicit
+		GraphicsSettings (const ComputeSettings &settings) :
+			device{ settings.device },		version{ settings.version },
+			flags{ (settings.isDebug ? EFlags::DebugContext : EFlags::None) | EFlags::NoSurface },
+			colorFmt{ Uninitialized },		depthStencilFmt{ Uninitialized },
+			samples{},						swapchainLength{ 0 }
+		{}
+
 		ND_ String GetAPIName () const;
 		ND_ uint   GetAPIVersion () const;
 	};
@@ -108,13 +117,8 @@ namespace CreateInfo
 
 	// methods
 		explicit GpuContext (GAPI::type version = GAPI::type(0)) : settings{ version } {}
-		explicit GpuContext (const Platforms::GraphicsSettings &settings) : settings{ settings } {}
-
-		explicit GpuContext (const Platforms::ComputeSettings &settings) :
-			settings{ settings.version, (settings.isDebug ? EFlags::DebugContext : EFlags::type(0)) | EFlags::NoSurface,
-					  Platforms::EPixelFormat::Unknown, Platforms::EPixelFormat::Unknown,
-					  Platforms::MultiSamples(), settings.device, 0 }
-		{}
+		explicit GpuContext (const Platforms::GraphicsSettings &gsettings) : settings{ gsettings } {}
+		explicit GpuContext (const Platforms::ComputeSettings &csettings) : settings{ csettings } {}
 	};
 
 }	// CreateInfo

@@ -17,23 +17,16 @@ namespace Base
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >::Append< MessageListFrom< 
+		using SupportedMessages_t	= MessageListFrom< 
 											ModuleMsg::OnManagerChanged,
 											DSMsg::GetDataSourceDescription,
 											DSMsg::WriteToStream,
 											DSMsg::ReleaseData
-										> >;
-
-		//using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
-		//									DSMsg::DataRegionChanged
-		//								> >;
+										>;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -63,7 +56,6 @@ namespace Base
 
 
 	
-	const TypeIdList	FileOutputStream::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	FileOutputStream::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -72,9 +64,11 @@ namespace Base
 =================================================
 */
 	FileOutputStream::FileOutputStream (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::OutputStream &ci) :
-		Module( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_filename{ ci.uri }
 	{
+		SetDebugName( "FileOutputStream: "_str << _filename );
+
 		_SubscribeOnMsg( this, &FileOutputStream::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &FileOutputStream::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &FileOutputStream::_AttachModule_Empty );
@@ -89,7 +83,7 @@ namespace Base
 		_SubscribeOnMsg( this, &FileOutputStream::_WriteToStream_Empty );
 		_SubscribeOnMsg( this, &FileOutputStream::_ReleaseData );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 		
 		_AttachSelfToManager( ci.provider, LocalStorageDataProviderModuleID, true );
 	}
@@ -150,8 +144,8 @@ namespace Base
 		DataSourceDescription	descr;
 
 		descr.memoryFlags	|= EMemoryAccess::CpuWrite | EMemoryAccess::SequentialOnly;
-		descr.available		 = BytesUL();	// data is not cached
-		descr.totalSize		 = BytesUL( _file->Size() );
+		descr.available		 = 0_b;	// data is not cached
+		descr.totalSize		 = _file->Size();
 
 		msg.result.Set( descr );
 		return true;
@@ -186,7 +180,7 @@ namespace Base
 */
 	bool FileOutputStream::_WriteToStream (const DSMsg::WriteToStream &msg)
 	{
-		msg.wasWritten.Set( BytesUL(_file->Write( msg.data )) );
+		msg.wasWritten.Set( _file->WriteBuf( msg.data.RawPtr(), msg.data.Size() ) );
 
 		return true;
 	}

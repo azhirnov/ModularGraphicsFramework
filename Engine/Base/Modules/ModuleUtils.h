@@ -51,7 +51,7 @@ namespace Base
 	template <typename Msg>
 	inline void ModuleUtils::Send (InitializerList<ModulePtr> list, const Msg &msg)
 	{
-		return Send( ArrayCRef<ModulePtr>( list ), msg, sender );
+        return Send( ArrayCRef<ModulePtr>( list ), msg );
 	}
 	
 /*

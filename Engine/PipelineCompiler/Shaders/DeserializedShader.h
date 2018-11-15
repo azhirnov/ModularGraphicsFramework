@@ -50,6 +50,18 @@ namespace PipelineCompiler
 			
 			ND_ String ToString () const;
 		};
+
+
+		struct SubpassInput final : _Token
+		{
+			String							name;
+			uint							unit				= UMax;
+			uint							descriptorSet		= UMax;
+			uint							attachmentIndex		= UMax;
+			bool							isMultisample		= false;
+
+			ND_ String ToString () const;
+		};
 		
 
 		struct _Variable : _Token
@@ -228,6 +240,7 @@ namespace PipelineCompiler
 	private:
 		Array<TextureUniform>				_textures;
 		Array<ImageUniform>					_images;
+		Array<SubpassInput>					_subpassInputs;
 		Array<Uniform>						_uniforms;			// without samplers, images, subpass, subroutine...
 
 		Array<UniformBuffer>				_uniformBuffers;
@@ -264,6 +277,7 @@ namespace PipelineCompiler
 
 		ND_ ArrayCRef<TextureUniform>		Textures ()				const	{ return _textures; }
 		ND_ ArrayCRef<ImageUniform>			Images ()				const	{ return _images; }
+		ND_ ArrayCRef<SubpassInput>			SubpassInputs ()		const	{ return _subpassInputs; }
 		ND_ ArrayCRef<Uniform>				Uniforms ()				const	{ return _uniforms; }
 
 		ND_ ArrayCRef<UniformBuffer>		UniformBuffers ()		const	{ return _uniformBuffers; }

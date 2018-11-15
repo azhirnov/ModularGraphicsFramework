@@ -18,7 +18,7 @@ namespace GpuMsg
 	//
 	// Get Device Info
 	//
-	struct GetCLDeviceInfo : _MessageBase_
+	struct GetCLDeviceInfo : _MsgBase_
 	{
 	// types
 		struct Info {
@@ -36,7 +36,7 @@ namespace GpuMsg
 	//
 	// Get Buffer ID
 	//
-	struct GetCLBufferID : _MessageBase_
+	struct GetCLBufferID : _MsgBase_
 	{
 	// types
 		using ESharing	= PlatformCL::ESharing::type;
@@ -60,11 +60,11 @@ namespace GpuMsg
 	struct CreateCLSubBuffer : GetCLBufferID
 	{
 	// variables
-		BytesUL					offset;
-		BytesUL					size;
+		BytesU					offset;
+		BytesU					size;
 
 	// methods
-		CreateCLSubBuffer (BytesUL off, BytesUL size) : offset{off}, size{size} {};
+		CreateCLSubBuffer (BytesU off, BytesU size) : offset{off}, size{size} {};
 	};
 
 
@@ -79,7 +79,7 @@ namespace GpuMsg
 	//
 	// Get Sampler ID
 	//
-	struct GetCLSamplerID : _MessageBase_
+	struct GetCLSamplerID : _MsgBase_
 	{
 		Out< cl::cl_sampler >	result;
 	};
@@ -88,7 +88,7 @@ namespace GpuMsg
 	//
 	// Get Compute Pipeline ID
 	//
-	struct GetCLComputePipelineID : _MessageBase_
+	struct GetCLComputePipelineID : _MsgBase_
 	{
 	// types
 		struct Pipeline {
@@ -107,7 +107,7 @@ namespace GpuMsg
 	//
 	// Pipeline Resource Table ID (program arguments)
 	//
-	struct CLBindPipelineResourceTable : _MessageBase_
+	struct CLBindPipelineResourceTable : _MsgBase_
 	{
 	// variables
 		cl::cl_kernel	kernelId = null;
@@ -120,7 +120,7 @@ namespace GpuMsg
 	//
 	// Get Shader Module IDs
 	//
-	struct GetCLShaderModuleIDs : _MessageBase_
+	struct GetCLShaderModuleIDs : _MsgBase_
 	{
 	// types
 		struct ShaderModule : CompileTime::PODStruct
@@ -139,11 +139,11 @@ namespace GpuMsg
 	//
 	// Fence Sync
 	//
-	struct CLFenceSync : _MessageBase_
+	struct CLFenceSync : _MsgBase_
 	{
 	// variables
-		Platforms::GpuFenceId	fenceId;
-		Out< cl::cl_event >		result;
+		Platforms::GpuFenceId		fenceId;
+		Out_opt< cl::cl_event >		result;
 		
 	// methods
 		explicit CLFenceSync (Platforms::GpuFenceId id) : fenceId{id} {}
@@ -153,14 +153,14 @@ namespace GpuMsg
 	//
 	// Get Event
 	//
-	struct GetCLEvent : _MessageBase_
+	struct GetCLEvent : _MsgBase_
 	{
 	// types
 		using Event_t	= Platforms::GpuEventId;
 
 	// variables
-		Event_t				eventId;
-		Out< cl::cl_event >	result;
+		Event_t					eventId;
+		Out< cl::cl_event >		result;
 
 	// methods
 		explicit GetCLEvent (Event_t id) : eventId(id) {}
@@ -170,21 +170,21 @@ namespace GpuMsg
 	//
 	// Semaphore
 	//
-	struct CLSemaphoreEnqueue : _MessageBase_
+	struct CLSemaphoreEnqueue : _MsgBase_
 	{
 	// variables
 		Platforms::GpuSemaphoreId	semId;
-		Out< cl::cl_event >			result;
+		Out_opt< cl::cl_event >		result;
 		
 	// methods
 		explicit CLSemaphoreEnqueue (Platforms::GpuSemaphoreId id) : semId{id} {}
 	};
 
 
-	struct WaitCLSemaphore : _MessageBase_
+	struct WaitCLSemaphore : _MsgBase_
 	{
 	// types
-		using Semaphores_t	= FixedSizeArray< Platforms::GpuSemaphoreId, GpuMsg::SubmitComputeQueueCommands::WaitSemaphores_t::MemoryContainer_t::SIZE + 4 >;
+		using Semaphores_t	= FixedSizeArray< Platforms::GpuSemaphoreId, GpuMsg::SubmitCommands::WaitSemaphores_t::MemoryContainer_t::SIZE + 4 >;
 
 	// variables
 		Semaphores_t		semaphores;
@@ -198,13 +198,13 @@ namespace GpuMsg
 	//
 	// Update Buffer Command
 	//
-	struct CLCmdUpdateBuffer : _MessageBase_
+	struct CLCmdUpdateBuffer : _MsgBase_
 	{
 	// variables
 		ModulePtr		dstBuffer;
-		BytesUL			dstOffset;
-		BytesUL			size;
-		BytesUL			srcOffset;
+		BytesU			dstOffset;
+		BytesU			size;
+		BytesU			srcOffset;
 
 	// methods
 		CLCmdUpdateBuffer (const CmdUpdateBuffer &cmd, BytesU offset) :
@@ -216,7 +216,7 @@ namespace GpuMsg
 	//
 	// OpenCL Commands
 	//
-	struct SetCLCommandBufferQueue : _MessageBase_
+	struct SetCLCommandBufferQueue : _MsgBase_
 	{
 	// types
 		using Data_t	= Union< CmdBindComputePipeline,
@@ -277,7 +277,7 @@ namespace GpuMsg
 	//
 	// Execute CL Command Buffer
 	//
-	struct ExecuteCLCommandBuffer : _MessageBase_
+	struct ExecuteCLCommandBuffer : _MsgBase_
 	{};
 
 

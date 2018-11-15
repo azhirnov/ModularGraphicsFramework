@@ -55,7 +55,7 @@ namespace Base
 */
 	bool ModulesFactory::Create (UntypedID_t id, GlobalSystemsRef gs, VariantCRef msg, OUT ModulePtr &result) noexcept
 	{
-		SCOPELOCK( _lock );
+		SCOPELOCK( _lock.GetScopeReadLock() );
 
 		ModConstructors_t::const_iterator	iter;
 
@@ -78,7 +78,7 @@ namespace Base
 */
 	bool ModulesFactory::_Register (UntypedID_t id, TypeId ctorMsgType, TypeId moduleIdType, Constructor_t &&ctor)
 	{
-		SCOPELOCK( _lock );
+		SCOPELOCK( _lock.GetScopeWriteLock() );
 
 		const EModuleGroup::type	group	= EModuleGroup::type( id & EModuleGroup::_Mask );
 
@@ -111,7 +111,7 @@ namespace Base
 */
 	bool ModulesFactory::_Unregister (UntypedID_t id, TypeId ctorMsgType)
 	{
-		SCOPELOCK( _lock );
+		SCOPELOCK( _lock.GetScopeWriteLock() );
 
 		ModConstructors_t::iterator	iter;
 
@@ -131,7 +131,7 @@ namespace Base
 */
 	bool ModulesFactory::_UnregisterAll (UntypedID_t id)
 	{
-		SCOPELOCK( _lock );
+		SCOPELOCK( _lock.GetScopeWriteLock() );
 
 		usize	idx = 0;
 
@@ -154,7 +154,7 @@ namespace Base
 */
 	bool ModulesFactory::_IsRegistered (UntypedID_t id, TypeId ctorMsgType) const
 	{
-		SCOPELOCK( _lock );
+		SCOPELOCK( _lock.GetScopeReadLock() );
 
 		return _constructors.IsExist( ConstructorID( id, ctorMsgType ) );
 	}
@@ -166,7 +166,7 @@ namespace Base
 */
 	bool ModulesFactory::_Search (TypeId ctorMsgType, StringCRef startsWith, OUT Array<UntypedID_t> &result) const
 	{
-		SCOPELOCK( _lock );
+		SCOPELOCK( _lock.GetScopeReadLock() );
 
 		result.Clear();
 

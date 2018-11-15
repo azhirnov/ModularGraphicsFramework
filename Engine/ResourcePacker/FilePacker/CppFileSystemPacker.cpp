@@ -301,8 +301,7 @@ namespace ResPack
 				String	str;
 				str <<	"// This is generated file, don't change anything!\n\n"
 						"#include \"Core/STL/Containers/StringRef.h\"\n"
-						"#include \"Core/STL/Containers/Array.h\"\n"
-						"#include \"Core/STL/Math/BinaryMath.h\"\n\n"
+						"#include \"Core/STL/Containers/Array.h\"\n\n"
 						"namespace " << name_space << "\n{\n"
 						"\tusing namespace GX_STL;\n"
 						"\tusing namespace GX_STL::GXTypes;\n\n"
@@ -323,8 +322,7 @@ namespace ResPack
 				String	str;
 				str <<	"// This is generated file, don't change anything!\n\n"
 						"#include \"" << header_name << "\"\n"
-						"#include \"Core/STL/Containers/HashMap.h\"\n"
-						"#include \"Core/STL/Math/BinaryMath.h\"\n\n"
+						"#include \"Core/STL/Containers/HashMap.h\"\n\n"
 						"namespace " << name_space << "\n{\n\n";
 
 				FOR( i, _functions ) {

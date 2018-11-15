@@ -20,12 +20,6 @@ namespace Base
 
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >
-										::Append< MessageListFrom<
-											ModuleMsg::OnManagerChanged
-										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 		
 		using OnStartThreadFunc_t	= CreateInfo::Thread::OnStartThreadFunc_t;
@@ -33,7 +27,6 @@ namespace Base
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -49,6 +42,8 @@ namespace Base
 	public:
 		ParallelThreadImpl (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Thread &);
 		~ParallelThreadImpl ();
+		
+		void SetDebugName (StringCRef name) override;
 
 
 	// message handlers

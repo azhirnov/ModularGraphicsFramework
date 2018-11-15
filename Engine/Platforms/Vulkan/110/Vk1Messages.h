@@ -19,7 +19,7 @@ namespace GpuMsg
 	//
 	// Get Device Info
 	//
-	struct GetVkDeviceInfo : _MessageBase_
+	struct GetVkDeviceInfo : _MsgBase_
 	{
 		struct Info {
 			vk::VkInstance			instance			= VK_NULL_HANDLE;
@@ -35,9 +35,18 @@ namespace GpuMsg
 
 
 	//
+	// Get Queue ID
+	//
+	struct GetVkQueueID : _MsgBase_
+	{
+		Out< vk::VkQueue >			result;
+	};
+
+
+	//
 	// Get GPU Buffer ID
 	//
-	struct GetVkBufferID : _MessageBase_
+	struct GetVkBufferID : _MsgBase_
 	{
 		Out< vk::VkBuffer >			result;
 	};
@@ -46,7 +55,7 @@ namespace GpuMsg
 	//
 	// Get Framebuffer ID
 	//
-	struct GetVkFramebufferID : _MessageBase_
+	struct GetVkFramebufferID : _MsgBase_
 	{
 		Out< vk::VkFramebuffer >	result;
 	};
@@ -55,7 +64,7 @@ namespace GpuMsg
 	//
 	// Get GPU Memory ID
 	//
-	struct GetVkMemoryID : _MessageBase_
+	struct GetVkMemoryID : _MsgBase_
 	{
 		Out< vk::VkDeviceMemory >	result;
 	};
@@ -64,7 +73,7 @@ namespace GpuMsg
 	//
 	// Get Graphics Pipeline ID
 	//
-	struct GetVkGraphicsPipelineID : _MessageBase_
+	struct GetVkGraphicsPipelineID : _MsgBase_
 	{
 		Out< vk::VkPipeline >		result;
 	};
@@ -73,7 +82,7 @@ namespace GpuMsg
 	//
 	// Get Compute Pipeline ID
 	//
-	struct GetVkComputePipelineID : _MessageBase_
+	struct GetVkComputePipelineID : _MsgBase_
 	{
 		Out< vk::VkPipeline >		result;
 	};
@@ -82,7 +91,7 @@ namespace GpuMsg
 	//
 	// Get Pipeline Layout
 	//
-	struct GetVkPipelineLayoutID : _MessageBase_
+	struct GetVkPipelineLayoutID : _MsgBase_
 	{
 		Out< vk::VkPipelineLayout >	result;
 	};
@@ -91,7 +100,7 @@ namespace GpuMsg
 	//
 	// Get Pipeline Layout Push Constants Mapping
 	//
-	struct GetVkPipelineLayoutPushConstants : _MessageBase_
+	struct GetVkPipelineLayoutPushConstants : _MsgBase_
 	{
 	// types
 		using EShader	= Platforms::EShader;
@@ -116,7 +125,7 @@ namespace GpuMsg
 	//
 	// Get Description Layout IDs
 	//
-	struct GetVkDescriptionLayouts : _MessageBase_
+	struct GetVkDescriptionLayouts : _MsgBase_
 	{
 		Out< vk::VkDescriptorSetLayout >	result;
 	};
@@ -125,7 +134,7 @@ namespace GpuMsg
 	//
 	// Get Pipeline Resource Table ID (DescriptorSet)
 	//
-	struct GetVkPipelineResourceTableID : _MessageBase_
+	struct GetVkPipelineResourceTableID : _MsgBase_
 	{
 		Out< vk::VkDescriptorSet >		result;
 	};
@@ -134,7 +143,7 @@ namespace GpuMsg
 	//
 	// Get Render Pass ID
 	//
-	struct GetVkRenderPassID : _MessageBase_
+	struct GetVkRenderPassID : _MsgBase_
 	{
 		Out< vk::VkRenderPass >		result;
 	};
@@ -143,7 +152,7 @@ namespace GpuMsg
 	//
 	// Get Sampler ID
 	//
-	struct GetVkSamplerID : _MessageBase_
+	struct GetVkSamplerID : _MsgBase_
 	{
 		Out< vk::VkSampler >		result;
 	};
@@ -152,7 +161,7 @@ namespace GpuMsg
 	//
 	// Get Image ID
 	//
-	struct GetVkImageID : _MessageBase_
+	struct GetVkImageID : _MsgBase_
 	{
 	// types
 		struct Data {
@@ -171,7 +180,7 @@ namespace GpuMsg
 	//
 	// Create Image View
 	//
-	struct CreateVkImageView : _MessageBase_
+	struct CreateVkImageView : _MsgBase_
 	{
 	// variables
 		Platforms::ImageViewDescription	viewDescr;
@@ -186,7 +195,7 @@ namespace GpuMsg
 	//
 	// Get Shader Module IDs
 	//
-	struct GetVkShaderModuleIDs : _MessageBase_
+	struct GetVkShaderModuleIDs : _MsgBase_
 	{
 	// types
 		struct ShaderModule : CompileTime::PODStruct
@@ -205,7 +214,7 @@ namespace GpuMsg
 	//
 	// Get Command Buffer ID
 	//
-	struct GetVkCommandBufferID : _MessageBase_
+	struct GetVkCommandBufferID : _MsgBase_
 	{
 		Out< vk::VkCommandBuffer >		result;
 	};
@@ -214,7 +223,7 @@ namespace GpuMsg
 	//
 	// Get Command Pool ID
 	//
-	struct GetVkCommandPoolID : _MessageBase_
+	struct GetVkCommandPoolID : _MsgBase_
 	{
 		Out< vk::VkCommandPool >		result;
 	};
@@ -223,19 +232,21 @@ namespace GpuMsg
 	//
 	// Memory Manger Allocate Block for Image / Buffer
 	//
-	struct VkAllocMemory : _MessageBase_
+	struct VkAllocMemory : _MsgBase_
 	{
 	// types
 		struct Data {
 			vk::VkDeviceMemory	mem	= VK_NULL_HANDLE;
-			BytesUL				offset;
-			BytesUL				size;
+			BytesU				offset;
+			BytesU				size;
 		};
 		using EGpuMemory	= Platforms::EGpuMemory;
 
 	// variables
 		ModuleWPtr					module;
 		vk::VkMemoryRequirements	memReqs;
+		vk::VkImage					image		= VK_NULL_HANDLE;	// for dedicated allocation
+		vk::VkBuffer				buffer		= VK_NULL_HANDLE;
 		EGpuMemory::bits			flags;
 		Out< Data >					result;
 
@@ -249,24 +260,24 @@ namespace GpuMsg
 	//
 	// Memory Manager Free Block
 	//
-	struct VkFreeMemory : _MessageBase_
+	struct VkFreeMemory : _MsgBase_
 	{
 	// variables
 		ModuleWPtr			module;
 		vk::VkDeviceMemory	mem	= VK_NULL_HANDLE;
-		BytesUL				offset;
-		BytesUL				size;
+		BytesU				offset;
+		BytesU				size;
 
 	// methods
 		VkFreeMemory () {}
-		VkFreeMemory (const ModuleWPtr &mod, vk::VkDeviceMemory mem, BytesUL off, BytesUL size) : module{mod}, mem{mem}, offset{off}, size{size} {}
+		VkFreeMemory (const ModuleWPtr &mod, vk::VkDeviceMemory mem, BytesU off, BytesU size) : module{mod}, mem{mem}, offset{off}, size{size} {}
 	};
 
 
 	//
 	// Get Fence
 	//
-	struct GetVkFence : _MessageBase_
+	struct GetVkFence : _MsgBase_
 	{
 	// types
 		using Fence_t	= Platforms::GpuFenceId;
@@ -283,7 +294,7 @@ namespace GpuMsg
 	//
 	// Get Event
 	//
-	struct GetVkEvent : _MessageBase_
+	struct GetVkEvent : _MsgBase_
 	{
 	// types
 		using Event_t	= Platforms::GpuEventId;
@@ -300,7 +311,7 @@ namespace GpuMsg
 	//
 	// Get Semaphore
 	//
-	struct GetVkSemaphore : _MessageBase_
+	struct GetVkSemaphore : _MsgBase_
 	{
 	// types
 		using Semaphore_t	= Platforms::GpuSemaphoreId;
@@ -311,6 +322,15 @@ namespace GpuMsg
 
 	// methods
 		explicit GetVkSemaphore (Semaphore_t id) : semId(id) {}
+	};
+
+
+	//
+	// Get Query Pool
+	//
+	struct GetVkQueryPoolID : _MsgBase_
+	{
+		Out< vk::VkQueryPool >		result;
 	};
 
 

@@ -34,7 +34,6 @@ namespace PlatformGL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -68,7 +67,6 @@ namespace PlatformGL
 
 
 	
-	const TypeIdList	GL4RenderPass::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4RenderPass::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -77,7 +75,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4RenderPass::GL4RenderPass (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuRenderPass &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr )
 	{
 		SetDebugName( "GL4RenderPass" );
@@ -98,7 +96,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4RenderPass::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4RenderPass::_GetGLPrivateClasses );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}

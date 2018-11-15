@@ -2,18 +2,17 @@
 
 #include "SApp.h"
 	
-extern void Test_Sharing (StringCRef device)
+extern void Test_Sharing (StringCRef device, bool debug)
 {
 	CHECK( OS::FileSystem::FindAndSetCurrentDir( "EngineTests/Platforms.GAPI/Sharing" ) );
 
-	#if defined(GRAPHICS_API_OPENGL) and defined(COMPUTE_API_OPENCL)
+	#if 0 //defined(GRAPHICS_API_OPENGL) and defined(COMPUTE_API_OPENCL)
 	{
 		LOG( "Test OpenGL - OpenCL sharing", ELog::Info );
 
 		SApp	app;
-		app.Initialize( "GL 4.5"_GAPI, "CL 1.2"_GAPI, device );
+		app.Initialize( "GL 4.5"_GAPI, "CL 1.2"_GAPI, device, debug );
 
-		// main loop
 		for (; app.Update();) {}
 
 		app.Quit();
@@ -26,9 +25,8 @@ extern void Test_Sharing (StringCRef device)
 		LOG( "Test Soft - OpenGL sharing", ELog::Info );
 
 		SApp	app;
-		app.Initialize( "SW 1.0"_GAPI, "GL 4.5"_GAPI, device );
+		app.Initialize( "SW 1.0"_GAPI, "GL 4.5"_GAPI, device, debug );
 
-		// main loop
 		for (; app.Update();) {}
 
 		app.Quit();
@@ -41,9 +39,8 @@ extern void Test_Sharing (StringCRef device)
 		LOG( "Test Soft - OpenCL sharing", ELog::Info );
 
 		SApp	app;
-		app.Initialize( "SW 1.0"_GAPI, "CL 1.2"_GAPI, device );
+		app.Initialize( "SW 1.0"_GAPI, "CL 1.2"_GAPI, device, debug );
 
-		// main loop
 		for (; app.Update();) {}
 
 		app.Quit();
@@ -56,9 +53,8 @@ extern void Test_Sharing (StringCRef device)
 		LOG( "Test Soft - Vulkan sharing", ELog::Info );
 
 		SApp	app;
-		app.Initialize( "SW 1.0"_GAPI, "VK 1.0"_GAPI, device );
+		app.Initialize( "SW 1.0"_GAPI, "VK 1.0"_GAPI, device, debug );
 
-		// main loop
 		for (; app.Update();) {}
 
 		app.Quit();

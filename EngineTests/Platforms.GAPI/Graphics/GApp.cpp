@@ -25,7 +25,7 @@ GApp::GApp ()
 	Initialize
 =================================================
 */
-bool GApp::Initialize (GAPI::type api, StringCRef device)
+bool GApp::Initialize (GAPI::type api, StringCRef device, bool debug)
 {
 	auto	factory	= ms->GlobalSystems()->modulesFactory;
 
@@ -40,32 +40,37 @@ bool GApp::Initialize (GAPI::type api, StringCRef device)
 		os_ids = *req_ids.result;
 	}
 
+	GraphicsSettings	settings;
+	settings.version	= api;
+	settings.device		= device;
+
+	if ( debug )
+		settings.flags	|= CreateInfo::GpuContext::EFlags::DebugContext;
+	
 	{
 		ModulePtr	context;
-		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ api }, OUT context ) );
+		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ settings }, OUT context ) );
 		ms->Send( ModuleMsg::AttachModule{ context });
 
 		GpuMsg::GetGraphicsModules	req_ids;
 		context->Send( req_ids );
-		gpuIDs		= *req_ids.graphics;
-		computeIDs	= *req_ids.compute;
+		gpuIDs		= req_ids.result->graphics;
+		computeIDs	= req_ids.result->compute;
 	}
 
-	auto		thread	= ms->GlobalSystems()->parallelThread;
+	auto		thread = ms->GlobalSystems()->parallelThread;
 	
 	ModulePtr	window;
 	factory->Create( 0, ms->GlobalSystems(), CreateInfo::Window{}, OUT window );
 	thread->Send( ModuleMsg::AttachModule{ window });
-
-	thread->AddModule( gpuIDs.thread,
-						CreateInfo::GpuThread{
-							GraphicsSettings{
-								api,
-								CreateInfo::GpuContext::EFlags::DebugContext
-							} }
-					 );
-
-	auto	gthread		= thread->GetModuleByID( gpuIDs.thread );
+	
+	ModulePtr	gthread;
+	CHECK_ERR( factory->Create(
+						gpuIDs.thread,
+						ms->GlobalSystems(),
+						CreateInfo::GpuThread{ settings },
+						OUT gthread ) );
+	thread->Send( ModuleMsg::AttachModule{ gthread });
 
 	window->Subscribe( this, &GApp::_OnWindowClosed );
 	gthread->Subscribe( this, &GApp::_Draw );

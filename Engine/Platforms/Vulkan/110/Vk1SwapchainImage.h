@@ -16,7 +16,7 @@ namespace Engine
 namespace GpuMsg
 {
 	
-	struct SetVkSwapchainImage : _MessageBase_
+	struct SetVkSwapchainImage : _MsgBase_
 	{
 	// variables
 		vk::VkImage				image	= VK_NULL_HANDLE;
@@ -60,7 +60,6 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -100,7 +99,6 @@ namespace PlatformVK
 
 
 	
-	const TypeIdList	Vk1SwapchainImage::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1SwapchainImage::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -109,7 +107,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1SwapchainImage::Vk1SwapchainImage (GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ VkImageModuleID, UMax }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ VkImageModuleID, UMax }, &_eventTypes ),
 		_descr( ci.descr ),				_imageId( VK_NULL_HANDLE ),	
 		_imageView( VK_NULL_HANDLE ),	_layout( EImageLayout::Unknown )
 	{

@@ -20,14 +20,14 @@ namespace Platforms
 	struct GpuMemoryDescription : CompileTime::PODStruct
 	{
 	// variables
-		BytesUL					size;
+		BytesU					size;
 		EGpuMemory::bits		flags;
 		EMemoryAccess::bits		access;
 
 	// methods
 		GpuMemoryDescription (GX_DEFCTOR) {}
 
-		GpuMemoryDescription (BytesUL size, EGpuMemory::bits flags, EMemoryAccess::bits access) :
+		GpuMemoryDescription (BytesU size, EGpuMemory::bits flags, EMemoryAccess::bits access) :
 			size(size), flags(flags), access(access) {}
 	};
 
@@ -73,17 +73,12 @@ namespace CreateInfo
 
 	// variables
 		ModulePtr				gpuThread;		// can be null
-		BytesUL					maxSize;		// max size of allocated memory
-		BytesUL					blockSize;		// block size to avoid fragmentation
 		EGpuMemory::bits		memFlags;
 		EMemoryAccess::bits		access;
 		
 	// methods
-		GpuMemoryManager (Bytes<ulong> maxSize, Bytes<ulong> blockSize, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
-			maxSize(maxSize), blockSize(blockSize), memFlags(memFlags), access(access) {}
-
-		GpuMemoryManager (Bytes<uint> maxSize, Bytes<uint> blockSize, EGpuMemory::bits memFlags, EMemoryAccess::bits access) :
-			maxSize(maxSize), blockSize(blockSize), memFlags(memFlags), access(access) {}
+		explicit GpuMemoryManager (EGpuMemory::bits memFlags, EMemoryAccess::bits access = EMemoryAccess::All) :
+			memFlags(memFlags), access(access) {}
 	};
 
 }	// CreateInfo
@@ -95,7 +90,7 @@ namespace GpuMsg
 	//
 	// Get GPU Memory Description
 	//
-	struct GetGpuMemoryDescription : _MessageBase_
+	struct GetGpuMemoryDescription : _MsgBase_
 	{
 		Out< Platforms::GpuMemoryDescription >	result;
 	};
@@ -113,39 +108,38 @@ namespace GpuMsg
 	//
 	// Make GPU Memory visible by CPU
 	//
-	struct MapMemoryToCpu : _MessageBase_
+	struct MapMemoryToCpu : _MsgBase_
 	{
 	// variables
-		BytesUL				position;
-		BytesUL				size;
-		EMappingFlags		flags	= EMappingFlags::ReadWrite;
-		Out<BinArrayRef>	result;		// use 'ReadFromGpuMemory' or 'WriteToGpuMemory' instead of this
+		BytesU					position;
+		BytesU					size;
+		EMappingFlags			flags	= EMappingFlags::ReadWrite;
+		Out_opt<BinArrayRef>	result;		// use 'ReadFromGpuMemory' or 'WriteToGpuMemory' instead of this
 
 	// methods
 		MapMemoryToCpu () {}
-		explicit MapMemoryToCpu (EMappingFlags flags) : size{BytesUL(~0ull)}, flags{flags} {}
-		MapMemoryToCpu (EMappingFlags flags, Bytes<uint> pos, Bytes<uint> size) : position(BytesUL(pos)), size(BytesUL(size)), flags(flags) {}
-		MapMemoryToCpu (EMappingFlags flags, Bytes<ulong> pos, Bytes<ulong> size) : position(pos), size(size), flags(flags) {}
+		explicit MapMemoryToCpu (EMappingFlags flags) : size{~0_b}, flags{flags} {}
+		MapMemoryToCpu (EMappingFlags flags, BytesU pos, BytesU size) : position(pos), size(size), flags(flags) {}
 	};
 
-	struct MapImageToCpu : _MessageBase_
+	struct MapImageToCpu : _MsgBase_
 	{
 	// types
 		struct MemoryRange {
-			BytesUL		offset;
-			BytesUL		size;
+			BytesU		offset;
+			BytesU		size;
 		};
 		using MipmapLevel	= Platforms::MipmapLevel;
 		using ImageLayer	= Platforms::ImageLayer;
 
 	// variables
-		BytesUL				memOffset;		// offset in global memory space, may be unsupported
-		MipmapLevel			mipLevel;
-		ImageLayer			layer;
-		EMappingFlags		flags		= EMappingFlags::ReadWrite;
+		BytesU					memOffset;		// offset in global memory space, may be unsupported
+		MipmapLevel				mipLevel;
+		ImageLayer				layer;
+		EMappingFlags			flags		= EMappingFlags::ReadWrite;
 
-		Out<MemoryRange>	range;			// this values may be used in 'FlushMemoryRange' command
-		Out<uint3>			dimension;		// dimension of mapped level (layer) in pixels
+		Out_opt<MemoryRange>	range;			// this values may be used in 'FlushMemoryRange' command
+		Out_opt<uint3>			dimension;		// dimension of mapped level (layer) in pixels
 
 	// methods
 		MapImageToCpu () {}
@@ -156,105 +150,99 @@ namespace GpuMsg
 
 
 	// for mapped memory use commands:
-	//	ReadRegion	where 'position' - offset in mapped memory space
-	//	WriteRegion	where 'position' - offset in mapped memory space
+	//	ReadMemRange	where 'position' - offset in mapped memory space
+	//	WriteMemRange	where 'position' - offset in mapped memory space
 
 
 	//
 	// Hide GPU Memory
 	//
-	struct UnmapMemory : _MessageBase_
+	struct UnmapMemory : _MsgBase_
 	{};
 
 
 	//
 	// Flush GPU Memory Range
 	//
-	struct FlushMemoryRange : _MessageBase_
+	struct FlushMemoryRange : _MsgBase_
 	{
 	// variables
-		BytesUL			offset;		// offset in mapped memory space
-		BytesUL			size;
+		BytesU			offset;		// offset in mapped memory space
+		BytesU			size;
 
 	// methods
 		FlushMemoryRange () {}
-		FlushMemoryRange (Bytes<uint> offset, Bytes<uint> size) :  offset{BytesUL(offset)}, size{BytesUL(size)} {}
-		FlushMemoryRange (Bytes<ulong> offset, Bytes<ulong> size) :  offset{offset}, size{size} {}
+		FlushMemoryRange (BytesU offset, BytesU size) :  offset{offset}, size{size} {}
 	};
 
 
 	//
 	// Read from memory without mapping
 	//
-	struct ReadFromGpuMemory : DSMsg::ReadRegion
+	struct ReadFromGpuMemory : DSMsg::ReadMemRange
 	{
 		// 'position' - position in global memory space
 
 	// methods
 		ReadFromGpuMemory () {}
-		ReadFromGpuMemory (Bytes<uint> pos, BinArrayRef buf) : ReadRegion{pos, buf} {}
-		ReadFromGpuMemory (Bytes<ulong> pos, BinArrayRef buf) : ReadRegion{pos, buf} {}
-		explicit ReadFromGpuMemory (BinArrayRef buf) : ReadRegion(0_b, buf) {}
+		ReadFromGpuMemory (BytesU pos, BinArrayRef buf) : ReadMemRange{pos, buf} {}
+		explicit ReadFromGpuMemory (BinArrayRef buf) : ReadMemRange(0_b, buf) {}
 	};
 
 
 	//
 	// Write to memory without mapping
 	//
-	struct WriteToGpuMemory : DSMsg::WriteRegion
+	struct WriteToGpuMemory : DSMsg::WriteMemRange
 	{
 		// 'position' - position in global memory space
 		
 	// methods
 		WriteToGpuMemory () {}
-		WriteToGpuMemory (Bytes<uint> pos, BinArrayCRef data) : WriteRegion(pos, data) {}
-		WriteToGpuMemory (Bytes<ulong> pos, BinArrayCRef data) : WriteRegion(pos, data) {}
-		explicit WriteToGpuMemory (BinArrayCRef data) : WriteRegion(0_b, data) {}
+		WriteToGpuMemory (BytesU pos, BinArrayCRef data) : WriteMemRange(pos, data) {}
+		explicit WriteToGpuMemory (BinArrayCRef data) : WriteMemRange(0_b, data) {}
 	};
 
 
 	//
 	// Read From Image memory without mapping
 	//
-	struct ReadFromImageMemory : _MessageBase_
+	struct ReadFromImageMemory : _MsgBase_
 	{
 	// types
 		using MipmapLevel	= Platforms::MipmapLevel;
 		using ImageLayer	= Platforms::ImageLayer;
 
 	// variables
-		BytesUL					memOffset;		// offset in global memory space, may be unsupported
-		uint3					offset;
-		uint3					dimension;
-		MipmapLevel				mipLevel;
-		ImageLayer				layer;
-		BytesU					rowPitch;		// memory alignment requirements for result
-		BytesU					slicePitch;		// memory alignment requirements for result
-		Editable< BinArrayRef >	writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
-		Out< BinArrayCRef >		result;
+		BytesU						memOffset;		// offset in global memory space, may be unsupported
+		uint3						offset;
+		uint3						dimension;
+		MipmapLevel					mipLevel;
+		ImageLayer					layer;
+		BytesU						rowPitch;		// memory alignment requirements for result
+		BytesU						slicePitch;		// memory alignment requirements for result
+		Editable< BinArrayRef >		writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
+		Out_opt< BinArrayCRef >		result;
 		
 	// methods
 		ReadFromImageMemory () {}
 
-		ReadFromImageMemory (BinArrayRef buf, const uint3 &off, const uint3 &dim, Bytes<uint> rowPitch, Bytes<uint> slicePitch = Uninitialized) :
-			offset{off}, dimension{Max(dim, 1u)}, rowPitch{BytesU(rowPitch)}, slicePitch{BytesU(slicePitch)}, writableBuffer{buf} {}
-
-		ReadFromImageMemory (BinArrayRef buf, const uint3 &off, const uint3 &dim, Bytes<ulong> rowPitch, Bytes<ulong> slicePitch = Uninitialized) :
-			offset{off}, dimension{Max(dim, 1u)}, rowPitch{BytesU(rowPitch)}, slicePitch{BytesU(slicePitch)}, writableBuffer{buf} {}
+		ReadFromImageMemory (BinArrayRef buf, const uint3 &off, const uint3 &dim, BytesU rowPitch, BytesU slicePitch = Uninitialized) :
+			offset{off}, dimension{Max(dim, 1u)}, rowPitch{rowPitch}, slicePitch{slicePitch}, writableBuffer{buf} {}
 	};
 
 
 	//
 	// Write to Image memory without mapping
 	//
-	struct WriteToImageMemory : _MessageBase_
+	struct WriteToImageMemory : _MsgBase_
 	{
 	// types
 		using MipmapLevel	= Platforms::MipmapLevel;
 		using ImageLayer	= Platforms::ImageLayer;
 
 	// variables
-		BytesUL				memOffset;		// offset in global memory space, may be unsupported
+		BytesU				memOffset;		// offset in global memory space, may be unsupported
 		uint3				offset;
 		uint3				dimension;
 		MipmapLevel			mipLevel;
@@ -262,23 +250,20 @@ namespace GpuMsg
 		BytesU				rowPitch;
 		BytesU				slicePitch;		// size of array layer or 3D image slice
 		BinArrayCRef		data;
-		Out< BytesUL >		wasWritten;
+		Out_opt< BytesU >	wasWritten;
 
 	// methods
 		WriteToImageMemory () {}
 
-		WriteToImageMemory (BinArrayCRef data, const uint3 &off, const uint3 &dim, Bytes<uint> rowPitch, Bytes<uint> slicePitch = Uninitialized) :
-			offset(off), dimension(Max(dim, 1u)), rowPitch(BytesU(rowPitch)), slicePitch(BytesU(slicePitch)), data(data) {}
-
-		WriteToImageMemory (BinArrayCRef data, const uint3 &off, const uint3 &dim, Bytes<ulong> rowPitch, Bytes<ulong> slicePitch = Uninitialized) :
-			offset(off), dimension(Max(dim, 1u)), rowPitch(BytesU(rowPitch)), slicePitch(BytesU(slicePitch)), data(data) {}
+		WriteToImageMemory (BinArrayCRef data, const uint3 &off, const uint3 &dim, BytesU rowPitch, BytesU slicePitch = Uninitialized) :
+			offset(off), dimension(Max(dim, 1u)), rowPitch(rowPitch), slicePitch(slicePitch), data(data) {}
 	};
 
 
 	//
 	// On GPU Memory Binding State Changed
 	//
-	struct OnMemoryBindingChanged : _MessageBase_
+	struct OnMemoryBindingChanged : _MsgBase_
 	{
 	// types
 		enum class EBindingTarget
@@ -299,20 +284,6 @@ namespace GpuMsg
 		OnMemoryBindingChanged (const ModulePtr &obj, bool isDedicated) : targetObject{obj}, newState{EBindingTarget::Shared}, isDedicated{isDedicated} {}
 	};
 
-
-	//
-	// GPU Memory Region Changed Event	// TODO
-	//
-	struct GpuMemoryRegionChanged : _MessageBase_
-	{
-	// variables
-		BytesUL		offset;
-		BytesUL		size;
-
-	// methods
-		GpuMemoryRegionChanged (Bytes<uint> offset, Bytes<uint> size) : offset(BytesUL(offset)), size(BytesUL(size)) {}
-		GpuMemoryRegionChanged (Bytes<ulong> offset, Bytes<ulong> size) : offset(offset), size(size) {}
-	};
 
 }	// GpuMsg
 }	// Engine

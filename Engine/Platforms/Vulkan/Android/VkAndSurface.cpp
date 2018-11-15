@@ -37,10 +37,10 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	bool VkAndSurface::Create (VkInstance instance, const AWindow_t &windowHandle, OUT VkSurfaceKHR &surface)
+	bool VkAndSurface::Create (VkInstance instance, const PlatformTools::WindowHelper::WinAPIWindow &wnd, OUT VkSurfaceKHR &surface)
 	{
 		CHECK_ERR( instance != VK_NULL_HANDLE );
-		CHECK_ERR( windowHandle.IsNotNull<ANativeWindow*>() );
+		CHECK_ERR( wnd.window.IsNotNull< ANativeWindow *>() );
 		
 		CHECK_ERR( Vk1_PlatformInit( instance ) );
 
@@ -48,7 +48,7 @@ namespace PlatformVK
 
 		surface_info.sType		= VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
 		surface_info.flags		= 0;
-		surface_info.window		= windowHandle.Get<ANativeWindow*>();
+		surface_info.window		= wnd.window.Get< ANativeWindow *>();
 		
 		VK_CHECK( vkCreateAndroidSurfaceKHR( instance, &surface_info, null, OUT &surface ) );
 		return true;

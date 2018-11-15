@@ -50,7 +50,7 @@ bool CApp::_Test_CopyBuffer ()
 	// write data to buffer
 	GpuMsg::WriteToGpuMemory	write_cmd{ data };
 	src_buffer->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL(data.Size()) );
+	CHECK_ERR( *write_cmd.wasWritten == data.Size() );
 
 
 	// build command buffer
@@ -69,7 +69,7 @@ bool CApp::_Test_CopyBuffer ()
 
 
 	// submit and sync
-	gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
+	gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
 
 	syncManager->Send( GpuMsg::ClientWaitFence{ *fence_ctor.result });
 

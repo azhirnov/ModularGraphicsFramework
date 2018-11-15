@@ -31,12 +31,11 @@ namespace PlatformCL
 										>;
 
 		using SupportedMessages_t	= CL1BaseModule::SupportedMessages_t::Append< MessageListFrom<
-											GpuMsg::GetPipelineLayoutDescription,
 											GpuMsg::CLBindPipelineResourceTable,
 											GpuMsg::PipelineAttachBuffer,
 											GpuMsg::PipelineAttachImage,
 											GpuMsg::PipelineAttachTexture
-										> >::Append< LayoutMsgList_t >;
+										> >;
 
 		using SupportedEvents_t		= CL1BaseModule::SupportedEvents_t;
 		
@@ -62,8 +61,8 @@ namespace PlatformCL
 		
 		struct BufferAttachment
 		{
-			BytesUL		offset;
-			BytesUL		size;
+			BytesU		offset;
+			BytesU		size;
 		};
 
 		struct ImageAttachment
@@ -81,7 +80,6 @@ namespace PlatformCL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -118,7 +116,6 @@ namespace PlatformCL
 
 
 	
-	const TypeIdList	CL1PipelineResourceTable::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	CL1PipelineResourceTable::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -127,7 +124,7 @@ namespace PlatformCL
 =================================================
 */
 	CL1PipelineResourceTable::CL1PipelineResourceTable (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		CL1BaseModule( gs, ModuleConfig{ id, UMax, true }, &_msgTypes, &_eventTypes )
+		CL1BaseModule( gs, ModuleConfig{ id, UMax, true }, &_eventTypes )
 	{
 		SetDebugName( "CL1PipelineResourceTable" );
 
@@ -148,6 +145,8 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1PipelineResourceTable::_PipelineAttachBuffer );
 		_SubscribeOnMsg( this, &CL1PipelineResourceTable::_PipelineAttachTexture );
 		_SubscribeOnMsg( this, &CL1PipelineResourceTable::_CLBindPipelineResourceTable );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -312,7 +311,7 @@ namespace PlatformCL
 		{
 			CHECK( _SetState( EState::Initial ) );
 			
-			if ( msg.oldModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >() )
+			if ( msg.oldModule->SupportsAllMessages< LayoutMsgList_t >() )
 				_DestroyResourceTable();
 		}
 		return true;
@@ -355,7 +354,7 @@ namespace PlatformCL
 
 			for (const auto& mod : self._GetAttachments())
 			{
-				if ( mod.second->GetSupportedMessages().HasAnyType< ResourceMsgList >() )
+				if ( mod.second->SupportsAnyMessage< ResourceMsgList >() )
 					moduleMap.Add( mod.first, mod.second );
 			}
 		}
@@ -396,7 +395,7 @@ namespace PlatformCL
 			
 			if ( moduleMap.Find( name, OUT iter ) )
 			{
-				CHECK_ERR( iter->second->GetSupportedMessages().HasAllTypes< MsgList >() );
+				CHECK_ERR( iter->second->SupportsAllMessages< MsgList >() );
 				result = iter->second;
 				
 				DEBUG_ONLY( moduleMap.EraseByIter( iter ) );
@@ -415,9 +414,6 @@ namespace PlatformCL
 			ModulePtr	tex_mod, samp_mod;
 			CHECK_ERR( FindModule< ImageMsgList >( tex.name, OUT tex_mod ) );
 			CHECK_ERR( FindModule< SamplerMsgList >( String(tex.name) << ".sampler", OUT samp_mod ) );
-			
-			GpuMsg::GetCLSamplerID		req_sampler;
-			samp_mod->Send( req_sampler );
 
 			const auto&	img_res = self.GetResourceCache()->GetImageID( tex_mod );	// warning: reference may be invalid after any changes
 
@@ -433,7 +429,7 @@ namespace PlatformCL
 				RETURN_ERR( "not supported" );
 			}
 			
-			// create descriptor
+			// create description
 			MemObjectArg		img_descr;
 			img_descr.id		= img_res.Get<0>().id;
 			img_descr.sharing	= img_res.Get<0>().sharing;
@@ -441,7 +437,7 @@ namespace PlatformCL
 			resources.PushBack(ResourceDescr_t( img_descr ));
 
 			SamplerArg			samp_descr;
-			samp_descr.id		= *req_sampler.result;
+			samp_descr.id		= samp_mod->Request( GpuMsg::GetCLSamplerID{} );
 			samp_descr.index	= uint(maxIndex++);
 			resources.PushBack(ResourceDescr_t( samp_descr ));
 			return true;
@@ -483,38 +479,32 @@ namespace PlatformCL
 
 			const auto&	buf_res = self.GetResourceCache()->GetBufferID( buf_mod );	// warning: reference may be invalid after any changes
 
-			CHECK( buf_res.Get<1>().size == BytesUL(buf.size) );
+			CHECK( buf_res.Get<1>().size == buf.size );
 			CHECK( buf_res.Get<1>().usage[ EBufferUsage::Uniform ] );
 			
 			// find attachment info
 			AttachmentInfoMap_t::iterator	info;
-			cl::cl_mem						buffer_id		= null;
-			ESharing::type					buffer_sharing	= ESharing::None;
+			GpuMsg::GetCLBufferID::Data		buf_id;
 
 			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
 			{
 				auto const&		buf_info = info->second.Get<BufferAttachment>();
-				CHECK_ERR( buf_info.size == BytesUL(buf.size) );
+				CHECK_ERR( buf_info.size == buf.size );
 
-				GpuMsg::CreateCLSubBuffer	req_subbuffer{ buf_info.offset, buf_info.size };
-				buf_mod->Send( req_subbuffer );
-
-				buffer_id		= req_subbuffer.result->id;
-				buffer_sharing	= req_subbuffer.result->sharing;
+				buf_id = buf_mod->Request( GpuMsg::CreateCLSubBuffer{ buf_info.offset, buf_info.size } );
 			}
 			else
 			{
-				CHECK_ERR( buf_res.Get<1>().size >= BytesUL(buf.size) );
+				CHECK_ERR( buf_res.Get<1>().size >= buf.size );
 
-				buffer_id		= buf_res.Get<0>().id;
-				buffer_sharing	= buf_res.Get<0>().sharing;
+				buf_id = buf_res.Get<0>();
 			}
 			
-			// create descriptor
+			// create description
 			MemObjectArg	descr;
 			descr.index		= buf.uniqueIndex;
-			descr.id		= buffer_id;
-			descr.sharing	= buffer_sharing;
+			descr.id		= buf_id.id;
+			descr.sharing	= buf_id.sharing;
 			
 			resources.PushBack(ResourceDescr_t( descr ));
 			return true;
@@ -536,8 +526,7 @@ namespace PlatformCL
 			
 			// find attachment info
 			AttachmentInfoMap_t::iterator	info;
-			cl::cl_mem						buffer_id		= null;
-			ESharing::type					buffer_sharing	= ESharing::None;
+			GpuMsg::GetCLBufferID::Data		buf_id;
 
 			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
 			{
@@ -546,26 +535,21 @@ namespace PlatformCL
 				CHECK_ERR(	(buf_info.size >= buf.staticSize) and
 							(buf.arrayStride == 0 or (buf_info.size - buf.staticSize) % buf.arrayStride == 0) );
 				
-				GpuMsg::CreateCLSubBuffer	req_subbuffer{ buf_info.offset, buf_info.size };
-				buf_mod->Send( req_subbuffer );
-
-				buffer_id		= req_subbuffer.result->id;
-				buffer_sharing	= req_subbuffer.result->sharing;
+				buf_id = buf_mod->Request( GpuMsg::CreateCLSubBuffer{ buf_info.offset, buf_info.size } );
 			}
 			else
 			{
 				CHECK_ERR(	(buf_res.Get<1>().size >= buf.staticSize) and
 							(buf.arrayStride == 0 or (buf_res.Get<1>().size - buf.staticSize) % buf.arrayStride == 0) );
 
-				buffer_id		= buf_res.Get<0>().id;
-				buffer_sharing	= buf_res.Get<0>().sharing;
+				buf_id = buf_res.Get<0>();
 			}
 			
-			// create descriptor
+			// create description
 			MemObjectArg	descr;
 			descr.index		= buf.uniqueIndex;
-			descr.id		= buffer_id;
-			descr.sharing	= buffer_sharing;
+			descr.id		= buf_id.id;
+			descr.sharing	= buf_id.sharing;
 
 			resources.PushBack(ResourceDescr_t( descr ));
 			return true;
@@ -587,7 +571,7 @@ namespace PlatformCL
 		
 		// initialize table
 		FOR( i, uniforms ) {
-			uniforms[i].Apply( func );
+			uniforms[i].Accept( func );
 		}
 		return true;
 	}
@@ -651,7 +635,7 @@ namespace PlatformCL
 		_WriteDescription_Func	func( GetDevice(), this, msg.kernelId );
 
 		FOR( i, _resources ) {
-			_resources[i].Apply( func );
+			_resources[i].Accept( func );
 		}
 		return true;
 	}

@@ -19,6 +19,7 @@
 #include "Engine/Platforms/Public/GPU/ImageEnums.h"
 #include "Engine/Platforms/Public/GPU/VertexEnums.h"
 #include "Engine/Platforms/Public/GPU/ObjectEnums.h"
+#include "Engine/Platforms/Public/GPU/QueryEnums.h"
 
 namespace Engine
 {
@@ -570,16 +571,19 @@ namespace PlatformVK
 
 		switch ( value )
 		{
-			case EImageLayout::Undefined						: return VK_IMAGE_LAYOUT_UNDEFINED;
-			case EImageLayout::General							: return VK_IMAGE_LAYOUT_GENERAL;
-			case EImageLayout::ColorAttachmentOptimal			: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			case EImageLayout::DepthStencilAttachmentOptimal	: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			case EImageLayout::DepthStencilReadOnlyOptimal		: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-			case EImageLayout::ShaderReadOnlyOptimal			: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			case EImageLayout::TransferSrcOptimal				: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-			case EImageLayout::TransferDstOptimal				: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			case EImageLayout::Preinitialized					: return VK_IMAGE_LAYOUT_PREINITIALIZED;
-			case EImageLayout::PresentSrc						: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+			case EImageLayout::Undefined :								return VK_IMAGE_LAYOUT_UNDEFINED;
+			case EImageLayout::General :								return VK_IMAGE_LAYOUT_GENERAL;
+			case EImageLayout::ColorAttachmentOptimal :					return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			case EImageLayout::DepthStencilAttachmentOptimal :			return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			case EImageLayout::DepthStencilReadOnlyOptimal :			return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			case EImageLayout::ShaderReadOnlyOptimal :					return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			case EImageLayout::TransferSrcOptimal :						return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+			case EImageLayout::TransferDstOptimal :						return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			case EImageLayout::Preinitialized :							return VK_IMAGE_LAYOUT_PREINITIALIZED;
+			case EImageLayout::PresentSrc :								return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+			case EImageLayout::DepthReadOnlyStencilAttachmentOptimal :	return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
+			case EImageLayout::DepthAttachmentStencilReadOptimal :		return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
+			case EImageLayout::SharedPresent :							return VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR;
 		}
 
 		RETURN_ERR( "invalid image layout type", VK_IMAGE_LAYOUT_MAX_ENUM );
@@ -619,6 +623,36 @@ namespace PlatformVK
 	PipelineStage
 =================================================
 */
+	ND_ inline vk::VkPipelineStageFlagBits  Vk1Enum (EPipelineStage::type value)
+	{
+		using namespace vk;
+
+		switch ( value )
+		{
+			case EPipelineStage::TopOfPipe				: return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+			case EPipelineStage::DrawIndirect			: return VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;
+			case EPipelineStage::VertexInput			: return VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
+			case EPipelineStage::VertexShader			: return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+			case EPipelineStage::TessControlShader		: return VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT;
+			case EPipelineStage::TessEvaluationShader	: return VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT;
+			case EPipelineStage::GeometryShader			: return VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;
+			case EPipelineStage::FragmentShader			: return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			case EPipelineStage::EarlyFragmentTests		: return VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			case EPipelineStage::LateFragmentTests		: return VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			case EPipelineStage::ColorAttachmentOutput	: return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			case EPipelineStage::ComputeShader			: return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+			case EPipelineStage::Transfer				: return VK_PIPELINE_STAGE_TRANSFER_BIT;
+			case EPipelineStage::BottomOfPipe			: return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+			case EPipelineStage::Host					: return VK_PIPELINE_STAGE_HOST_BIT;
+		}
+		RETURN_ERR( "invalid pipeline state", VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM );
+	}
+	
+/*
+=================================================
+	PipelineStage
+=================================================
+*/
 	ND_ inline vk::VkPipelineStageFlags  Vk1Enum (EPipelineStage::bits values)
 	{
 		using namespace vk;
@@ -638,25 +672,7 @@ namespace PlatformVK
 			if ( not values[t] )
 				continue;
 
-			switch ( t )
-			{
-				case EPipelineStage::TopOfPipe				: flags |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;						break;
-				case EPipelineStage::DrawIndirect			: flags |= VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;						break;
-				case EPipelineStage::VertexInput			: flags |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;						break;
-				case EPipelineStage::VertexShader			: flags |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;						break;
-				case EPipelineStage::TessControlShader		: flags |= VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT;		break;
-				case EPipelineStage::TessEvaluationShader	: flags |= VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT;	break;
-				case EPipelineStage::GeometryShader			: flags |= VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;					break;
-				case EPipelineStage::FragmentShader			: flags |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;					break;
-				case EPipelineStage::EarlyFragmentTests		: flags |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;				break;
-				case EPipelineStage::LateFragmentTests		: flags |= VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;				break;
-				case EPipelineStage::ColorAttachmentOutput	: flags |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;			break;
-				case EPipelineStage::ComputeShader			: flags |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;					break;
-				case EPipelineStage::Transfer				: flags |= VK_PIPELINE_STAGE_TRANSFER_BIT;							break;
-				case EPipelineStage::BottomOfPipe			: flags |= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;					break;
-				case EPipelineStage::Host					: flags |= VK_PIPELINE_STAGE_HOST_BIT;								break;
-				default										: RETURN_ERR( "invalid pipeline state", VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM );
-			}
+			flags |= Vk1Enum( t );
 		}
 		return flags;
 	}
@@ -735,7 +751,7 @@ namespace PlatformVK
 		}
 		return flags;
 	}
-		
+
 /*
 =================================================
 	ImageUsage
@@ -769,7 +785,26 @@ namespace PlatformVK
 		}
 		return flags;
 	}
-		
+
+/*
+=================================================
+	ImageUsage
+=================================================
+*/
+	ND_ inline EImageUsage::bits  Vk1EnumRevert (vk::VkImageUsageFlags flags)
+	{
+		EImageUsage::bits	result;
+		if ( EnumEq( flags, vk::VK_IMAGE_USAGE_TRANSFER_SRC_BIT ) )					result |= EImageUsage::TransferSrc;
+		if ( EnumEq( flags, vk::VK_IMAGE_USAGE_TRANSFER_DST_BIT ) )					result |= EImageUsage::TransferDst;
+		if ( EnumEq( flags, vk::VK_IMAGE_USAGE_SAMPLED_BIT ) )						result |= EImageUsage::Sampled;
+		if ( EnumEq( flags, vk::VK_IMAGE_USAGE_STORAGE_BIT ) )						result |= EImageUsage::Storage;
+		if ( EnumEq( flags, vk::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT ) )				result |= EImageUsage::ColorAttachment;
+		if ( EnumEq( flags, vk::VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ) )		result |= EImageUsage::DepthStencilAttachment;
+		if ( EnumEq( flags, vk::VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT ) )			result |= EImageUsage::TransientAttachment;
+		if ( EnumEq( flags, vk::VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT ) )				result |= EImageUsage::InputAttachment;
+		return result;
+	}
+
 /*
 =================================================
 	ImageViewType
@@ -826,6 +861,61 @@ namespace PlatformVK
 		return flags;
 	}
 	
+/*
+=================================================
+	Query
+=================================================
+*/
+	ND_ inline vk::VkQueryType  Vk1Enum (EQuery::type value)
+	{
+		using namespace vk;
+
+		switch ( value )
+		{
+			case EQuery::Occlusion :			return VK_QUERY_TYPE_OCCLUSION;
+			case EQuery::PipelineStatistic :	return VK_QUERY_TYPE_PIPELINE_STATISTICS;
+			case EQuery::Timestamp :			return VK_QUERY_TYPE_TIMESTAMP;
+		}
+		RETURN_ERR( "unknown query type!", VK_QUERY_TYPE_MAX_ENUM );
+	}
+	
+/*
+=================================================
+	PipelineStatistic
+=================================================
+*/
+	ND_ inline vk::VkQueryPipelineStatisticFlags  Vk1Enum (EPipelineStatistic::bits values)
+	{
+		using namespace vk;
+
+		VkQueryPipelineStatisticFlags	flags = 0;
+
+		FOR( i, values )
+		{
+			const auto t = EPipelineStatistic::type(i);
+			
+			if ( not values[t] )
+				continue;
+			
+			switch ( t )
+			{
+				case EPipelineStatistic::InputAssemblyVertices :					flags |= VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT;						break;
+				case EPipelineStatistic::TessellationControllShaderPatches :		flags |= VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT;			break;
+				case EPipelineStatistic::InputAssembluPrimitives :					flags |= VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT;						break;
+				case EPipelineStatistic::GeometryShaderPrimitives :					flags |= VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_PRIMITIVES_BIT;					break;
+				case EPipelineStatistic::ClippingPrimitives :						flags |= VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT;							break;
+				case EPipelineStatistic::VertexShaderInvocations :					flags |= VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT;						break;
+				case EPipelineStatistic::GeometryShaderInvocations :				flags |= VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_INVOCATIONS_BIT;					break;
+				case EPipelineStatistic::ClippingInvocations :						flags |= VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT;							break;
+				case EPipelineStatistic::FragmentShaderInvocations :				flags |= VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT;					break;
+				case EPipelineStatistic::TessellationEvaluationShaderInvocations :	flags |= VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT;	break;
+				case EPipelineStatistic::ComputeShaderInvocations :					flags |= VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT;					break;
+				default :															RETURN_ERR( "invalid pipeline statistic type", VK_QUERY_PIPELINE_STATISTIC_FLAG_BITS_MAX_ENUM );
+			}
+		}
+		return flags;
+	}
+
 /*
 =================================================
 	GpuObject

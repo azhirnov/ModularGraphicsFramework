@@ -50,7 +50,7 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	_AddBindings
+	_AddBindings (TextureUniform)
 =================================================
 */
 	void BasePipeline::_AddBindings (INOUT Array<TextureUniform> &textures)
@@ -58,7 +58,7 @@ namespace PipelineCompiler
 		_MergeTextures_Func	func( INOUT textures );
 
 		for (auto& un : bindings.uniforms) {
-			un.Apply( func );
+			un.Accept( func );
 		}
 		
 		for (auto& tex : textures) {
@@ -107,7 +107,7 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	_AddBindings
+	_AddBindings (ImageUniform)
 =================================================
 */
 	void BasePipeline::_AddBindings (INOUT Array<ImageUniform> &images)
@@ -115,7 +115,7 @@ namespace PipelineCompiler
 		_MergeImages_Func	func( INOUT images );
 
 		for (auto& un : bindings.uniforms) {
-			un.Apply( func );
+			un.Accept( func );
 		}
 
 		for (auto& img : images) {
@@ -123,6 +123,62 @@ namespace PipelineCompiler
 		}
 	}
 	
+/*
+=================================================
+	_MergeSubpasses_Func
+=================================================
+*/
+	struct BasePipeline::_MergeSubpasses_Func
+	{
+	// variables
+		Array<SubpassInput>&	images;
+		
+	// methods
+		_MergeSubpasses_Func (INOUT Array<SubpassInput> &images) : images(images)
+		{}
+
+		void operator () (SubpassInput &spi) const
+		{
+			FOR( i, images )
+			{
+				const auto&	other = images[i];
+
+				if ( other.name == spi.name )
+				{
+					CHECK( other.attachmentIndex == spi.attachmentIndex );
+					CHECK( other.isMultisample == spi.isMultisample );
+					
+					spi.shaderUsage |= other.shaderUsage;
+
+					images.Erase( i );
+					--i;
+				}
+			}
+		}
+
+		template <typename T>
+		void operator () (const T &) const
+		{}
+	};
+	
+/*
+=================================================
+	_AddBindings (SubpassInput)
+=================================================
+*/
+	void BasePipeline::_AddBindings (INOUT Array<SubpassInput> &subpasses)
+	{
+		_MergeSubpasses_Func	func( INOUT subpasses );
+
+		for (auto& un : bindings.uniforms) {
+			un.Accept( func );
+		}
+
+		for (auto& subpass : subpasses) {
+			bindings.uniforms.PushBack( Bindings::_Uniform{ subpass } );
+		}
+	}
+
 /*
 =================================================
 	_MergeUniformBuffers_Func
@@ -162,7 +218,7 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	_AddBindings
+	_AddBindings (UniformBuffer)
 =================================================
 */
 	void BasePipeline::_AddBindings (INOUT Array<UniformBuffer> &buffers)
@@ -170,7 +226,7 @@ namespace PipelineCompiler
 		_MergeUniformBuffers_Func	func( INOUT buffers );
 
 		for (auto& un : bindings.uniforms) {
-			un.Apply( func );
+			un.Accept( func );
 		}
 
 		for (auto& buf : buffers) {
@@ -218,7 +274,7 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	_AddBindings
+	_AddBindings (StorageBuffer)
 =================================================
 */
 	void BasePipeline::_AddBindings (INOUT Array<StorageBuffer> &buffers)
@@ -226,7 +282,7 @@ namespace PipelineCompiler
 		_MergeStorageBuffers_Func	func( INOUT buffers );
 
 		for (auto& un : bindings.uniforms) {
-			un.Apply( func );
+			un.Accept( func );
 		}
 
 		for (auto& buf : buffers) {
@@ -281,6 +337,29 @@ namespace PipelineCompiler
 			dst.format		= src.format;
 			dst.imageType	= src.imageType;
 			dst.shaderUsage	|= shader.Type();
+
+			result.PushBack( RVREF(dst) );
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	_ExtractSubpasses
+=================================================
+*/
+	bool BasePipeline::_ExtractSubpasses (const DeserializedShader &shader, OUT Array<SubpassInput> &result)
+	{
+		result.Reserve( shader.SubpassInputs().Count() );
+
+		for (const auto& src : shader.SubpassInputs())
+		{
+			SubpassInput	dst;
+
+			dst.name			= src.name;
+			dst.attachmentIndex	= src.attachmentIndex;
+			dst.isMultisample	= src.isMultisample;
+			dst.shaderUsage		|= shader.Type();
 
 			result.PushBack( RVREF(dst) );
 		}
@@ -375,7 +454,7 @@ namespace PipelineCompiler
 				result.PushBack( RVREF(dst) );
 			}
 
-			CHECK_ERR( var.offset != BytesU(~0u) );		// 'offset' and 'align' must be correct
+			CHECK_ERR( var.offset != ~0_b );		// 'offset' and 'align' must be correct
 
 			curr.fields.PushBack( RVREF(info) );
 		}
@@ -528,7 +607,7 @@ namespace PipelineCompiler
 				result.PushBack( RVREF(dst) );
 			}
 
-			CHECK_ERR( var.location != BytesU(~0u) );		// 'offset' and 'align' must be correct
+			CHECK_ERR( var.location != UMax );		// 'offset' and 'align' must be correct
 
 			if ( curr ) {
 				curr->fields.PushBack( RVREF(info) );
@@ -637,7 +716,7 @@ namespace PipelineCompiler
 
 			_StructField	field;
 			field.name		= attr.first;
-			field.offset	= BytesU(attr.second.index);
+			field.offset	= BytesU(attr.second.index);	// it is OK, write index to offset, sort, then calculate correct offset
 			field.type		= EShaderVariable::type(attr.second.type);
 			field.packing	= st.packing;
 			field.stride	= EShaderVariable::SizeOf( field.type );
@@ -700,6 +779,13 @@ namespace PipelineCompiler
 		}
 
 
+		void operator () (SubpassInput &src)
+		{
+			src.location.uniqueIndex	= _index++;
+			src.location.index			= _textureCounter++;	// in OpenGL subpass is sampler2D
+		}
+
+
 		void operator () (UniformBuffer &src)
 		{
 			src.location.uniqueIndex	= _index++;
@@ -724,7 +810,7 @@ namespace PipelineCompiler
 		_UpdateBindingIndices_Func	func;
 
 		for (auto& un : bindings.uniforms) {
-			un.Apply( func );
+			un.Accept( func );
 		}
 		return true;
 	}
@@ -786,7 +872,7 @@ namespace PipelineCompiler
 		_UpdateBufferSizes_Func	func( _structTypes );
 
 		for (auto& un : bindings.uniforms) {
-			un.Apply( func );
+			un.Accept( func );
 		}
 		return true;
 	}
@@ -844,13 +930,13 @@ namespace PipelineCompiler
 		_UpdateDescriptorSets_Func	func;
 
 		for (auto& un : bindings.uniforms) {
-			un.Apply( func );
+			un.Accept( func );
 		}
 
 		func.StartPass2();
 		
 		for (auto& un : bindings.uniforms) {
-			un.Apply( func );
+			un.Accept( func );
 		}
 		return true;
 	}
@@ -868,12 +954,13 @@ namespace PipelineCompiler
 		DeserializedShader	deserialized;
 		Array<StringCRef>	source;
 		String				shader_entry	= shader.entry;
-		const String		version			= _GetVersionGLSL();
+		const String		version			= _GetVersionGLSL( shaderFormat );
 		
-		CHECK_ERR(	shaderFormat == EShaderSrcFormat::GXSL			or
-					shaderFormat == EShaderSrcFormat::GXSL_Vulkan	or
-					shaderFormat == EShaderSrcFormat::GLSL			or
-					shaderFormat == EShaderSrcFormat::GLSL_Vulkan );
+		LOG( "Disasemble "_str << EShaderFormat::ToString( shaderFormat ), ELog::Info );
+
+		CHECK_ERR(	EShaderFormat::GetApiFormat( shaderFormat ) == EShaderFormat::GXSL	or
+					EShaderFormat::GetApiFormat( shaderFormat ) == EShaderFormat::GLSL	or
+					EShaderFormat::GetApiFormat( shaderFormat ) == EShaderFormat::VKSL );
 
 		if ( shader.type == EShader::Vertex )
 		{
@@ -894,6 +981,7 @@ namespace PipelineCompiler
 		{
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
+					<< _GetTypeRedefinitionGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< str;
 
@@ -915,6 +1003,7 @@ namespace PipelineCompiler
 
 			CHECK_ERR( _ExtractTextures( deserialized, OUT disasm.textures ) );
 			CHECK_ERR( _ExtractImages( deserialized, OUT disasm.images ) );
+			CHECK_ERR( _ExtractSubpasses( deserialized, OUT disasm.subpasses ) );
 			CHECK_ERR( _ExtractUniformBuffers( deserialized, OUT disasm.uniformBuffers ) );
 			CHECK_ERR( _ExtractStorageBuffers( deserialized, OUT disasm.storageBuffers ) );
 			CHECK_ERR( _ExtractTypes( deserialized, OUT disasm.structTypes ) );
@@ -924,7 +1013,12 @@ namespace PipelineCompiler
 				CHECK_ERR( _ExtractAttribs( disasm.input, OUT attribs ) );
 			
 			if ( shader.type == EShader::Fragment )
+			{
 				CHECK_ERR( _ExtractFragOutput( disasm.output, OUT fragOutput ) );
+
+				earlyFragmentTests = EnumEq( deserialized.FragmentShader().flags, EFragmentShaderParams::EarlyFragmentTests ) or
+									 not EnumEq( deserialized.FragmentShader().flags, EFragmentShaderParams::DepthExport );
+			}
 
 			if ( shader.type == EShader::TessControl )
 				patchControlPoints = deserialized.TessControlShader().patchSize;
@@ -937,6 +1031,7 @@ namespace PipelineCompiler
 		{
 			_AddBindings( INOUT disasm.textures );
 			_AddBindings( INOUT disasm.images );
+			_AddBindings( INOUT disasm.subpasses );
 			_AddBindings( INOUT disasm.uniformBuffers );
 			_AddBindings( INOUT disasm.storageBuffers );
 		}

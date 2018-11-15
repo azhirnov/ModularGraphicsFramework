@@ -25,8 +25,8 @@ namespace PlatformSW
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
 											DSMsg::GetDataSourceDescription,
-											DSMsg::ReadRegion,
-											DSMsg::WriteRegion,
+											DSMsg::ReadMemRange,
+											DSMsg::WriteMemRange,
 											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
@@ -41,38 +41,19 @@ namespace PlatformSW
 		using SupportedMessages_t	= SWBaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GetBufferDescription,
 											GpuMsg::SetBufferDescription,
-											GpuMsg::GpuMemoryRegionChanged,
 											GpuMsg::GetSWBufferMemoryLayout,
-											GpuMsg::GetSWBufferMemoryRequirements,
-											GpuMsg::SWBufferBarrier
-										> >::Append< ForwardToMem_t >;
+											GpuMsg::GetSWBufferMemoryRequirements
+										> >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::SetBufferDescription
 										> >;
 		
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
-		
-
-		struct Block : CompileTime::FastCopyable
-		{
-		// variables
-			BytesU					offset;
-			EPipelineAccess::bits	access;
-			EPipelineStage::type	stage	= EPipelineStage::Unknown;	// last synchronization stage
-
-		// methods
-			Block () {}
-			Block (BytesU offset, EPipelineAccess::bits access, EPipelineStage::type stage) :
-				offset{offset}, access{access}, stage{stage} {}
-		};
-
-		using Blocks_t				= Array< Block >;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		static constexpr BytesU		_align	= 4_b;
@@ -83,7 +64,6 @@ namespace PlatformSW
 		BufferDescription		_descr;
 		ModulePtr				_memObj;
 		BinArrayRef				_memory;
-		Blocks_t				_blocks;
 		
 		EGpuMemory::bits		_memFlags;		// -|-- this flags is requirements for memory obj, don't use it anywhere
 		EMemoryAccess::bits		_memAccess;		// -|
@@ -108,10 +88,8 @@ namespace PlatformSW
 		bool _DetachModule (const ModuleMsg::DetachModule &);
 		bool _GetBufferDescription (const GpuMsg::GetBufferDescription &);
 		bool _SetBufferDescription (const GpuMsg::SetBufferDescription &);
-		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
 		bool _GetSWBufferMemoryLayout (const GpuMsg::GetSWBufferMemoryLayout &);
 		bool _GetSWBufferMemoryRequirements (const GpuMsg::GetSWBufferMemoryRequirements &);
-		bool _SWBufferBarrier (const GpuMsg::SWBufferBarrier &);
 		
 	// event handlers
 		bool _OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &);
@@ -124,19 +102,14 @@ namespace PlatformSW
 		void _DestroyAll ();
 		void _OnMemoryBinded ();
 		void _OnMemoryUnbinded ();
-
-		bool _MergeBlocks (Block newBlock, BytesU size);
-		//void _MergeBlocks (const Block &newBlock, EPipelineAccess::bits lastAccess, EPipelineStage::bits lastStage);
 		
-		void _CheckAccess (const Block &block, EPipelineAccess::bits access, EPipelineStage::type stage) const;
-
-		static bool _IsIntersects (const Block &curr, const Block &next, BytesU offset, BytesU size);
+		static void _ValidateMemFlags (INOUT EGpuMemory::bits &flags);
+		static void _ValidateDescription (INOUT BufferDescription &descr);
 	};
 //-----------------------------------------------------------------------------
 
 
 	
-	const TypeIdList	SWBuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SWBuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -145,7 +118,7 @@ namespace PlatformSW
 =================================================
 */
 	SWBuffer::SWBuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
-		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),			_memFlags( ci.memFlags ),
 		_memAccess( ci.access ),	_useMemMngr( ci.allocMem ),
 		_isCreated( false ),		_isBindedToMemory( false )
@@ -167,12 +140,15 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWBuffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &SWBuffer::_GetSWDeviceInfo );
 		_SubscribeOnMsg( this, &SWBuffer::_GetSWPrivateClasses );
-		_SubscribeOnMsg( this, &SWBuffer::_GpuMemoryRegionChanged );
 		_SubscribeOnMsg( this, &SWBuffer::_GetSWBufferMemoryLayout );
 		_SubscribeOnMsg( this, &SWBuffer::_GetSWBufferMemoryRequirements );
-		_SubscribeOnMsg( this, &SWBuffer::_SWBufferBarrier );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
+		
+		_ValidateMemFlags( INOUT _memFlags );
+		_ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -338,7 +314,7 @@ namespace PlatformSW
 			}
 			else
 			{
-				_SendMsg( ModuleMsg::Delete{} );
+				Send( ModuleMsg::Delete{} );
 			}
 		}
 		return true;
@@ -388,20 +364,10 @@ namespace PlatformSW
 */
 	void SWBuffer::_OnMemoryBinded ()
 	{
-		GpuMsg::GetSWMemoryData			req_data;
-		GpuMsg::GetGpuMemoryDescription	req_descr;
+		_memory		= _memObj->Request( GpuMsg::GetSWMemoryData{} );
+		_memAccess	= _memObj->Request( GpuMsg::GetGpuMemoryDescription{} ).access;
 
-		_memObj->Send( req_data );
-		_memObj->Send( req_descr );
-
-		_memory		= *req_data.result;
-		_memAccess	= req_descr.result->access;
-
-		_blocks.Clear();
-		_blocks.PushBack(Block{ 0_b, EPipelineAccess::bits(), EPipelineStage::Unknown });
-		_blocks.PushBack(Block{ _memory.Size(), EPipelineAccess::bits(), EPipelineStage::Unknown });
-
-		CHECK( BytesUL(_memory.Size()) == _descr.size );
+		CHECK( _memory.Size() == _descr.size );
 	}
 
 /*
@@ -420,30 +386,6 @@ namespace PlatformSW
 
 		_isBindedToMemory	= false;
 		_memory				= Uninitialized;
-		_blocks.Clear();
-	}
-
-/*
-=================================================
-	_GpuMemoryRegionChanged
-=================================================
-*/
-	bool SWBuffer::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
-	{
-		// request buffer memory barrier
-		TODO( "" );
-		return false;
-	}
-	
-/*
-=================================================
-	_IsIntersects
-=================================================
-*/
-	bool SWBuffer::_IsIntersects (const Block &curr, const Block &next, BytesU offset, BytesU size)
-	{
-		return !!(	((curr.offset < offset + size) & (next.offset > offset)) |
-					((offset + size < curr.offset) & (offset > next.offset)) );
 	}
 
 /*
@@ -454,20 +396,6 @@ namespace PlatformSW
 	bool SWBuffer::_GetSWBufferMemoryLayout (const GpuMsg::GetSWBufferMemoryLayout &msg)
 	{
 		CHECK_ERR( _isBindedToMemory );
-
-		// check access
-		for (usize i = 1; i < _blocks.Count(); ++i)
-		{
-			auto const&	curr = _blocks[i-1];
-			auto const&	next = _blocks[i];
-
-			if ( _IsIntersects( curr, next, msg.offset, msg.size ) )
-			{
-				_CheckAccess( curr, msg.access, msg.stage );
-			}
-		}
-
-		_MergeBlocks( Block{ msg.offset, msg.access, msg.stage }, msg.size );
 
 		msg.result.Set({ _memory.SubArray( usize(msg.offset), usize(msg.size) ), _align, _memAccess });
 		return true;
@@ -480,122 +408,32 @@ namespace PlatformSW
 */
 	bool SWBuffer::_GetSWBufferMemoryRequirements (const GpuMsg::GetSWBufferMemoryRequirements &msg)
 	{
-		msg.result.Set({ BytesU(_descr.size), _align });
+		msg.result.Set({ _descr.size, _align });
 		return true;
 	}
 	
 /*
 =================================================
-	_SWBufferBarrier
+	_ValidateMemFlags
 =================================================
 */
-	bool SWBuffer::_SWBufferBarrier (const GpuMsg::SWBufferBarrier &msg)
+	void SWBuffer::_ValidateMemFlags (INOUT EGpuMemory::bits &flags)
 	{
-		for (auto& br : msg.barriers)
+		if ( flags[EGpuMemory::Dedicated] and flags[EGpuMemory::SupportAliasing] )
 		{
-			ASSERT( br.buffer == this );
+			WARNING( "not supported" );
 
-			_MergeBlocks( Block{ BytesU(br.offset), br.dstAccessMask, EPipelineStage::BottomOfPipe }, BytesU(br.size ));
-
-			//_MergeBlocks( Block{ BytesU(br.offset), BytesU(br.size), br.dstAccessMask, msg.dstStageMask }, br.srcAccessMask, msg.srcStageMask );
+			flags[EGpuMemory::Dedicated] = false;
 		}
-		return true;
 	}
-
-/*
-=================================================
-	_MergeBlocks
-=================================================
-*/
-	bool SWBuffer::_MergeBlocks (Block newBlock, BytesU blockSize)
-	{
-		// insert new blocks
-		Block	curr_block	= _blocks.Front();
-
-		for (usize i = 1; i < _blocks.Count(); ++i)
-		{
-			auto&			curr	= _blocks[i-1];
-			auto const&		next	= _blocks[i];
-			const BytesU	size	= next.offset - curr.offset;
-			
-			if ( not _IsIntersects( curr, next, newBlock.offset, blockSize ) )
-				continue;
-
-			if ( curr.offset < newBlock.offset and
-				 newBlock.offset < next.offset )
-			{
-				curr_block = curr;
-				curr_block.offset = newBlock.offset;
-
-				_blocks.Insert( curr_block, i );
-				continue;
-			}
-
-			if ( curr.offset == newBlock.offset and
-				 blockSize > 0 )
-			{
-				curr_block	= curr;
-				curr		= newBlock;
-
-				if ( blockSize < size )
-				{
-					curr_block.offset += blockSize;
-
-					_blocks.Insert( curr_block, i );
-					break;
-				}
-				else
-				{
-					blockSize		-= size;
-					newBlock.offset += size;
-				}
-			}
-				 
-		}
-
-		// optimize
-		for (usize i = 1; i+1 < _blocks.Count(); ++i)
-		{
-			auto const&		curr	= _blocks[i-1];
-			auto const&		next	= _blocks[i];
-
-			if ( curr.access == next.access and
-				 curr.stage == next.stage )
-			{
-				_blocks.Erase( i );
-				--i;
-			}
-		}
-		return true;
-	}
-	
-	/*void SWBuffer::_MergeBlocks (const Block &newBlock, EPipelineAccess::bits lastAccess, EPipelineStage::bits lastStage)
-	{
-		// TODO
-		_MergeBlocks( newBlock );
-	}*/
 	
 /*
 =================================================
-	_CheckAccess
+	_ValidateDescription
 =================================================
 */
-	void SWBuffer::_CheckAccess (const Block &block, EPipelineAccess::bits accessMask, EPipelineStage::type stage) const
+	void SWBuffer::_ValidateDescription (INOUT BufferDescription &)
 	{
-		const bool	was_written		= !!(block.access & EPipelineAccess::WriteMask);
-		const bool	will_be_read	= !!(accessMask & EPipelineAccess::ReadMask);
-		const bool	will_be_written	= !!(accessMask & EPipelineAccess::WriteMask);
-		const bool	need_sync		= was_written and will_be_read;
-		
-		// read,  read  -> no sync
-		// write, read  -> sync
-		// write, write -> no sync ?
-
-		SW_DEBUG_REPORT( not need_sync,
-						 "missed synchronization between read and write access: from stage '"_str <<
-						 EPipelineStage::ToString( block.stage ) << "', with access '" << EPipelineAccess::ToString( block.access ) <<
-						 "' to stage '" << EPipelineStage::ToString( stage ) << "', with access '" << EPipelineAccess::ToString( accessMask ) << "'",
-						 EDbgReport::Error );
 	}
 
 }	// PlatformSW

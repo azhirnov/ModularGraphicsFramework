@@ -423,28 +423,19 @@ namespace PlatformCL
 */
 	bool CL1Device::AddSharedObj (const ModulePtr &owner, const ModulePtr &obj)
 	{
-		ESharing::type	sharing = ESharing::None;
-		cl_mem			id		= null;
+		GpuMsg::GetCLBufferID::Data		result;
 
-		if ( obj->GetSupportedMessages().HasType< GpuMsg::GetCLBufferID >() )
+		if ( obj->SupportsAnyMessage< CompileTime::TypeListFrom< GpuMsg::GetCLBufferID >>() )
 		{
-			GpuMsg::GetCLBufferID	req_id;
-			obj->Send( req_id );
-
-			sharing	= req_id.result->sharing;
-			id		= req_id.result->id;
+			result = obj->Request( GpuMsg::GetCLBufferID{} );
 		}
 		else
-		if ( obj->GetSupportedMessages().HasType< GpuMsg::GetCLImageID >() )
+		if ( obj->SupportsAnyMessage< CompileTime::TypeListFrom< GpuMsg::GetCLImageID >>() )
 		{
-			GpuMsg::GetCLImageID	req_id;
-			obj->Send( req_id );
-
-			sharing	= req_id.result->sharing;
-			id		= req_id.result->id;
+			result = obj->Request( GpuMsg::GetCLImageID{} );
 		}
 
-		return AddSharedObj( owner, id, sharing );
+		return AddSharedObj( owner, result.id, result.sharing );
 	}
 	
 /*
@@ -605,7 +596,7 @@ namespace PlatformCL
 		log << "\nCompute Units:    " << value32;
 
 		CL_CALL( clGetDeviceInfo( _device, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(value64), OUT &value64, null ) );
-		log << "\nLocal Mem:        " << ToString( Bytes<ulong>::FromBytes( value64 ) );
+		log << "\nLocal Mem:        " << ToString( BytesU::FromBytes( value64 ) );
 
 		CL_CALL( clGetDeviceInfo( _device, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size), OUT &size, null ) );
 		log << "\nMax invocations:  " << size;
@@ -617,17 +608,17 @@ namespace PlatformCL
 		log << "\nAddress bits:     " << value32;
 
 		CL_CALL( clGetDeviceInfo( _device, CL_DEVICE_GLOBAL_MEM_CACHE_SIZE, sizeof(value64), OUT &value64, null ) );
-		log << "\nGlobal Cache:     " << ToString( Bytes<ulong>::FromBytes( value64 ) );		// L1 cache
+		log << "\nGlobal Cache:     " << ToString( BytesU::FromBytes( value64 ) );		// L1 cache
 
 		CL_CALL( clGetDeviceInfo( _device, CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(value64), OUT &value64, null ) );
 		_totalMemory.SetBytes( value64 );
-		log << "\nGlobal Mem:       " << ToString( Bytes<ulong>::FromBytes( value64 ) );
+		log << "\nGlobal Mem:       " << ToString( BytesU::FromBytes( value64 ) );
 		
 		CL_CALL( clGetDeviceInfo( _device, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(value64), OUT &value64, null ) );
-		log << "\nConst Buffer:     " << ToString( Bytes<ulong>::FromBytes( value64 ) );
+		log << "\nConst Buffer:     " << ToString( BytesU::FromBytes( value64 ) );
 
 		CL_CALL( clGetDeviceInfo( _device, CL_DEVICE_MAX_MEM_ALLOC_SIZE, sizeof(value64), OUT &value64, null ) );
-		log << "\nMax alloc size:   " << ToString( Bytes<ulong>::FromBytes( value64 ) );
+		log << "\nMax alloc size:   " << ToString( BytesU::FromBytes( value64 ) );
 		
 		CL_CALL( clGetDeviceInfo( _device, CL_DEVICE_MAX_CONSTANT_ARGS, sizeof(value32), OUT &value32, null ) );
 		log << "\nConst args:       " << value32;
@@ -639,7 +630,7 @@ namespace PlatformCL
 		log << "\nEncoding:         " << ( valueb ? "Little endian" : "Big endian");
 		
 		CL_CALL( clGetDeviceInfo( _device, CL_DEVICE_MEM_BASE_ADDR_ALIGN, sizeof(value32), OUT &value32, null ) );
-		log << "\nMem align:        " << ToString( Bits<uint>( value32 ) );
+		log << "\nMem align:        " << ToString( BitsU( value32 ) );
 
 		CL_CALL( clGetDeviceInfo( _device, CL_DEVICE_IMAGE2D_MAX_WIDTH, sizeof(size), OUT &size, null ) );
 		log << "\nImage2D width:    " << size << " px";

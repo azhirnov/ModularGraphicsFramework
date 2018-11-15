@@ -18,16 +18,14 @@ namespace Base
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
 											DSMsg::OpenFileForRead,
 											DSMsg::IsUriExists,
 											DSMsg::CreateDataInputModule
-										> >;
+										>;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 		
@@ -37,7 +35,6 @@ namespace Base
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -63,7 +60,6 @@ namespace Base
 //-----------------------------------------------------------------------------
 
 
-	const TypeIdList	BuiltinStorageDataProvider::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	BuiltinStorageDataProvider::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -72,7 +68,7 @@ namespace Base
 =================================================
 */
 	BuiltinStorageDataProvider::BuiltinStorageDataProvider (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::BuiltinStorageDataProvider &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_fileMap{ ci.func }
 	{
 		SetDebugName( "BuiltinStorageDataProvider" );
@@ -93,7 +89,7 @@ namespace Base
 		_SubscribeOnMsg( this, &BuiltinStorageDataProvider::_IsUriExists );
 		_SubscribeOnMsg( this, &BuiltinStorageDataProvider::_CreateDataInputModule );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 		
 		_AttachSelfToManager( ci.manager, DataProviderManagerModuleID, false );
 	}

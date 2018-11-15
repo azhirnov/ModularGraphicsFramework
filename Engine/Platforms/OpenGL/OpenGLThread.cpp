@@ -10,6 +10,8 @@
 #include "Engine/Platforms/OpenGL/450/GL4SamplerCache.h"
 #include "Engine/Platforms/OpenGL/450/GL4ResourceCache.h"
 #include "Engine/Platforms/OpenGL/Windows/GLWinContext.h"
+#include "Engine/Platforms/OpenGL/Linux/GLX11Context.h"
+#include "Engine/Platforms/OpenGL/EGL/EGLRenderContext.h"
 
 namespace Engine
 {
@@ -25,21 +27,15 @@ namespace Platforms
 	// types
 	private:
 		using QueueMsgList_t		= MessageListFrom<
-											GpuMsg::SubmitGraphicsQueueCommands,
-											GpuMsg::SubmitComputeQueueCommands,
+											GpuMsg::SubmitCommands,
 											GpuMsg::SyncGLClientWithDevice
 										>;
 		using QueueEventList_t		= MessageListFrom< GpuMsg::DeviceLost >;
 
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Compose
-										> >
-										::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
-											OSMsg::WindowCreated,
-											OSMsg::WindowBeforeDestroy,
 											GpuMsg::GetGraphicsModules,
 											GpuMsg::ThreadBeginFrame,
 											GpuMsg::ThreadEndFrame,
@@ -49,7 +45,7 @@ namespace Platforms
 											GpuMsg::GetGLDeviceInfo,
 											GpuMsg::GetGLPrivateClasses,
 											GpuMsg::GetDeviceProperties
-										> >::Append< QueueMsgList_t >;
+										>;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::ThreadBeginFrame,
@@ -66,7 +62,6 @@ namespace Platforms
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		
@@ -128,7 +123,6 @@ namespace Platforms
 
 
 	
-	const TypeIdList	OpenGLThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	OpenGLThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -137,7 +131,7 @@ namespace Platforms
 =================================================
 */
 	OpenGLThread::OpenGLThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_settings( ci.settings ),	_device( gs ),
 		_isWindowVisible( false )
 	{
@@ -166,6 +160,8 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenGLThread::_GetGraphicsSettings );
 		_SubscribeOnMsg( this, &OpenGLThread::_GetComputeSettings );
 		_SubscribeOnMsg( this, &OpenGLThread::_GetDeviceProperties );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		CHECK( ci.shared.IsNull() );	// sharing is not supported yet
 
@@ -179,7 +175,7 @@ namespace Platforms
 */
 	OpenGLThread::~OpenGLThread ()
 	{
-		LOG( "OpenGLThread finalized", ELog::Debug );
+		//LOG( "OpenGLThread finalized", ELog::Debug );
 
 		ASSERT( _window.IsNull() );
 	}
@@ -221,7 +217,7 @@ namespace Platforms
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 											GLCommandQueueModuleID,
 											GlobalSystems(),
-											CreateInfo::GpuCommandQueue{ this, EQueueFamily::Default },
+											CreateInfo::GpuCommandQueue{ this, { EQueueFamily::Default, 1.0f } },
 											OUT _cmdQueue ) );
 			
 			CHECK_ERR( _Attach( "queue", _cmdQueue ) );
@@ -236,7 +232,7 @@ namespace Platforms
 		// if window already created
 		if ( _IsComposedState( _window->GetState() ) )
 		{
-			_SendMsg( OSMsg::WindowCreated{} );
+			Send( OSMsg::WindowCreated{} );
 		}
 		return true;
 	}
@@ -302,8 +298,8 @@ namespace Platforms
 */	
 	bool OpenGLThread::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg.compute.Set( OpenGLObjectsConstructor::GetComputeModules() );
-		msg.graphics.Set( OpenGLObjectsConstructor::GetGraphicsModules() );
+		msg.result.Set({ OpenGLObjectsConstructor::GetComputeModules(),
+						 OpenGLObjectsConstructor::GetGraphicsModules() });
 		return true;
 	}
 
@@ -319,7 +315,7 @@ namespace Platforms
 		
 		_context.MakeCurrent();
 
-		msg.result.Set({ _device.GetCurrentFramebuffer(), _device.GetImageIndex() });
+		msg.result.Set({ _device.GetCurrentFramebuffer(), null, _device.GetImageIndex() });
 		return true;
 	}
 
@@ -335,7 +331,7 @@ namespace Platforms
 		if ( msg.framebuffer )
 			CHECK_ERR( msg.framebuffer == _device.GetCurrentFramebuffer() );
 
-		_cmdQueue->Send( msg._Cast<GpuMsg::SubmitGraphicsQueueCommands>() );
+		_cmdQueue->Send( Cast<GpuMsg::SubmitCommands const&>( msg));
 		_cmdQueue->Send( GpuMsg::GLFlushQueue{} );
 		
 		CHECK_ERR( _device.EndFrame() );
@@ -364,21 +360,19 @@ namespace Platforms
 */
 	bool OpenGLThread::_CreateDevice ()
 	{
-		using namespace Engine::PlatformTools;
-
-		OSMsg::WindowGetDescription	req_descr;
-		_window->Send( req_descr );
+		const uint2  surf_size = _window->Request( OSMsg::WindowGetDescription{} ).surfaceSize;
 
 		if ( _settings.colorFmt == EPixelFormat::Unknown )
 			_settings.colorFmt = EPixelFormat::RGBA8_UNorm;
-
+		
+		using namespace Engine::PlatformTools;
 		CHECK_ERR( WindowHelper::GetWindowHandle( _window,
-						LAMBDA( this ) (const WindowHelper::WinAPIWindow &data)
+						LAMBDA( this ) (const auto &wnd)
 						{
-							return _context.Create( data.window, INOUT _settings );
+							return _context.Create( wnd, INOUT _settings );
 						}) );
 
-		CHECK_ERR( _device.Initialize( req_descr.result->surfaceSize, _settings.colorFmt,
+		CHECK_ERR( _device.Initialize( surf_size, _settings.colorFmt,
 									   _settings.depthStencilFmt, _settings.samples ) );
 
 		if ( _settings.flags[ GraphicsSettings::EFlags::DebugContext ] )

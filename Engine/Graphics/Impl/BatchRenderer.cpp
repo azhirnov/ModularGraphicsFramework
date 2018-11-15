@@ -21,13 +21,13 @@ namespace Graphics
 	{
 	// types
 	private:
-		using SupportedMessages_t	= GraphicsBaseModule::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											GraphicsMsg::BatchRendererSetMaterial,
 											GraphicsMsg::BatchRendererSetCustomMaterial,
 											GraphicsMsg::AddBatch,
 											GraphicsMsg::BeginBatchRenderer,
 											GraphicsMsg::FlushBatchRenderer
-										> >;
+										>;
 
 		using SupportedEvents_t		= GraphicsBaseModule::SupportedEvents_t;
 		
@@ -82,7 +82,6 @@ namespace Graphics
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -147,7 +146,6 @@ namespace Graphics
 
 
 	
-	const TypeIdList	BatchRenderer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	BatchRenderer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -156,7 +154,7 @@ namespace Graphics
 =================================================
 */
 	BatchRenderer::BatchRenderer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::BatchRenderer &ci) :
-		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci )
 	{
 		SetDebugName( "BatchRenderer" );
@@ -177,7 +175,7 @@ namespace Graphics
 		_SubscribeOnMsg( this, &BatchRenderer::_BeginBatchRenderer );
 		_SubscribeOnMsg( this, &BatchRenderer::_FlushBatchRenderer );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGpuThread( ci.gpuThread ), UntypedID_t(0), true );
 
@@ -226,7 +224,7 @@ namespace Graphics
 		GpuMsg::GetGraphicsModules	req_ids;
 		CHECK( _GetManager()->Send( req_ids ) );
 
-		_moduleIDs = *req_ids.graphics;
+		_moduleIDs = req_ids.result->graphics;
 
 		return Module::_Link_Impl( msg );
 	}
@@ -320,7 +318,7 @@ namespace Graphics
 
 			// user defined pipeline must be compatible with current vertex input state,
 			// names from batch attribs will be ignored
-			CHECK_ERR( req_descr.result->vertexInput.Equals( aligned_attribs, true ) );
+			CHECK_ERR( req_descr.result->vertexInput.EqualsRelaxed( aligned_attribs ) );
 		}
 		else
 		{
@@ -341,7 +339,7 @@ namespace Graphics
 */
 	void BatchRenderer::_AlignVertices (Ptr<Batch> batch)
 	{
-		const BytesU	stride	= batch->attribs.Bindings().Front().second.stride;
+		const auto		stride	= batch->attribs.Bindings().Front().second.stride;
 		const BytesU	aligned	= AlignToLarge( _vertices.Size(), stride );
 
 		_vertices.Resize( usize(aligned) );
@@ -366,7 +364,7 @@ namespace Graphics
 
 		for (usize i = 0; i < count; ++i)
 		{
-			MemCopy( _vertices.SubArray( offset + dst_stride * i, src_stride ),
+			MemCopy( OUT _vertices.SubArray( offset + dst_stride * i, src_stride ),
 					 data.vertices.SubArray( src_stride * i, src_stride ) );
 		}
 		return true;
@@ -763,7 +761,7 @@ namespace Graphics
 		// copy vertices
 		{
 			vbuffer->Send( GpuMsg::MapMemoryToCpu{ GpuMsg::EMappingFlags::WriteDiscard, 0_b, _vertices.Size() });
-			vbuffer->Send( DSMsg::WriteRegion { 0_b, _vertices });
+			vbuffer->Send( DSMsg::WriteMemRange { 0_b, _vertices });
 			vbuffer->Send( GpuMsg::UnmapMemory{} );
 		}
 
@@ -773,7 +771,7 @@ namespace Graphics
 			ibuffer->Send( GpuMsg::MapMemoryToCpu{ GpuMsg::EMappingFlags::WriteDiscard, 0_b, indices_size });
 
 			for (auto& batch : _batches) {
-				ibuffer->Send( DSMsg::WriteRegion{ offset, ArrayCRef<uint>( batch.indices ) });
+				ibuffer->Send( DSMsg::WriteMemRange{ offset, ArrayCRef<uint>( batch.indices ) });
 				offset += batch.indices.Size();
 			}
 			ibuffer->Send( GpuMsg::UnmapMemory{} );

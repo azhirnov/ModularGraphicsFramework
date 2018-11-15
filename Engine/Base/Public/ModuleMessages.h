@@ -61,7 +61,7 @@ namespace _BaseMessages_
 	using color4f		= GX_STL::GXMath::color4f;
 	
 
-	struct _MessageBase_ : CompileTime::FastCopyable
+	struct _MsgBase_ : CompileTime::FastCopyable
 	{
 		using __is_message	= bool;
 	};
@@ -77,7 +77,7 @@ namespace ModuleMsg
 	//
 	// Attach / Detach Module from Parent
 	//
-	struct AttachModule : _MessageBase_
+	struct AttachModule : _MsgBase_
 	{
 	// variables
 		ModuleName_t	name;		// can be empty
@@ -88,7 +88,7 @@ namespace ModuleMsg
 		AttachModule (StringCRef name, const ModulePtr &unit) : name( name ), newModule( unit ) {}
 	};
 	
-	struct DetachModule : _MessageBase_
+	struct DetachModule : _MsgBase_
 	{
 	// variables
 		ModulePtr	oldModule;
@@ -97,7 +97,7 @@ namespace ModuleMsg
 		explicit DetachModule (const ModulePtr &unit) : oldModule{unit} {}
 	};
 
-	struct ReplaceModule : _MessageBase_
+	struct ReplaceModule : _MsgBase_
 	{
 	// variables
 		ModuleName_t	name;		// can be empty
@@ -113,7 +113,7 @@ namespace ModuleMsg
 	//
 	// On Module Attached / Detached from Parent
 	//
-	struct OnModuleAttached : _MessageBase_
+	struct OnModuleAttached : _MsgBase_
 	{
 	// variables
 		ModulePtr		parent;
@@ -129,7 +129,7 @@ namespace ModuleMsg
 		{}
 	};
 
-	struct OnModuleDetached : _MessageBase_
+	struct OnModuleDetached : _MsgBase_
 	{
 	// variables
 		ModulePtr		parent;
@@ -152,19 +152,19 @@ namespace ModuleMsg
 	//
 	// Link All Modules Message
 	//
-	struct Link : _MessageBase_
+	struct Link : _MsgBase_
 	{
 	};
 
 	// event
-	struct AfterLink : _MessageBase_
+	struct AfterLink : _MsgBase_
 	{};
 
 
 	//
 	// Compose 
 	//
-	struct Compose : _MessageBase_
+	struct Compose : _MsgBase_
 	{
 		// this is the last chance to initialize module.
 
@@ -172,14 +172,14 @@ namespace ModuleMsg
 	};
 
 	// event
-	struct AfterCompose : _MessageBase_
+	struct AfterCompose : _MsgBase_
 	{};
 
 	
 	//
 	// Update Module Message
 	//
-	struct Update : _MessageBase_
+	struct Update : _MsgBase_
 	{
 	// variables
 		TimeL		timeDelta;
@@ -193,7 +193,7 @@ namespace ModuleMsg
 	//
 	// Find Module
 	//
-	struct FindModule : _MessageBase_
+	struct FindModule : _MsgBase_
 	{
 	// variables
 		StringCRef				name;
@@ -207,7 +207,7 @@ namespace ModuleMsg
 	//
 	// Find Module with Messages and Events
 	//
-	struct FindModuleByTypes : _MessageBase_
+	struct FindModuleByTypes : _MsgBase_
 	{
 	// variables
 		Runtime::TypeIdList		messages;
@@ -225,7 +225,7 @@ namespace ModuleMsg
 	//
 	// Search Modules
 	//
-	struct ModulesDeepSearch : _MessageBase_
+	struct ModulesDeepSearch : _MsgBase_
 	{
 	// variables
 		ArrayCRef<UntypedID_t>		ids;
@@ -245,7 +245,7 @@ namespace ModuleMsg
 	//
 	// Search Modules with Messages and Events
 	//
-	struct ModulesDeepSearchByTypes : _MessageBase_
+	struct ModulesDeepSearchByTypes : _MsgBase_
 	{
 	// variables
 		Runtime::TypeIdList			messages;
@@ -268,7 +268,7 @@ namespace ModuleMsg
 	//
 	// Delete Module Message
 	//
-	struct Delete : _MessageBase_
+	struct Delete : _MsgBase_
 	{
 	};
 
@@ -282,7 +282,7 @@ namespace ModuleMsg
 	//
 	// Add / Remove Module from Manager
 	//
-	struct AddToManager : _MessageBase_
+	struct AddToManager : _MsgBase_
 	{
 	// variables
 		ModulePtr	module;
@@ -291,7 +291,7 @@ namespace ModuleMsg
 		explicit AddToManager (const ModulePtr &module) : module{module} {}
 	};
 
-	struct RemoveFromManager : _MessageBase_
+	struct RemoveFromManager : _MsgBase_
 	{
 	// variables
 		ModuleWPtr	module;
@@ -304,7 +304,7 @@ namespace ModuleMsg
 	//
 	// On Module Manager Changed
 	//
-	struct OnManagerChanged : _MessageBase_
+	struct OnManagerChanged : _MsgBase_
 	{
 	// variables
 		ModulePtr	oldManager;		// unsubscribe from old manager events

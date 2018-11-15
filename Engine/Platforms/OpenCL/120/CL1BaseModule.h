@@ -24,7 +24,7 @@ namespace GpuMsg
 	//
 	// Get Private Classes
 	//
-	struct GetCLPrivateClasses : _MessageBase_
+	struct GetCLPrivateClasses : _MsgBase_
 	{
 		struct Classes {
 			PlatformCL::CL1Device *			device			= null;
@@ -51,15 +51,12 @@ namespace PlatformCL
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >
-										::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::OnManagerChanged,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetCLDeviceInfo,
 											GpuMsg::GetCLPrivateClasses
-										> >;
+										>;
 
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Compose,
@@ -78,7 +75,6 @@ namespace PlatformCL
 	protected:
 		CL1BaseModule (const GlobalSystemsRef gs,
 					   const ModuleConfig &config,
-					   const TypeIdList *msgTypes,
 					   const TypeIdList *eventTypes);
 
 		ND_ Ptr< CL1Device >		GetDevice ()		const	{ return _clDevice; }

@@ -4,6 +4,30 @@
 namespace Pipelines
 {
 // Packing: Std430
+struct FindMSB_SSBO final
+{
+	uint  results[16];    // offset: 0, align: 4
+
+	FindMSB_SSBO ()
+	{
+		STATIC_ASSERT( sizeof(FindMSB_SSBO) == 64 );
+		STATIC_ASSERT( (offsetof( FindMSB_SSBO, results ) == 0) and (sizeof( results ) == 64) );
+	}
+};
+
+// Packing: Std430
+struct VecSwizzle_SSBO final
+{
+	uint  results[8];    // offset: 0, align: 4
+
+	VecSwizzle_SSBO ()
+	{
+		STATIC_ASSERT( sizeof(VecSwizzle_SSBO) == 32 );
+		STATIC_ASSERT( (offsetof( VecSwizzle_SSBO, results ) == 0) and (sizeof( results ) == 32) );
+	}
+};
+
+// Packing: Std430
 struct UnnamedBuffer_SSBO final
 {
 	uint  data[2];    // offset: 0, align: 4
@@ -18,40 +42,14 @@ struct UnnamedBuffer_SSBO final
 };
 
 // Packing: Std430
-struct FindLSB_SSBO final
+struct InlineAll_SSBO final
 {
 	uint  results[16];    // offset: 0, align: 4
 
-	FindLSB_SSBO ()
+	InlineAll_SSBO ()
 	{
-		STATIC_ASSERT( sizeof(FindLSB_SSBO) == 64 );
-		STATIC_ASSERT( (offsetof( FindLSB_SSBO, results ) == 0) and (sizeof( results ) == 64) );
-	}
-};
-
-// Packing: Std430
-struct GlobalToLocal_SSBO final
-{
-	uint  data[4];    // offset: 0, align: 4
-	uint  results[2];    // offset: 16, align: 4
-
-	GlobalToLocal_SSBO ()
-	{
-		STATIC_ASSERT( sizeof(GlobalToLocal_SSBO) == 24 );
-		STATIC_ASSERT( (offsetof( GlobalToLocal_SSBO, data ) == 0) and (sizeof( data ) == 16) );
-		STATIC_ASSERT( (offsetof( GlobalToLocal_SSBO, results ) == 16) and (sizeof( results ) == 8) );
-	}
-};
-
-// Packing: Std430
-struct VecSwizzle_SSBO final
-{
-	uint  results[8];    // offset: 0, align: 4
-
-	VecSwizzle_SSBO ()
-	{
-		STATIC_ASSERT( sizeof(VecSwizzle_SSBO) == 32 );
-		STATIC_ASSERT( (offsetof( VecSwizzle_SSBO, results ) == 0) and (sizeof( results ) == 32) );
+		STATIC_ASSERT( sizeof(InlineAll_SSBO) == 64 );
+		STATIC_ASSERT( (offsetof( InlineAll_SSBO, results ) == 0) and (sizeof( results ) == 64) );
 	}
 };
 
@@ -82,26 +80,28 @@ struct Include_SSBO final
 };
 
 // Packing: Std430
-struct InlineAll_SSBO final
+struct GlobalToLocal_SSBO final
 {
-	uint  results[16];    // offset: 0, align: 4
+	uint  data[4];    // offset: 0, align: 4
+	uint  results[2];    // offset: 16, align: 4
 
-	InlineAll_SSBO ()
+	GlobalToLocal_SSBO ()
 	{
-		STATIC_ASSERT( sizeof(InlineAll_SSBO) == 64 );
-		STATIC_ASSERT( (offsetof( InlineAll_SSBO, results ) == 0) and (sizeof( results ) == 64) );
+		STATIC_ASSERT( sizeof(GlobalToLocal_SSBO) == 24 );
+		STATIC_ASSERT( (offsetof( GlobalToLocal_SSBO, data ) == 0) and (sizeof( data ) == 16) );
+		STATIC_ASSERT( (offsetof( GlobalToLocal_SSBO, results ) == 16) and (sizeof( results ) == 8) );
 	}
 };
 
 // Packing: Std430
-struct FindMSB_SSBO final
+struct FindLSB_SSBO final
 {
 	uint  results[16];    // offset: 0, align: 4
 
-	FindMSB_SSBO ()
+	FindLSB_SSBO ()
 	{
-		STATIC_ASSERT( sizeof(FindMSB_SSBO) == 64 );
-		STATIC_ASSERT( (offsetof( FindMSB_SSBO, results ) == 0) and (sizeof( results ) == 64) );
+		STATIC_ASSERT( sizeof(FindLSB_SSBO) == 64 );
+		STATIC_ASSERT( (offsetof( FindLSB_SSBO, results ) == 0) and (sizeof( results ) == 64) );
 	}
 };
 
@@ -124,14 +124,14 @@ struct AtomicAdd_SSBO final
 }	// Pipelines
 
 namespace GX_STL::CompileTime::_ctime_hidden_ {
-	template <> struct _IsPOD< Pipelines::UnnamedBuffer_SSBO > { static const bool value = true; };
-	template <> struct _IsPOD< Pipelines::FindLSB_SSBO > { static const bool value = true; };
-	template <> struct _IsPOD< Pipelines::GlobalToLocal_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::FindMSB_SSBO > { static const bool value = true; };
 	template <> struct _IsPOD< Pipelines::VecSwizzle_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::UnnamedBuffer_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::InlineAll_SSBO > { static const bool value = true; };
 	template <> struct _IsPOD< Pipelines::AtomicAdd_Struct > { static const bool value = true; };
 	template <> struct _IsPOD< Pipelines::Include_SSBO > { static const bool value = true; };
-	template <> struct _IsPOD< Pipelines::InlineAll_SSBO > { static const bool value = true; };
-	template <> struct _IsPOD< Pipelines::FindMSB_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::GlobalToLocal_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::FindLSB_SSBO > { static const bool value = true; };
 	template <> struct _IsPOD< Pipelines::AtomicAdd_SSBO > { static const bool value = true; };
 }
 

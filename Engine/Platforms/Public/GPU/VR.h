@@ -72,7 +72,7 @@ namespace GpuMsg
 	//
 	// Get VR Device Info
 	//
-	struct GetVRDeviceInfo : _MessageBase_
+	struct GetVRDeviceInfo : _MsgBase_
 	{
 	// types
 		struct Info {
@@ -81,14 +81,14 @@ namespace GpuMsg
 		};
 
 	// variables
-		Out< Info >		result;
+		Out_opt< Info >		result;
 	};
 
 
 	//
 	// Thread Begin / End VR Frame
 	//
-	struct ThreadBeginVRFrame : _MessageBase_
+	struct ThreadBeginVRFrame : _MsgBase_
 	{
 	// types
 		struct PerEye : CompileTime::FastCopyable
@@ -119,7 +119,7 @@ namespace GpuMsg
 	};
 
 
-	struct ThreadEndVRFrame : SubmitGraphicsQueueCommands
+	struct ThreadEndVRFrame : SubmitCommands
 	{};
 
 	

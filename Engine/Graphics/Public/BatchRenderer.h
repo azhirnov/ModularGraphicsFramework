@@ -38,7 +38,7 @@ namespace GraphicsMsg
 	//
 	// Begin Batch Renderer
 	//
-	struct BeginBatchRenderer : _MessageBase_
+	struct BeginBatchRenderer : _MsgBase_
 	{
 	// variables
 		ModulePtr		renderPass;		// needed to create pipelines, if null then used default render pass
@@ -52,7 +52,7 @@ namespace GraphicsMsg
 	//
 	// Flush Batch Renderer
 	//
-	struct FlushBatchRenderer : _MessageBase_
+	struct FlushBatchRenderer : _MsgBase_
 	{
 	// variables
 		ModulePtr			framebuffer;
@@ -69,7 +69,7 @@ namespace GraphicsMsg
 	//
 	// Set Default Material to Batch Renderer
 	//
-	struct BatchRendererSetMaterial : _MessageBase_
+	struct BatchRendererSetMaterial : _MsgBase_
 	{
 	// types
 		using LayerName_t	= StaticString<32>;
@@ -90,7 +90,7 @@ namespace GraphicsMsg
 	//
 	// Set Custom Material to Batch Renderer
 	//
-	struct BatchRendererSetCustomMaterial : _MessageBase_
+	struct BatchRendererSetCustomMaterial : _MsgBase_
 	{
 	// types
 		using LayerName_t	= BatchRendererSetMaterial::LayerName_t;
@@ -110,7 +110,7 @@ namespace GraphicsMsg
 	//
 	// Add Batch to Batch Renderer
 	//
-	struct AddBatch : _MessageBase_
+	struct AddBatch : _MsgBase_
 	{
 	// types
 		using VertexInputState	= Platforms::VertexInputState;

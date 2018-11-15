@@ -10,7 +10,6 @@ namespace Engine
 namespace Base
 {
 	
-	const TypeIdList	ThreadManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	ThreadManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -19,7 +18,7 @@ namespace Base
 =================================================
 */
 	ThreadManager::ThreadManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ThreadManager &) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_currentThread{New<ParallelThreadImpl>( ParallelThreadModuleID, gs, CreateInfo::Thread{ "MainThread", null } )}
 	{
 		SetDebugName( "ThreadManager" );
@@ -39,10 +38,10 @@ namespace Base
 		_SubscribeOnMsg( this, &ThreadManager::_AddThreadToManager );
 		_SubscribeOnMsg( this, &ThreadManager::_RemoveFromManager );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 		
 		_currentThread->_SetManager( this );
-		CHECK( _SendMsg( ModuleMsg::AddThreadToManager{ _currentThread, DelegateBuilder( _currentThread, &ParallelThreadImpl::_NoWait )} ));
+		CHECK( Send( ModuleMsg::AddThreadToManager{ _currentThread, DelegateBuilder( _currentThread, &ParallelThreadImpl::_NoWait )} ));
 	}
 	
 /*
@@ -52,7 +51,7 @@ namespace Base
 */
 	ThreadManager::~ThreadManager ()
 	{
-		LOG( "ThreadManager finalized", ELog::Debug );
+		//LOG( "ThreadManager finalized", ELog::Debug );
 
 		ASSERT( _threads.Empty() );
 	}
@@ -68,7 +67,7 @@ namespace Base
 			LAMBDA() (const ThreadManagerPtr &mngr, const ModulePtr &thread, GlobalSystemsRef) {
 				thread->Send( ModuleMsg::Delete{} );
 			},
-			true
+			true // exceptMain
 		);
 		
 		// all secondary threads must be finished before deleting main thread
@@ -114,13 +113,11 @@ namespace Base
 				continue;
 
 			CHECK( task_mngr->SendAsync( ModuleMsg::PushAsyncMessage{
-					AsyncMessage{
+						thread.first,
 						LAMBDA( func, mngr = ModulePtr(this), thread = thread.second.thread ) (GlobalSystemsRef gs) {
 							func( mngr, thread, gs );
-					}},
-					thread.first
-				})
-			);
+						}}
+					));
 		}
 		return true;
 	}
@@ -245,7 +242,8 @@ namespace Base
 		UntypedID_t					id;
 		CreateInfo::Thread			info;
 		OS::Thread					thread;
-		OS::SyncEvent				sync;			// sync primitive
+		SyncEvent					dataInitialized;
+		SyncEvent					dataCopied;
 		ModulePtr					result;			// out
 		BlockingWaitThread_t		waitFunc;		// out
 		Ptr< Module >				main;
@@ -255,7 +253,8 @@ namespace Base
 		CreateParallelThreadData (UntypedID_t id, GlobalSystemsRef gs, CreateInfo::Thread &&info) :
 			id{ id },
 			info( RVREF( info ) ),
-			sync( OS::SyncEvent::MANUAL_RESET ),
+			dataInitialized( SyncEvent::MANUAL_RESET ),
+			dataCopied( SyncEvent::MANUAL_RESET ),
 			main( gs->mainSystem.ptr() ),
 			factory( gs->modulesFactory.ptr() )
 		{}
@@ -293,9 +292,11 @@ namespace Base
 		// start thread and set 'data' to new thread
 		data.thread.Create( &_RunAsync, &data );
 
+		// allow to copy 'data' in second thread.
+		data.dataInitialized.Signal();
 		
-		// data will changed in other thread, so we can't modify anything, you should wait for signal.
-		CHECK_ERR( data.sync.Wait( TimeL::FromSeconds( 10 ) ) );
+		// 'data' will changed in other thread, so we can't modify anything, you should wait for signal.
+		CHECK_ERR( data.dataCopied.Wait( 10_sec ) );
 		
 		CHECK( mngr->Send( ModuleMsg::AddThreadToManager{ data.result, RVREF(data.waitFunc) }) );
 		
@@ -348,9 +349,12 @@ namespace Base
 		GlobalSubSystems		global_sys;
 		ParallelThreadImplPtr	pt;
 
-		// in this scope 'data' is valid, after call data.sync.Signal() 'data' may be invalidated
+		// in this scope 'data' is valid,
+		// after call data.dataCopied.Signal() 'data' may be invalidated
 		{
 			CreateParallelThreadData&	data = *Cast<CreateParallelThreadData *>(d);
+
+			data.dataInitialized.Wait();
 
 			global_sys.mainSystem._Set( data.main );
 			global_sys.modulesFactory._Set( data.factory );
@@ -364,7 +368,7 @@ namespace Base
 
 			pt->_SetManager( data.info.manager );
 
-			data.sync.Signal();
+			data.dataCopied.Signal();
 		}
 		
 		pt->_OnEnter();

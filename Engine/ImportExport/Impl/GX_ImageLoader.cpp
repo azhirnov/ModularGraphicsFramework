@@ -17,17 +17,6 @@ namespace ImportExport
 	{
 	// types
 	private:
-		using SupportedMessages_t	= MessageListFrom<
-											ModuleMsg::AttachModule,
-											ModuleMsg::DetachModule,
-											ModuleMsg::OnModuleAttached,
-											ModuleMsg::OnModuleDetached,
-											ModuleMsg::FindModule,
-											ModuleMsg::ModulesDeepSearch,
-											ModuleMsg::Link,
-											ModuleMsg::Delete
-										>;
-		
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Link,
 											ModuleMsg::Compose,
@@ -55,7 +44,6 @@ namespace ImportExport
 		
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -94,7 +82,6 @@ namespace ImportExport
 
 
 	
-	const TypeIdList	GX_ImageLoader::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GX_ImageLoader::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -103,10 +90,12 @@ namespace ImportExport
 =================================================
 */
 	GX_ImageLoader::GX_ImageLoader (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ImageLoader &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_dataInput{ ci.dataInput },		_format{ Uninitialized },
 		_imageLayout{ ci.imageLayout }
 	{
+		SetDebugName( "GX_ImageLoader" );
+
 		_SubscribeOnMsg( this, &GX_ImageLoader::_OnModuleAttached );
 		_SubscribeOnMsg( this, &GX_ImageLoader::_OnModuleDetached );
 		_SubscribeOnMsg( this, &GX_ImageLoader::_AttachModule_Impl );
@@ -115,8 +104,6 @@ namespace ImportExport
 		_SubscribeOnMsg( this, &GX_ImageLoader::_ModulesDeepSearch_Empty );
 		_SubscribeOnMsg( this, &GX_ImageLoader::_Link );
 		_SubscribeOnMsg( this, &GX_ImageLoader::_Delete );
-
-		CHECK( _ValidateMsgSubscriptions() );
 	}
 	
 /*
@@ -143,7 +130,7 @@ namespace ImportExport
 
 		// check parent
 		CHECK_LINKING( _GetParents().Count() == 1 );
-		CHECK_LINKING( _GetParents().Front()->GetSupportedMessages().HasAllTypes< ImageMsgList_t >() );
+		CHECK_LINKING( _GetParents().Front()->SupportsAllMessages< ImageMsgList_t >() );
 
 		// check attachment
 		CHECK_ATTACHMENT( GetModuleByMsg< AsyncCmdBufMsgList_t >() );
@@ -229,12 +216,12 @@ namespace ImportExport
 		// read header
 		GXImageFormat::Header	header = {};
 		{
-			_dataInput->Send( DSMsg::ReadRegion{ BinArrayRef::FromValue( header ) });
+			_dataInput->Send( DSMsg::ReadMemRange{ BinArrayRef::FromValue( header ) });
 
 			const usize		num_levels	= header.layers * header.maxLevel;
 			_levels.Resize( num_levels, false );
 
-			_dataInput->Send( DSMsg::ReadRegion{ BinArrayRef::From( _levels ) });
+			_dataInput->Send( DSMsg::ReadMemRange{ BinArrayRef::From( _levels ) });
 			_dataInput->Send( DSMsg::ReleaseData{} );
 
 			_format = header.pixelFormat;
@@ -352,10 +339,10 @@ namespace ImportExport
 		{
 			ModulePtr	buffer;
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-										req_ids.graphics->buffer,
+										req_ids.result->graphics.buffer,
 										GlobalSystems(),
 										CreateInfo::GpuBuffer{
-											BufferDescription{ level.slicePitch * level.dimension.z, EBufferUsage::TransferSrc },
+											BufferDescription{ BytesU(level.slicePitch) * level.dimension.z, EBufferUsage::TransferSrc },
 											EGpuMemory::CoherentWithCPU,
 											EMemoryAccess::CpuWrite | EMemoryAccess::GpuRead },
 										OUT buffer ) );
@@ -364,7 +351,7 @@ namespace ImportExport
 			GpuMsg::MapMemoryToCpu	map_cmd{ GpuMsg::EMappingFlags::WriteDiscard };
 			buffer->Send( map_cmd );
 
-			_dataInput->Send( DSMsg::ReadRegion{ *map_cmd.result });
+			_dataInput->Send( DSMsg::ReadMemRange{ *map_cmd.result });
 
 			buffer->Send( GpuMsg::UnmapMemory{} );
 			
@@ -372,7 +359,7 @@ namespace ImportExport
 							.AddBuffer({ buffer,
 										 EPipelineAccess::HostWrite,
 										 EPipelineAccess::TransferRead,
-										 BytesUL(0), BytesUL(ulong(UMax)) }) );
+										 0_b, ~0_b }) );
 
 			GpuMsg::CmdCopyBufferToImage	copy;
 			copy.dstImage		= image;

@@ -198,7 +198,7 @@ namespace PlatformVK
 		_CreateDescription_Func	func( OUT descr_binding, OUT pushConstRanges, OUT _pushConstants );
 
 		FOR( i, descr.GetUniforms() ) {
-			descr.GetUniforms()[i].Apply( func );
+			descr.GetUniforms()[i].Accept( func );
 		}
 
 		CHECK_ERR( not descr_binding.Empty() );	// empty descriptor set is not allowed

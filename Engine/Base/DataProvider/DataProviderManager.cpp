@@ -17,13 +17,11 @@ namespace Base
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											DSMsg::GetDataProviderForURI
-										> >;
+										>;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 		
@@ -34,7 +32,6 @@ namespace Base
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -59,7 +56,6 @@ namespace Base
 //-----------------------------------------------------------------------------
 
 
-	const TypeIdList	DataProviderManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	DataProviderManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -68,7 +64,7 @@ namespace Base
 =================================================
 */
 	DataProviderManager::DataProviderManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::DataProviderManager &) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes )
 	{
 		SetDebugName( "DataProviderManager" );
 
@@ -85,7 +81,7 @@ namespace Base
 		_SubscribeOnMsg( this, &DataProviderManager::_RemoveFromManager );
 		_SubscribeOnMsg( this, &DataProviderManager::_GetDataProviderForURI );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 	}
 	
 /*
@@ -95,7 +91,7 @@ namespace Base
 */
 	DataProviderManager::~DataProviderManager ()
 	{
-		LOG( "DataProviderManager finalized", ELog::Debug );
+		//LOG( "DataProviderManager finalized", ELog::Debug );
 
 		ASSERT( _providers.Empty() );
 	}
@@ -118,7 +114,7 @@ namespace Base
 	bool DataProviderManager::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
 		CHECK_ERR( msg.module );
-		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< DataProviderMsgList_t >() );
+		CHECK_ERR( msg.module->SupportsAllMessages< DataProviderMsgList_t >() );
 		//CHECK_ERR( msg.module->GetSupportedEvents().HasAllTypes< DataProviderEventList_t >() );
 		ASSERT( not _providers.IsExist( msg.module ) );
 

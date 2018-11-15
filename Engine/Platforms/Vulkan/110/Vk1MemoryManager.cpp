@@ -29,16 +29,13 @@ namespace PlatformVK
 										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t;
-		
-		using EBindingTarget		= GpuMsg::OnMemoryBindingChanged::EBindingTarget;
 
 		struct Memory
 		{
 			VkDeviceMemory			mem		= VK_NULL_HANDLE;
-			BytesUL					size;
-			BytesUL					align;
+			BytesU					size;
+			BytesU					align;
 			EGpuMemory::bits		flags;
-			EBindingTarget			binding	= EBindingTarget::Unbinded;
 		};
 
 		using MemoryMap_t		= Map< ModuleWPtr, Memory >;
@@ -46,7 +43,6 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 		
 
@@ -72,7 +68,6 @@ namespace PlatformVK
 
 
 
-	const TypeIdList	Vk1MemoryManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1MemoryManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -81,7 +76,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1MemoryManager::Vk1MemoryManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemoryManager &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
+		Vk1BaseModule( gs, ModuleConfig{ id, 1 }, &_eventTypes )
 	{
 		SetDebugName( "Vk1MemoryManager" );
 
@@ -101,7 +96,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_VkAllocMemory );
 		_SubscribeOnMsg( this, &Vk1MemoryManager::_VkFreeMemory );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -133,6 +128,22 @@ namespace PlatformVK
 
 		CHECK_ERR( GetDevice()->GetMemoryTypeIndex( msg.memReqs.memoryTypeBits, Vk1Enum( msg.flags ), OUT info.memoryTypeIndex ) );
 		
+
+		// dedicated allocation (if supported)
+		VkMemoryDedicatedAllocateInfoKHR	dedicated_info = {};
+		dedicated_info.sType	= VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO_KHR;
+		dedicated_info.buffer	= msg.buffer;
+		dedicated_info.image	= msg.image;
+
+		if ( msg.flags[EGpuMemory::Dedicated] and
+			 GetDevice()->HasDeviceExtension( VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME ) )
+		{
+			CHECK_ERR( msg.buffer != VK_NULL_HANDLE or msg.image != VK_NULL_HANDLE );
+
+			info.pNext = &dedicated_info;
+		}
+
+
 		VkDeviceMemory		mem_id;
 		VK_CHECK( vkAllocateMemory( GetVkDevice(), &info, null, OUT &mem_id ) );
 		
@@ -140,13 +151,12 @@ namespace PlatformVK
 		
 
 		Memory	block;
-		block.binding	= EBindingTarget::Buffer;
-		block.align		= BytesUL( msg.memReqs.alignment );
+		block.align		= BytesU(msg.memReqs.alignment);
 		block.flags		= msg.flags;
 		block.mem		= mem_id;
-		block.size		= BytesUL( msg.memReqs.size );
+		block.size		= BytesU(msg.memReqs.size);
 		
-		msg.result.Set({ block.mem, BytesUL(0), block.size });
+		msg.result.Set({ block.mem, 0_b, block.size });
 
 		_memBlocks.Add( msg.module, block );
 		return true;

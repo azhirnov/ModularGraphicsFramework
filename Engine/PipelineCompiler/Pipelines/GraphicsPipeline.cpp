@@ -209,6 +209,7 @@ namespace PipelineCompiler
 			CHECK_ERR( _AllStructsToString( _structTypes, ser, OUT ser_str, OUT cfg._glslTypes ) );
 
 			src << ser_str;*/
+			TODO( "" );
 		}
 
 		FOR( i, cfg.includings ) {
@@ -261,18 +262,14 @@ namespace PipelineCompiler
 		if ( attribs.Count() > 0 )
 			src << ser->ToString( "\tdescr.attribs", attribs ) << '\n';
 
-		CompiledShader	compiled;
+		CompiledShader_t	compiled;
 		CHECK_ERR( _CompileShader( shaders.vertex, cfg, OUT compiled ) );
 
-		String	name = "\t" + ser->CallFunction( "descr.Vertex", Uninitialized );
+		const String	name = "\t" + ser->CallFunction( "descr.Vertex", Uninitialized );
 
-		src << ser->ShaderSrcGLSL( name, compiled.glsl )
-			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
-			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
-			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
-			<< ser->ShaderBinHLSL( name, compiled.hlslBinary )
-			<< '\n';
+		for (auto& comp : compiled) {
+			src << ser->ShaderToString( comp.first, name, comp.second );
+		}
 
 		if ( cfg.validation ) {
 			CHECK_ERR( _ValidateShader( EShader::Vertex, compiled ) );
@@ -292,22 +289,18 @@ namespace PipelineCompiler
 		if ( not shaders.tessControl.IsEnabled() )
 			return true;
 		
-		CompiledShader	compiled;
+		CompiledShader_t	compiled;
 		CHECK_ERR( _CompileShader( shaders.tessControl, cfg, OUT compiled ) );
 		
 		ASSERT( patchControlPoints > 0 );
 		src << '\t' << ser->DeclVariable( "uint", "patchControlPoints", ToString(patchControlPoints) ) << '\n';
 
-		String	name = "\t" + ser->CallFunction( "descr.TessControl", Uninitialized );
-
-		src << ser->ShaderSrcGLSL( name, compiled.glsl )
-			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
-			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
-			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
-			<< ser->ShaderBinHLSL( name, compiled.hlslBinary )
-			<< '\n';
+		const String	name = "\t" + ser->CallFunction( "descr.TessControl", Uninitialized );
 		
+		for (auto& comp : compiled) {
+			src << ser->ShaderToString( comp.first, name, comp.second );
+		}
+
 		if ( cfg.validation ) {
 			CHECK_ERR( _ValidateShader( EShader::TessControl, compiled ) );
 		}
@@ -326,19 +319,15 @@ namespace PipelineCompiler
 		if ( not shaders.tessEvaluation.IsEnabled() )
 			return true;
 		
-		CompiledShader	compiled;
+		CompiledShader_t	compiled;
 		CHECK_ERR( _CompileShader( shaders.tessEvaluation, cfg, OUT compiled ) );
 		
-		String	name = "\t" + ser->CallFunction( "descr.TessEvaluation", Uninitialized );
-
-		src << ser->ShaderSrcGLSL( name, compiled.glsl )
-			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
-			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
-			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
-			<< ser->ShaderBinHLSL( name, compiled.hlslBinary )
-			<< '\n';
+		const String	name = "\t" + ser->CallFunction( "descr.TessEvaluation", Uninitialized );
 		
+		for (auto& comp : compiled) {
+			src << ser->ShaderToString( comp.first, name, comp.second );
+		}
+
 		if ( cfg.validation ) {
 			CHECK_ERR( _ValidateShader( EShader::TessEvaluation, compiled ) );
 		}
@@ -357,18 +346,14 @@ namespace PipelineCompiler
 		if ( not shaders.geometry.IsEnabled() )
 			return true;
 		
-		CompiledShader	compiled;
+		CompiledShader_t	compiled;
 		CHECK_ERR( _CompileShader( shaders.geometry, cfg, OUT compiled ) );
 		
-		String	name = "\t" + ser->CallFunction( "descr.Geometry", Uninitialized );
-
-		src << ser->ShaderSrcGLSL( name, compiled.glsl )
-			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
-			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
-			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
-			<< ser->ShaderBinHLSL( name, compiled.hlslBinary )
-			<< '\n';
+		const String	name = "\t" + ser->CallFunction( "descr.Geometry", Uninitialized );
+		
+		for (auto& comp : compiled) {
+			src << ser->ShaderToString( comp.first, name, comp.second );
+		}
 		
 		if ( cfg.validation ) {
 			CHECK_ERR( _ValidateShader( EShader::Geometry, compiled ) );
@@ -387,21 +372,19 @@ namespace PipelineCompiler
 	{
 		CHECK_ERR( shaders.fragment.IsEnabled() );
 		
+		//src << ser->ToString( "\tdescr.earlyFragmentTests", earlyFragmentTests );
+
 		if ( fragOutput.Count() > 0 )
 			src << ser->ToString( "\tdescr.fragOutput", fragOutput ) << '\n';
 
-		CompiledShader	compiled;
+		CompiledShader_t	compiled;
 		CHECK_ERR( _CompileShader( shaders.fragment, cfg, OUT compiled ) );
 
-		String	name = "\t" + ser->CallFunction( "descr.Fragment", Uninitialized );
-
-		src << ser->ShaderSrcGLSL( name, compiled.glsl )
-			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
-			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
-			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
-			<< ser->ShaderBinHLSL( name, compiled.hlslBinary )
-			<< '\n';
+		const String	name = "\t" + ser->CallFunction( "descr.Fragment", Uninitialized );
+		
+		for (auto& comp : compiled) {
+			src << ser->ShaderToString( comp.first, name, comp.second );
+		}
 		
 		if ( cfg.validation ) {
 			CHECK_ERR( _ValidateShader( EShader::Fragment, compiled ) );

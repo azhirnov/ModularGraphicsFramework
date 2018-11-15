@@ -121,7 +121,7 @@ namespace ShaderEditor
 	{
 		// setup shader
 		{
-			CHECK_ERR( _renderer.Inititalize() );
+			CHECK_ERR( _renderer.Inititalize( 1.0f ) );
 
 			_InitSamples();
 		}
@@ -205,8 +205,8 @@ int main ()
 	{
 		ShaderEditorApp	app;
 	
-		app.Initialize( "GL 4.5"_GAPI );
-		//app.Initialize( "VK 1.0"_GAPI );
+		//app.Initialize( "GL 4.5"_GAPI );
+		app.Initialize( "VK 1.0"_GAPI );
 
 		// main loop
 		for (; app.Update();) {}

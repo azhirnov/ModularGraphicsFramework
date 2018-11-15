@@ -52,7 +52,6 @@ namespace PlatformCL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -103,29 +102,29 @@ namespace PlatformCL
 		void _ClearStates ();
 		bool _DestroyResources ();
 		
-		bool _CmdBindComputePipeline (const Command_t &cmdData);
-		bool _CmdDispatch (const Command_t &cmdData);
-		bool _CmdExecute (const Command_t &cmdData);
-		bool _CmdBindComputeResourceTable (const Command_t &cmdData);
-		bool _CmdCopyBuffer (const Command_t &cmdData);
-		bool _CmdCopyImage (const Command_t &cmdData);
-		bool _CmdCopyBufferToImage (const Command_t &cmdData);
-		bool _CmdCopyImageToBuffer (const Command_t &cmdData);
-		bool _CmdUpdateBuffer (const Command_t &cmdData);
-		bool _CmdFillBuffer (const Command_t &cmdData);
-		bool _CmdClearColorImage (const Command_t &cmdData);
-		bool _CmdPipelineBarrier (const Command_t &cmdData);
-		bool _CmdPushConstants (const Command_t &cmdData);
-		bool _CmdPushNamedConstants (const Command_t &cmdData);
-		bool _CmdDebugMarker (const Command_t &cmdData);
-		bool _CmdPushDebugGroup (const Command_t &cmdData);
-		bool _CmdPopDebugGroup (const Command_t &cmdData);
+	public:
+		bool operator () (const GpuMsg::CmdBindComputePipeline &);
+		bool operator () (const GpuMsg::CmdDispatch &);
+		bool operator () (const GpuMsg::CmdExecute &);
+		bool operator () (const GpuMsg::CmdBindComputeResourceTable &);
+		bool operator () (const GpuMsg::CmdCopyBuffer &);
+		bool operator () (const GpuMsg::CmdCopyImage &);
+		bool operator () (const GpuMsg::CmdCopyBufferToImage &);
+		bool operator () (const GpuMsg::CmdCopyImageToBuffer &);
+		bool operator () (const GpuMsg::CLCmdUpdateBuffer &);
+		bool operator () (const GpuMsg::CmdFillBuffer &);
+		bool operator () (const GpuMsg::CmdClearColorImage &);
+		bool operator () (const GpuMsg::CmdPipelineBarrier &);
+		bool operator () (const GpuMsg::CmdPushConstants &);
+		bool operator () (const GpuMsg::CmdPushNamedConstants &);
+		bool operator () (const GpuMsg::CmdDebugMarker &);
+		bool operator () (const GpuMsg::CmdPushDebugGroup &);
+		bool operator () (const GpuMsg::CmdPopDebugGroup &);
 	};
 //-----------------------------------------------------------------------------
 
 
 
-	const TypeIdList	CL1CommandBuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	CL1CommandBuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -134,7 +133,7 @@ namespace PlatformCL
 =================================================
 */
 	CL1CommandBuffer::CL1CommandBuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuffer &ci) :
-		CL1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		CL1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),			_recordingState( ERecordingState::Deleted ),
 		_kernelId( null ),			_isInitialized( false )
 	{
@@ -160,7 +159,7 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1CommandBuffer::_GetCommandBufferState );
 		_SubscribeOnMsg( this, &CL1CommandBuffer::_ExecuteCLCommandBuffer );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -357,32 +356,9 @@ namespace PlatformCL
 	bool CL1CommandBuffer::_ExecuteCLCommandBuffer (const GpuMsg::ExecuteCLCommandBuffer &)
 	{
 		CHECK_ERR( _recordingState == ERecordingState::Pending );
-
-		FOR( i, _commands )
-		{
-			const auto&	data = _commands[i].data;
-
-			switch ( data.GetCurrentIndex() )
-			{
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdBindComputePipeline> :		_CmdBindComputePipeline( data );		break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdDispatch> :					_CmdDispatch( data );					break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdExecute> :					_CmdExecute( data );					break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdBindComputeResourceTable> :	_CmdBindComputeResourceTable( data );	break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyBuffer> :				_CmdCopyBuffer( data );					break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyImage> :				_CmdCopyImage( data );					break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyBufferToImage> :		_CmdCopyBufferToImage( data );			break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdCopyImageToBuffer> :		_CmdCopyImageToBuffer( data );			break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CLCmdUpdateBuffer> :			_CmdUpdateBuffer( data );				break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdFillBuffer> :				_CmdFillBuffer( data );					break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdClearColorImage> :			_CmdClearColorImage( data );			break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPipelineBarrier> :			_CmdPipelineBarrier( data );			break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPushConstants> :			_CmdPushConstants( data );				break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPushNamedConstants> :		_CmdPushNamedConstants( data );			break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdDebugMarker> :				_CmdDebugMarker( data );				break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPushDebugGroup> :			_CmdPushDebugGroup( data );				break;
-				case CmdDataTypes_t::IndexOf<GpuMsg::CmdPopDebugGroup> :			_CmdPopDebugGroup( data );				break;
-				default :															WARNING( "unknown command!" );
-			}
+		
+		FOR( i, _commands ) {
+			_commands[i].data.Accept( *this );
 		}
 
 		_ClearStates();
@@ -483,13 +459,12 @@ namespace PlatformCL
 
 /*
 =================================================
-	_CmdBindComputePipeline
+	operator (CmdBindComputePipeline)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdBindComputePipeline (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdBindComputePipeline &msg)
 	{
-		const auto&	cmd			= cmdData.data.Get< GpuMsg::CmdBindComputePipeline >();
-		const auto&	ppln_res	= GetResourceCache()->GetPipelineID( cmd.pipeline );
+		const auto&	ppln_res	= GetResourceCache()->GetPipelineID( msg.pipeline );
 
 		_kernelId			= ppln_res.Get<0>().kernel;
 		_kernelLocalSize	= ppln_res.Get<1>().localGroupSize;
@@ -499,14 +474,12 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_CmdDispatch
+	operator (CmdDispatch)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdDispatch (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdDispatch &msg)
 	{
-		const auto&		cmd				= cmdData.data.Get< GpuMsg::CmdDispatch >();
-
-		const usize3	global_size		= usize3(Max( cmd.groupCount, 1u )) * usize3(_kernelLocalSize);
+		const usize3	global_size		= usize3(Max( msg.groupCount, 1u )) * usize3(_kernelLocalSize);
 		const uint		invocations		= _kernelLocalSize.Volume();
 
 		const uint3		max_group_count	= GetDevice()->GetProperties().maxComputeWorkGroupCount;
@@ -515,7 +488,7 @@ namespace PlatformCL
 
 		CHECK_ERR( invocations <= max_invocations );
 		CHECK_ERR( All( _kernelLocalSize <= max_local_size ) );
-		CHECK_ERR( All( cmd.groupCount <= max_group_count ) );
+		CHECK_ERR( All( msg.groupCount <= max_group_count ) );
 
 		if ( _resourceTable )
 			CHECK( _resourceTable->Send( GpuMsg::CLBindPipelineResourceTable{ _kernelId }) );
@@ -538,56 +511,50 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_CmdExecute
+	operator (CmdExecute)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdExecute (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdExecute &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdExecute >();
-		
-		ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Pending });
-		ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::ExecuteCLCommandBuffer{} );
-		//ModuleUtils::Send( cmd.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Completed });
+		ModuleUtils::Send( msg.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Pending });
+		ModuleUtils::Send( msg.cmdBuffers, GpuMsg::ExecuteCLCommandBuffer{} );
+		//ModuleUtils::Send( msg.cmdBuffers, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Completed });
 
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdBindComputeResourceTable
+	operator (CmdBindComputeResourceTable)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdBindComputeResourceTable (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdBindComputeResourceTable &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdBindComputeResourceTable >();
-		
-		ASSERT( cmd.index == 0 );
-		_resourceTable = cmd.resourceTable;
+		ASSERT( msg.index == 0 );
+		_resourceTable = msg.resourceTable;
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdCopyBuffer
+	operator (CmdCopyBuffer)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdCopyBuffer (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdCopyBuffer &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyBuffer >();
-
-		const auto	src_res		= GetResourceCache()->GetBufferID( cmd.srcBuffer );
-		const auto	dst_res		= GetResourceCache()->GetBufferID( cmd.dstBuffer );
+		const auto	src_res		= GetResourceCache()->GetBufferID( msg.srcBuffer );
+		const auto	dst_res		= GetResourceCache()->GetBufferID( msg.dstBuffer );
 
 		cl_mem		src_id		= src_res.Get<0>().id;
 		cl_mem		dst_id		= dst_res.Get<0>().id;
-		BytesUL		src_size	= src_res.Get<1>().size;
-		BytesUL		dst_size	= dst_res.Get<1>().size;
+		BytesU		src_size	= src_res.Get<1>().size;
+		BytesU		dst_size	= dst_res.Get<1>().size;
 
-		CHECK( GetDevice()->AddSharedObj( this, cmd.srcBuffer ) );
-		CHECK( GetDevice()->AddSharedObj( this, cmd.dstBuffer ) );
+		CHECK( GetDevice()->AddSharedObj( this, msg.srcBuffer ) );
+		CHECK( GetDevice()->AddSharedObj( this, msg.dstBuffer ) );
 		CHECK( GetDevice()->AcquireSharedObj( this ) );
 
-		for (auto& reg : cmd.regions)
+		for (auto& reg : msg.regions)
 		{
 			CHECK_ERR( reg.srcOffset + reg.size <= src_size );
 			CHECK_ERR( reg.dstOffset + reg.size <= dst_size );
@@ -609,23 +576,21 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_CmdCopyImage
+	operator (CmdCopyImage)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdCopyImage (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdCopyImage &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyImage >();
-		
-		const auto	src_res	= GetResourceCache()->GetImageID( cmd.srcImage );
-		const auto	dst_res	= GetResourceCache()->GetImageID( cmd.dstImage );
+		const auto	src_res	= GetResourceCache()->GetImageID( msg.srcImage );
+		const auto	dst_res	= GetResourceCache()->GetImageID( msg.dstImage );
 		cl_mem		src_id	= src_res.Get<0>().id;
 		cl_mem		dst_id	= dst_res.Get<0>().id;
 		
-		CHECK( GetDevice()->AddSharedObj( this, cmd.srcImage ) );
-		CHECK( GetDevice()->AddSharedObj( this, cmd.dstImage ) );
+		CHECK( GetDevice()->AddSharedObj( this, msg.srcImage ) );
+		CHECK( GetDevice()->AddSharedObj( this, msg.dstImage ) );
 		CHECK( GetDevice()->AcquireSharedObj( this ) );
 
-		for (auto& reg : cmd.regions)
+		for (auto& reg : msg.regions)
 		{
 			CHECK_ERR( reg.srcLayers.mipLevel.Get() == 0 and reg.srcLayers.aspectMask[EImageAspect::Color] );
 			CHECK_ERR( reg.dstLayers.mipLevel.Get() == 0 and reg.dstLayers.aspectMask[EImageAspect::Color] );
@@ -659,34 +624,32 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_CmdCopyBufferToImage
+	operator (CmdCopyBufferToImage)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdCopyBufferToImage (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdCopyBufferToImage &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyBufferToImage >();
-		
-		const auto	src_res		= GetResourceCache()->GetBufferID( cmd.srcBuffer );
-		const auto	dst_res		= GetResourceCache()->GetImageID( cmd.dstImage );
+		const auto	src_res		= GetResourceCache()->GetBufferID( msg.srcBuffer );
+		const auto	dst_res		= GetResourceCache()->GetImageID( msg.dstImage );
 		
 		cl_mem		src_id		= src_res.Get<0>().id;
 		cl_mem		dst_id		= dst_res.Get<0>().id;
-		BytesUL		src_size	= src_res.Get<1>().size;
-		BytesUL		bpp			= BytesUL( EPixelFormat::BitPerPixel( dst_res.Get<1>().format ) );
+		BytesU		src_size	= src_res.Get<1>().size;
+		BytesU		bpp			= BytesU( EPixelFormat::BitPerPixel( dst_res.Get<1>().format ) );
 		uint		depth		= dst_res.Get<1>().dimension.z;
 		
-		CHECK( GetDevice()->AddSharedObj( this, cmd.srcBuffer ) );
-		CHECK( GetDevice()->AddSharedObj( this, cmd.dstImage ) );
+		CHECK( GetDevice()->AddSharedObj( this, msg.srcBuffer ) );
+		CHECK( GetDevice()->AddSharedObj( this, msg.dstImage ) );
 		CHECK( GetDevice()->AcquireSharedObj( this ) );
 
-		for (auto& reg : cmd.regions)
+		for (auto& reg : msg.regions)
 		{
 			CHECK_ERR( reg.imageLayers.mipLevel.Get() == 0 and reg.imageLayers.aspectMask[EImageAspect::Color] );
 
-			BytesUL	row_size		= reg.imageSize.x * bpp;
-			BytesUL	src_row_pitch	= reg.bufferRowLength * bpp;
-			BytesUL	src_depth_pitch	= reg.bufferImageHeight * src_row_pitch;
-			BytesUL	src_array_pitch	= src_depth_pitch;	// TODO
+			BytesU	row_size		= reg.imageSize.x * bpp;
+			BytesU	src_row_pitch	= reg.bufferRowLength * bpp;
+			BytesU	src_depth_pitch	= reg.bufferImageHeight * src_row_pitch;
+			BytesU	src_array_pitch	= src_depth_pitch;	// TODO
 			
 			for (uint layer = 0; layer < reg.imageLayers.layerCount; ++layer)
 			{
@@ -697,7 +660,7 @@ namespace PlatformCL
 						usize4	img_offset	= usize4( reg.imageOffset.x, y + reg.imageOffset.y, z + reg.imageOffset.z, layer + reg.imageLayers.baseLayer.Get() );
 						usize3	dst_offset	= usize3( img_offset.xy(), img_offset.z + img_offset.w * depth );
 						usize3	dst_size	= usize3( reg.imageSize.x, 1, 1 );
-						BytesUL	src_off		= reg.bufferOffset + layer * src_array_pitch + z * src_depth_pitch + y * src_row_pitch;
+						BytesU	src_off		= reg.bufferOffset + layer * src_array_pitch + z * src_depth_pitch + y * src_row_pitch;
 						
 						CHECK_ERR( src_off + row_size <= src_size );
 						CHECK_ERR(All( img_offset + usize4(dst_size.x, 1, 1, 1) <= usize4(dst_res.Get<1>().dimension) ));
@@ -722,34 +685,32 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_CmdCopyImageToBuffer
+	operator (CmdCopyImageToBuffer)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdCopyImageToBuffer (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdCopyImageToBuffer &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdCopyImageToBuffer >();
-		
-		const auto	src_res		= GetResourceCache()->GetImageID( cmd.srcImage );
-		const auto	dst_res		= GetResourceCache()->GetBufferID( cmd.dstBuffer );
+		const auto	src_res		= GetResourceCache()->GetImageID( msg.srcImage );
+		const auto	dst_res		= GetResourceCache()->GetBufferID( msg.dstBuffer );
 		
 		cl_mem		src_id		= src_res.Get<0>().id;
 		cl_mem		dst_id		= dst_res.Get<0>().id;
-		BytesUL		dst_size	= dst_res.Get<1>().size;
-		BytesUL		bpp			= BytesUL( EPixelFormat::BitPerPixel( src_res.Get<1>().format ) );
+		BytesU		dst_size	= dst_res.Get<1>().size;
+		BytesU		bpp			= BytesU( EPixelFormat::BitPerPixel( src_res.Get<1>().format ) );
 		uint		depth		= src_res.Get<1>().dimension.z;
 		
-		CHECK( GetDevice()->AddSharedObj( this, cmd.srcImage ) );
-		CHECK( GetDevice()->AddSharedObj( this, cmd.dstBuffer ) );
+		CHECK( GetDevice()->AddSharedObj( this, msg.srcImage ) );
+		CHECK( GetDevice()->AddSharedObj( this, msg.dstBuffer ) );
 		CHECK( GetDevice()->AcquireSharedObj( this ) );
 
-		for (auto& reg : cmd.regions)
+		for (auto& reg : msg.regions)
 		{
 			CHECK_ERR( reg.imageLayers.mipLevel.Get() == 0 and reg.imageLayers.aspectMask[EImageAspect::Color] );
 
-			BytesUL	row_size		= reg.imageSize.x * bpp;
-			BytesUL	dst_row_pitch	= reg.bufferRowLength * bpp;
-			BytesUL	dst_depth_pitch	= reg.bufferImageHeight * dst_row_pitch;
-			BytesUL	dst_array_pitch	= dst_depth_pitch;	// TODO
+			BytesU	row_size		= reg.imageSize.x * bpp;
+			BytesU	dst_row_pitch	= reg.bufferRowLength * bpp;
+			BytesU	dst_depth_pitch	= reg.bufferImageHeight * dst_row_pitch;
+			BytesU	dst_array_pitch	= dst_depth_pitch;	// TODO
 			
 			for (uint layer = 0; layer < reg.imageLayers.layerCount; ++layer)
 			{
@@ -760,7 +721,7 @@ namespace PlatformCL
 						usize4	img_offset	= usize4( reg.imageOffset.x, y + reg.imageOffset.y, z + reg.imageOffset.z, layer + reg.imageLayers.baseLayer.Get() );
 						usize3	src_offset	= usize3( img_offset.xy(), img_offset.z + img_offset.w * depth );
 						usize3	src_size	= usize3( reg.imageSize.x, 1, 1 );
-						BytesUL	dst_off		= reg.bufferOffset + layer * dst_array_pitch + z * dst_depth_pitch + y * dst_row_pitch;
+						BytesU	dst_off		= reg.bufferOffset + layer * dst_array_pitch + z * dst_depth_pitch + y * dst_row_pitch;
 						
 						CHECK_ERR( dst_off + row_size <= dst_size );
 						CHECK_ERR(All( img_offset + usize4(src_size.x, 1, 1, 1) <= usize4(src_res.Get<1>().dimension) ));
@@ -785,29 +746,27 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_CmdUpdateBuffer
+	operator (CLCmdUpdateBuffer)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdUpdateBuffer (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CLCmdUpdateBuffer &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CLCmdUpdateBuffer >();
-		
 		const auto	src_res	= GetResourceCache()->GetBufferID( _tempBuffer );
-		const auto	dst_res	= GetResourceCache()->GetBufferID( cmd.dstBuffer );
+		const auto	dst_res	= GetResourceCache()->GetBufferID( msg.dstBuffer );
 		
-		CHECK_ERR( cmd.dstOffset < dst_res.Get<1>().size );
-		CHECK_ERR( cmd.size + cmd.dstOffset <= dst_res.Get<1>().size );
+		CHECK_ERR( msg.dstOffset < dst_res.Get<1>().size );
+		CHECK_ERR( msg.size + msg.dstOffset <= dst_res.Get<1>().size );
 		
-		CHECK( GetDevice()->AddSharedObj( this, cmd.dstBuffer ) );
+		CHECK( GetDevice()->AddSharedObj( this, msg.dstBuffer ) );
 		CHECK( GetDevice()->AcquireSharedObj( this ) );
 
 		CL_CHECK( clEnqueueCopyBuffer(
 					GetCommandQueue(),
 					src_res.Get<0>().id,
 					dst_res.Get<0>().id,
-					size_t(cmd.srcOffset),
-					size_t(cmd.dstOffset),
-					size_t(cmd.size),
+					size_t(msg.srcOffset),
+					size_t(msg.dstOffset),
+					size_t(msg.size),
 					0, null,
 					null ) );
 		
@@ -817,29 +776,27 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_CmdFillBuffer
+	operator (CmdFillBuffer)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdFillBuffer (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdFillBuffer &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdFillBuffer >();
+		const auto&	dst_res	= GetResourceCache()->GetBufferID( msg.dstBuffer );
 		
-		const auto&	dst_res	= GetResourceCache()->GetBufferID( cmd.dstBuffer );
-		
-		CHECK_ERR( cmd.dstOffset < dst_res.Get<1>().size );
+		CHECK_ERR( msg.dstOffset < dst_res.Get<1>().size );
 		CHECK_ERR( dst_res.Get<1>().usage[ EBufferUsage::TransferDst ] );
 
-		const BytesUL	size = Min( dst_res.Get<1>().size - cmd.dstOffset, cmd.size );
+		const BytesU	size = Min( dst_res.Get<1>().size - msg.dstOffset, msg.size );
 		
-		CHECK( GetDevice()->AddSharedObj( this, cmd.dstBuffer ) );
+		CHECK( GetDevice()->AddSharedObj( this, msg.dstBuffer ) );
 		CHECK( GetDevice()->AcquireSharedObj( this ) );
 
 		CL_CHECK( clEnqueueFillBuffer(
 					GetCommandQueue(),
 					dst_res.Get<0>().id,
-					&cmd.pattern,
-					sizeof(cmd.pattern),
-					size_t(cmd.dstOffset),
+					&msg.pattern,
+					sizeof(msg.pattern),
+					size_t(msg.dstOffset),
 					size_t(size),
 					0, null,
 					null ) );
@@ -850,68 +807,60 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_CmdClearColorImage
+	operator (CmdClearColorImage)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdClearColorImage (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdClearColorImage &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdClearColorImage >();
-		
+		ASSERT( not msg.ranges.Empty() );
+
 		TODO( "" );
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdPipelineBarrier
+	operator (CmdPipelineBarrier)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdPipelineBarrier (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdPipelineBarrier &)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPipelineBarrier >();
-		
 		CL_CALL( clEnqueueMarkerWithWaitList( GetCommandQueue(), 0, null, null ) );
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdPushConstants
+	operator (CmdPushConstants)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdPushConstants (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdPushConstants &)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPushConstants >();
-		
 		TODO( "" );
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdPushNamedConstants
+	operator (CmdPushNamedConstants)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdPushNamedConstants (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdPushNamedConstants &)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPushNamedConstants >();
-		
 		TODO( "" );
 		return true;
 	}
 	
 /*
 =================================================
-	_CmdDebugMarker
+	operator (CmdDebugMarker)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdDebugMarker (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdDebugMarker &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdDebugMarker >();
-		
-		LOG( "Debug marker: "_str << cmd.info, ELog::Debug );
+		LOG( "Debug marker: "_str << msg.info, ELog::Debug );
 
-		if ( cmd.breakPoint ) {
+		if ( msg.breakPoint ) {
 			GX_BREAK_POINT();
 		}
 		return true;
@@ -919,26 +868,22 @@ namespace PlatformCL
 
 /*
 =================================================
-	_CmdPushDebugGroup
+	operator (CmdPushDebugGroup)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdPushDebugGroup (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdPushDebugGroup &msg)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPushDebugGroup >();
-		
-		LOG( "===================================================================\nDebug group begin: "_str << cmd.info, ELog::Debug );
+		LOG( "===================================================================\nDebug group begin: "_str << msg.info, ELog::Debug );
 		return true;
 	}
 
 /*
 =================================================
-	_CmdPopDebugGroup
+	operator (CmdPopDebugGroup)
 =================================================
 */
-	bool CL1CommandBuffer::_CmdPopDebugGroup (const Command_t &cmdData)
+	bool CL1CommandBuffer::operator () (const GpuMsg::CmdPopDebugGroup &)
 	{
-		const auto&	cmd = cmdData.data.Get< GpuMsg::CmdPopDebugGroup >();
-		
 		LOG( "Debug group end\n===================================================================", ELog::Debug );
 		return true;
 	}

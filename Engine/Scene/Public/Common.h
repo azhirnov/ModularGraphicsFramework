@@ -11,9 +11,6 @@ namespace Scene
 {
 	using namespace Engine::Base;
 	using namespace GX_STL::GXMath;
-
-	//using namespace Engine::Platforms;
-	//using namespace Engine::Graphics;
 	
 	
 	void RegisterScene ();

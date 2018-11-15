@@ -50,36 +50,29 @@ namespace OSMsg
 	//
 	// Get Displays
 	//
-	struct GetDisplays : _MessageBase_
+	struct GetDisplays : _MsgBase_
 	{
 	// types
 		using Displays_t = FixedSizeArray< Platforms::Display, GlobalConst::OS_MaxDisplays >;
 
 	// variables
 		Out< Displays_t >	result;
-
-	// methods
-		GetDisplays () {}
 	};
 
 
 	//
 	// Get OS Modules
 	//
-	struct GetOSModules : _MessageBase_
+	struct GetOSModules : _MsgBase_
 	{
-	// variables
 		Out< Platforms::OSModuleIDs >	result;
-
-	// methods
-		GetOSModules () {}
 	};
 
 
 	//
 	// Get CPU Info
 	//
-	struct GetProccessorInfo : _MessageBase_
+	struct GetProccessorInfo : _MsgBase_
 	{
 	// types
 		enum class EProcessorArch {
@@ -98,32 +91,26 @@ namespace OSMsg
 
 	// variables
 		Out< Info >			result;
-
-	// methods
-		GetProccessorInfo () {}
 	};
 
 
 	//
 	// Get (RAM) Memory Info
 	//
-	struct GetMemoryInfo : _MessageBase_
+	struct GetMemoryInfo : _MsgBase_
 	{
 	// types
 		struct Info {
 			// physical
-			BytesUL			total;
-			BytesUL			available;
+			BytesU			total;
+			BytesU			available;
 			// virtual
-			BytesUL			totalVirtual;
-			BytesUL			availableVirtual;
+			BytesU			totalVirtual;
+			BytesU			availableVirtual;
 		};
 
 	// variables
 		Out< Info >			result;
-
-	// methods
-		GetMemoryInfo () {}
 	};
 
 

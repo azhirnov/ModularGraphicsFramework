@@ -35,7 +35,6 @@ namespace PlatformSW
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -72,7 +71,6 @@ namespace PlatformSW
 
 
 	
-	const TypeIdList	SWGraphicsPipeline::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SWGraphicsPipeline::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -81,7 +79,7 @@ namespace PlatformSW
 =================================================
 *
 	SWGraphicsPipeline::SWGraphicsPipeline (GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci) :
-		SWBaseModule( gs, ModuleConfig{ SWGraphicsPipelineModuleID, UMax }, &_msgTypes, &_eventTypes ),
+		SWBaseModule( gs, ModuleConfig{ SWGraphicsPipelineModuleID, UMax }, &_eventTypes ),
 		_descr( ci.descr ),				_shaders( ci.shaders ),
 		_renderPass( ci.renderPass )
 	{
@@ -103,7 +101,7 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWGraphicsPipeline::_GetSWPrivateClasses );
 		_SubscribeOnMsg( this, &SWGraphicsPipeline::_GetPipelineLayoutDescription );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -234,20 +232,21 @@ namespace PlatformSW
 		
 		using ShadersMsgList_t		= MessageListFrom< GpuMsg::GetSWShaderModuleIDs >;
 
-		using Description			= ComputePipelineDescription;
-		using ShaderFunc_t			= PipelineTemplateDescription::ShaderSource::SWInvoke;
+		using Description_t			= ComputePipelineDescription;
+		using LayoutDesc_t			= PipelineLayoutDescription;
+		using ShaderFunc_t			= PipelineTemplateDescription::ShaderSource::SWInvoke_t;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
 	// variables
 	private:
-		Description		_descr;
-		ShaderFunc_t	_func;
+		Description_t		_descr;
+		LayoutDesc_t		_layoutDesc;
+		ShaderFunc_t		_func;
 
 
 	// methods
@@ -278,7 +277,6 @@ namespace PlatformSW
 
 
 
-	const TypeIdList	SWComputePipeline::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SWComputePipeline::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -287,8 +285,9 @@ namespace PlatformSW
 =================================================
 */
 	SWComputePipeline::SWComputePipeline (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
-		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
-		_descr{ ci.descr },		_func{ null }
+		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
+		_descr{ ci.descr },		_layoutDesc{ ci.layout },
+		_func{ null }
 	{
 		SetDebugName( "SWComputePipeline" );
 
@@ -309,7 +308,7 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWComputePipeline::_GetPipelineLayoutDescription );
 		_SubscribeOnMsg( this, &SWComputePipeline::_GetSWPipelineStage );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -374,7 +373,7 @@ namespace PlatformSW
 		CHECK_ERR( msg.newModule );
 
 		// render pass and shader must be unique
-		const bool	is_dependent = msg.newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		const bool	is_dependent = msg.newModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		CHECK( _Attach( msg.name, msg.newModule ) );
 
@@ -395,7 +394,7 @@ namespace PlatformSW
 	{
 		CHECK_ERR( msg.oldModule );
 		
-		const bool	is_dependent = msg.oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		const bool	is_dependent = msg.oldModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		if ( _Detach( msg.oldModule ) and is_dependent )
 		{
@@ -437,7 +436,7 @@ namespace PlatformSW
 */
 	bool SWComputePipeline::_GetPipelineLayoutDescription (const GpuMsg::GetPipelineLayoutDescription &msg)
 	{
-		msg.result.Set( _descr.layout );
+		msg.result.Set( _layoutDesc );
 		return true;
 	}
 

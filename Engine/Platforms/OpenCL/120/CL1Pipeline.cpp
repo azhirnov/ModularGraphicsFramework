@@ -32,12 +32,12 @@ namespace PlatformCL
 		
 		using ShadersMsgList_t		= MessageListFrom< GpuMsg::GetCLShaderModuleIDs >;
 
-		using Description			= ComputePipelineDescription;
+		using Description_t			= ComputePipelineDescription;
+		using LayoutDesc_t			= PipelineLayoutDescription;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -45,7 +45,8 @@ namespace PlatformCL
 	private:
 		cl::cl_program		_programId;
 		cl::cl_kernel		_kernelId;
-		Description			_descr;
+		Description_t		_descr;
+		LayoutDesc_t		_layoutDesc;
 		usize				_preferredMultipleOfWorkGroupSize;
 
 
@@ -76,7 +77,6 @@ namespace PlatformCL
 
 
 	
-	const TypeIdList	CL1ComputePipeline::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	CL1ComputePipeline::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -85,9 +85,9 @@ namespace PlatformCL
 =================================================
 */
 	CL1ComputePipeline::CL1ComputePipeline (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
-		CL1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
-		_programId( null ),		_kernelId( null ),
-		_descr( ci.descr ),
+		CL1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
+		_programId{ null },			_kernelId{ null },
+		_descr{ ci.descr },			_layoutDesc{ ci.layout },
 		_preferredMultipleOfWorkGroupSize(0)
 	{
 		SetDebugName( "CL1ComputePipeline" );
@@ -109,7 +109,7 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1ComputePipeline::_GetCLPrivateClasses );
 		_SubscribeOnMsg( this, &CL1ComputePipeline::_GetPipelineLayoutDescription );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -174,7 +174,7 @@ namespace PlatformCL
 		CHECK_ERR( msg.newModule );
 
 		// render pass and shader must be unique
-		bool	is_dependent = msg.newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		bool	is_dependent = msg.newModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		if ( _Attach( msg.name, msg.newModule ) and is_dependent )
 		{
@@ -193,7 +193,7 @@ namespace PlatformCL
 	{
 		CHECK_ERR( msg.oldModule );
 		
-		bool	is_dependent = msg.oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		bool	is_dependent = msg.oldModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		if ( _Detach( msg.oldModule ) and is_dependent )
 		{
@@ -248,7 +248,7 @@ namespace PlatformCL
 */
 	bool CL1ComputePipeline::_GetPipelineLayoutDescription (const GpuMsg::GetPipelineLayoutDescription &msg)
 	{
-		msg.result.Set( _descr.layout );
+		msg.result.Set( _layoutDesc );
 		return true;
 	}
 

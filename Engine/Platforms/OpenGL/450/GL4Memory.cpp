@@ -31,8 +31,8 @@ namespace PlatformGL
 	private:
 		using SupportedMessages_t	= GL4BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											DSMsg::GetDataSourceDescription,
-											DSMsg::ReadRegion,
-											DSMsg::WriteRegion,
+											DSMsg::ReadMemRange,
+											DSMsg::WriteMemRange,
 											GpuMsg::ReadFromGpuMemory,
 											GpuMsg::WriteToGpuMemory,
 											GpuMsg::ReadFromImageMemory,
@@ -41,12 +41,10 @@ namespace PlatformGL
 											GpuMsg::MapImageToCpu,
 											GpuMsg::FlushMemoryRange,
 											GpuMsg::UnmapMemory,
-											GpuMsg::GetGpuMemoryDescription,
-											GpuMsg::GpuMemoryRegionChanged
+											GpuMsg::GetGpuMemoryDescription
 										> >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t::Append< MessageListFrom<
-											//ModuleMsg::DataRegionChanged,
 											GpuMsg::OnMemoryBindingChanged
 										> >;
 		
@@ -61,7 +59,6 @@ namespace PlatformGL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -69,7 +66,7 @@ namespace PlatformGL
 	private:
 		GLuint				_objectId;
 		MemMapper_t			_memMapper;
-		BytesUL				_size;
+		BytesU				_size;
 		EGpuMemory::bits	_flags;
 		EBindingTarget		_binding;
 
@@ -83,14 +80,13 @@ namespace PlatformGL
 	// message handlers
 	private:
 		bool _GetGpuMemoryDescription (const GpuMsg::GetGpuMemoryDescription &);
-		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
 		bool _GetDataSourceDescription (const DSMsg::GetDataSourceDescription &);
 		bool _ReadFromImageMemory (const GpuMsg::ReadFromImageMemory &);
 		bool _WriteToImageMemory (const GpuMsg::WriteToImageMemory &);
 		bool _ReadFromGpuMemory (const GpuMsg::ReadFromGpuMemory &);
 		bool _WriteToGpuMemory (const GpuMsg::WriteToGpuMemory &);
-		bool _ReadRegion (const DSMsg::ReadRegion &);
-		bool _WriteRegion (const DSMsg::WriteRegion &);
+		bool _ReadMemRange (const DSMsg::ReadMemRange &);
+		bool _WriteMemRange (const DSMsg::WriteMemRange &);
 		bool _MapMemoryToCpu (const GpuMsg::MapMemoryToCpu &);
 		bool _MapImageToCpu (const GpuMsg::MapImageToCpu &);
 		bool _FlushMemoryRange (const GpuMsg::FlushMemoryRange &);
@@ -115,7 +111,6 @@ namespace PlatformGL
 
 
 
-	const TypeIdList	GL4Memory::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4Memory::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -124,7 +119,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Memory::GL4Memory (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuMemory &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_objectId( 0 ),			_memMapper( ci.memFlags, ci.access ),
 		_flags( ci.memFlags ),	_binding( EBindingTarget::Unbinded )
 	{
@@ -145,8 +140,8 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Memory::_WriteToImageMemory );
 		_SubscribeOnMsg( this, &GL4Memory::_ReadFromGpuMemory );
 		_SubscribeOnMsg( this, &GL4Memory::_WriteToGpuMemory );
-		_SubscribeOnMsg( this, &GL4Memory::_ReadRegion );
-		_SubscribeOnMsg( this, &GL4Memory::_WriteRegion );
+		_SubscribeOnMsg( this, &GL4Memory::_ReadMemRange );
+		_SubscribeOnMsg( this, &GL4Memory::_WriteMemRange );
 		_SubscribeOnMsg( this, &GL4Memory::_MapMemoryToCpu );
 		_SubscribeOnMsg( this, &GL4Memory::_MapImageToCpu );
 		_SubscribeOnMsg( this, &GL4Memory::_FlushMemoryRange );
@@ -154,10 +149,9 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Memory::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Memory::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Memory::_GetGLPrivateClasses );
-		_SubscribeOnMsg( this, &GL4Memory::_GpuMemoryRegionChanged );
 		_SubscribeOnMsg( this, &GL4Memory::_GetGpuMemoryDescription );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -192,16 +186,10 @@ namespace PlatformGL
 	{
 		CHECK_ERR( not _IsCreated() );
 
-		GpuMsg::GetGLImageID		req_id;
-		GpuMsg::GetImageDescription	req_descr;
-		
-		_GetParents().Front()->Send( req_id );
-		_GetParents().Front()->Send( req_descr );
-		
-		_objectId = req_id.result.Get(0);
+		_objectId = _GetParents().Front()->Request( GpuMsg::GetGLImageID{} );
 		CHECK_ERR( _objectId != 0 );
 	
-		// TODO: calc size
+		_size    = _GetParents().Front()->Request( GpuMsg::GetImageMemoryLayout{} ).size;
 		_binding = EBindingTarget::Image;
 		return true;
 	}
@@ -215,16 +203,10 @@ namespace PlatformGL
 	{
 		CHECK_ERR( not _IsCreated() );
 
-		GpuMsg::GetGLBufferID		req_id;
-		GpuMsg::GetBufferDescription	req_descr;
-		
-		_GetParents().Front()->Send( req_id );
-		_GetParents().Front()->Send( req_descr );
-		
-		_objectId = req_id.result.Get(0);
+		_objectId = _GetParents().Front()->Request( GpuMsg::GetGLBufferID{} );
 		CHECK_ERR( _objectId != 0 );
 
-		_size	 = req_descr.result->size;
+		_size	 = _GetParents().Front()->Request( GpuMsg::GetBufferDescription{} ).size;
 		_binding = EBindingTarget::Buffer;
 		return true;
 	}
@@ -260,12 +242,12 @@ namespace PlatformGL
 
 		ModulePtr const&	parent = _GetParents().Front();
 
-		if ( parent->GetSupportedMessages().HasAllTypes< ImageMessages_t >() )
+		if ( parent->SupportsAllMessages< ImageMessages_t >() )
 		{
 			CHECK_COMPOSING( _AllocForImage() );
 		}
 		else
-		if ( parent->GetSupportedMessages().HasAllTypes< BufferMessages_t >() )
+		if ( parent->SupportsAllMessages< BufferMessages_t >() )
 		{
 			CHECK_COMPOSING( _AllocForBuffer() );
 		}
@@ -298,34 +280,31 @@ namespace PlatformGL
 	
 /*
 =================================================
-	_ReadRegion
+	_ReadMemRange
 =================================================
 */
-	bool GL4Memory::_ReadRegion (const DSMsg::ReadRegion &msg)
+	bool GL4Memory::_ReadMemRange (const DSMsg::ReadMemRange &msg)
 	{
 		BinArrayCRef	data;
-		CHECK_ERR( _memMapper.Read( msg.position, BytesUL(msg.writableBuffer->Size()), OUT data ) );
+		CHECK_ERR( _memMapper.Read( msg.position, msg.writableBuffer->Size(), OUT data ) );
 
-		MemCopy( *msg.writableBuffer, data );
+		MemCopy( OUT *msg.writableBuffer, data );
 
 		msg.result.Set( msg.writableBuffer->SubArray( 0, data.Count() ) );
-		
-		//_SendEvent( ModuleMsg::DataRegionChanged{ EMemoryAccess::CpuRead, _memMapper.MappedOffset() + msg.offset, BytesUL(data.Size()) });
 		return true;
 	}
 	
 /*
 =================================================
-	_WriteRegion
+	_WriteMemRange
 =================================================
 */
-	bool GL4Memory::_WriteRegion (const DSMsg::WriteRegion &msg)
+	bool GL4Memory::_WriteMemRange (const DSMsg::WriteMemRange &msg)
 	{
-		BytesUL	written;
+		BytesU	written;
 		CHECK_ERR( _memMapper.Write( msg.data, msg.position, OUT written ) );
-		msg.wasWritten.Set( written );
 
-		//_SendEvent( ModuleMsg::DataRegionChanged{ EMemoryAccess::CpuWrite, _memMapper.MappedOffset() + msg.offset, written });
+		msg.wasWritten.Set( written );
 		return true;
 	}
 	
@@ -340,7 +319,7 @@ namespace PlatformGL
 		CHECK_ERR( _binding == EBindingTarget::Buffer );
 		CHECK_ERR( msg.position < _size );
 		
-		const BytesUL	size		= Min( _size, msg.size );
+		const BytesU	size		= Min( _size, msg.size );
 		GLenum			map_flags	= 0;
 		void *			ptr			= null;
 
@@ -361,7 +340,7 @@ namespace PlatformGL
 
 		_memMapper.OnMapped( ptr, msg.position, size, msg.flags );
 		
-		msg.result.Set( BinArrayRef::FromVoid( ptr, BytesU(size) ) );
+		msg.result.Set( BinArrayRef::FromVoid( ptr, size ) );
 		return true;
 	}
 	
@@ -415,20 +394,6 @@ namespace PlatformGL
 
 		return Module::_Delete_Impl( msg );
 	}
-
-/*
-=================================================
-	_GpuMemoryRegionChanged
-=================================================
-*/
-	bool GL4Memory::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
-	{
-		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::GpuWrite] );	// this message allowed only for gpu-writable memory
-
-		// request memory barrier
-		TODO( "" );
-		return false;
-	}
 	
 /*
 =================================================
@@ -459,7 +424,7 @@ namespace PlatformGL
 		CHECK_ERR( msg.writableBuffer->Size() > 0 );
 		CHECK_ERR( msg.position < _size );
 		
-		const BytesUL	req_size = BytesUL(msg.writableBuffer->Size());
+		const BytesU	req_size = msg.writableBuffer->Size();
 
 		// read from mapped memory
 		if ( _memMapper.IsMapped() )
@@ -468,17 +433,17 @@ namespace PlatformGL
 					   msg.position + req_size <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
 
 			// read
-			DSMsg::ReadRegion	read_stream;
-			read_stream.position		= msg.position - _memMapper.MappedOffset();
-			read_stream.writableBuffer	= msg.writableBuffer;
+			DSMsg::ReadMemRange	read;
+			read.position		= msg.position - _memMapper.MappedOffset();
+			read.writableBuffer	= msg.writableBuffer;
 
-			CHECK( _ReadRegion( read_stream ) );
+			CHECK( _ReadMemRange( read ) );
 			
 			// copy to writable buffer
-			CHECK( msg.writableBuffer->Size() >= read_stream.result->Size() );
+			CHECK( msg.writableBuffer->Size() >= read.result->Size() );
 
-			MemCopy( *msg.writableBuffer, *read_stream.result );
-			msg.result.Set( msg.writableBuffer->SubArray( 0, usize(read_stream.result->Size()) ) );
+			MemCopy( OUT *msg.writableBuffer, *read.result );
+			msg.result.Set( msg.writableBuffer->SubArray( 0, usize(read.result->Size()) ) );
 			return true;
 		}
 		
@@ -510,26 +475,26 @@ namespace PlatformGL
 		if ( _memMapper.IsMapped() )
 		{
 			CHECK_ERR( msg.position >= _memMapper.MappedOffset() and
-					   msg.position + BytesUL(msg.data.Size()) <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
+					   msg.position + msg.data.Size() <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
 
 			// write
-			DSMsg::WriteRegion		write_stream;
-			write_stream.position	= msg.position - _memMapper.MappedOffset();
-			write_stream.data		= msg.data;
+			DSMsg::WriteMemRange	write;
+			write.position	= msg.position - _memMapper.MappedOffset();
+			write.data		= msg.data;
 
-			CHECK( _WriteRegion( write_stream ) );
+			CHECK( _WriteMemRange( write ) );
 
 			// flush
 			if ( not _flags[ EGpuMemory::CoherentWithCPU ] )
 			{
 				GpuMsg::FlushMemoryRange	flush;
-				flush.offset	= write_stream.position;
-				flush.size		= write_stream.wasWritten.Get( UMax );
+				flush.offset	= write.position;
+				flush.size		= write.wasWritten.Get( UMax );
 
 				CHECK( _FlushMemoryRange( flush ) );
 			}
 
-			msg.wasWritten.Set( *write_stream.wasWritten );
+			msg.wasWritten.Set( *write.wasWritten );
 			return true;
 		}
 		
@@ -541,9 +506,7 @@ namespace PlatformGL
 									   GLsizei(size),
 									   msg.data.ptr() ) );
 
-		msg.wasWritten.Set( BytesUL(size) );
-		
-		//_SendEvent( ModuleMsg::DataRegionChanged{ EMemoryAccess::CpuWrite, msg.offset, BytesUL(size) });
+		msg.wasWritten.Set( BytesU(size) );
 		return true;
 	}
 
@@ -557,7 +520,7 @@ namespace PlatformGL
 		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
 		CHECK_ERR( _binding == EBindingTarget::Image );
-		CHECK_ERR( msg.memOffset == BytesUL(0) );	// not supported
+		CHECK_ERR( msg.memOffset == 0_b );	// not supported
 		CHECK_ERR( IsNotZero( msg.dimension ) );
 		
 		// write without mapping
@@ -582,7 +545,7 @@ namespace PlatformGL
 								row_align = 1_b;
 
 		const usize		row_length	= usize(msg.rowPitch / bpp);
-		BytesUL			data_size;
+		BytesU			data_size;
 
 		GL_CALL( glBindTexture( target, _objectId ) );
 		GL_CALL( glPixelStorei( GL_UNPACK_ALIGNMENT, GLint(row_align) ) );
@@ -592,7 +555,7 @@ namespace PlatformGL
 		{
 			CHECK_ERR( msg.data.Size() == msg.dimension.z * msg.slicePitch );
 
-			data_size = msg.dimension.z * BytesUL(msg.slicePitch);
+			data_size = msg.dimension.z * msg.slicePitch;
 
 			GL_CALL( glPixelStorei( GL_UNPACK_IMAGE_HEIGHT, GLint(msg.slicePitch / msg.rowPitch) ) );
 		}
@@ -601,7 +564,7 @@ namespace PlatformGL
 			CHECK_ERR( msg.dimension.z == 1 );
 			CHECK_ERR( msg.data.Size() >= msg.dimension.y * msg.rowPitch );
 			
-			data_size = msg.dimension.y * BytesUL(msg.rowPitch);
+			data_size = msg.dimension.y * msg.rowPitch;
 			
 			GL_CALL( glPixelStorei( GL_UNPACK_IMAGE_HEIGHT, 0 ) );
 		}
@@ -685,8 +648,6 @@ namespace PlatformGL
 		GL_CALL( glBindTexture( target, 0 ) );
 		
 		msg.wasWritten.Set( data_size );
-		
-		//_SendEvent( ModuleMsg::DataRegionChanged{ EMemoryAccess::CpuWrite, msg.memOffset, BytesUL(msg.data.Size()) });	// TODO: calc mipmap and layer offset
 		return true;
 	}
 	
@@ -700,7 +661,7 @@ namespace PlatformGL
 		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
 		CHECK_ERR( _binding == EBindingTarget::Image );
-		CHECK_ERR( msg.memOffset == BytesUL(0) );	// not supported
+		CHECK_ERR( msg.memOffset == 0_b );	// not supported
 		
 		// read without mapping
 		const auto&		img_res		= GetResourceCache()->GetImageID( _GetParents().Front() );

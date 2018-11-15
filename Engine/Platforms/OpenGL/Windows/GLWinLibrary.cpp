@@ -14,7 +14,7 @@ namespace Engine
 namespace PlatformGL
 {
 	
-	using wglGetProcAddressProc_t = decltype(&wglGetProcAddress);
+	using wglGetProcAddress_t = decltype(&wglGetProcAddress);
 	
 /*
 =================================================
@@ -22,7 +22,7 @@ namespace PlatformGL
 =================================================
 */
 	GLWinLibrary::GLWinLibrary () :
-		_getProc( UninitializedT<wglGetProcAddressProc_t>() )
+		_getProc( UninitializedT<wglGetProcAddress_t>() )
 	{}
 	
 /*
@@ -66,8 +66,8 @@ namespace PlatformGL
 	{
 		SharedLibFunction_t  res = null;
 
-		if ( _getProc.IsNotNull<wglGetProcAddressProc_t>() and
-			 (res = ReferenceCast<SharedLibFunction_t>(_getProc.Get<wglGetProcAddressProc_t>()( address.cstr() ))) != null )
+		if ( _getProc.IsNotNull< wglGetProcAddress_t >() and
+			 (res = ReferenceCast< SharedLibFunction_t >(_getProc.Get< wglGetProcAddress_t >()( address.cstr() ))) != null )
 		{
 			return res;
 		}
@@ -95,8 +95,8 @@ namespace PlatformGL
 */
 	bool GLWinLibrary::_OnInit ()
 	{
-		_getProc = ReferenceCast<wglGetProcAddressProc_t>( _lib.GetProc( "wglGetProcAddress" ) );
-		return _getProc.IsNotNull<wglGetProcAddressProc_t>();
+		_getProc = ReferenceCast< wglGetProcAddress_t >( _lib.GetProc( "wglGetProcAddress" ) );
+		return _getProc.IsNotNull< wglGetProcAddress_t> ();
 	}
 
 

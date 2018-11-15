@@ -159,7 +159,7 @@ namespace ResPack
 			CHECK_ERR( data_size == calc_data_size );
 
 			pixels.Resize( data_size, false );
-			UnsafeMem::MemCopy( pixels.ptr(), ilGetData(), BytesU(data_size) );
+			UnsafeMem::MemCopy( OUT pixels.ptr(), ilGetData(), BytesU(data_size) );
 		}
 
 		mipmap.dimension	= uint3(width, height, depth);

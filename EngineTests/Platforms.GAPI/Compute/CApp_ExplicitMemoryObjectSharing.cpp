@@ -7,27 +7,22 @@
 
 bool CApp::_Test_ExplicitMemoryObjectSharing ()
 {
-	using ImageLayers	= GpuMsg::CmdCopyBufferToImage::ImageLayers;
-	using Pixel			= uint;
-
-	using MemoryMsg_t	= ModuleMsg::MessageListFrom< GpuMsg::GetGpuMemoryDescription >;
-	using MemoryEvent_t	= ModuleMsg::MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
-
-
 	if ( not gpuThread->Request( GpuMsg::GetDeviceProperties{} ).explicitMemoryObjects )
 		return true;
 
 
+	using Pixel		= uint;
+
 	const uint2		img_dim		{64, 64};
 
 	const BytesU	align_bytes	= 4_b;
-	const BytesUL	row_pitch	= BytesUL(AlignToLarge( img_dim.x * sizeof(Pixel), align_bytes ));
+	const BytesU	row_pitch	= BytesU(AlignToLarge( img_dim.x * sizeof(Pixel), align_bytes ));
 	const uint		row_length	= uint(row_pitch / sizeof(Pixel));
 
-	const BytesUL	data_size	= row_pitch * img_dim.y;
+	const BytesU	data_size	= row_pitch * img_dim.y;
 	
 	// check alignment
-	CHECK_ERR( row_pitch == BytesUL(row_length * sizeof(Pixel)) );
+	CHECK_ERR( row_pitch == BytesU(row_length * sizeof(Pixel)) );
 	
 	// generate buffer data
 	Array<Pixel>	buf_data;	buf_data.Resize( usize(row_length * img_dim.y) );
@@ -35,7 +30,7 @@ bool CApp::_Test_ExplicitMemoryObjectSharing ()
 	for (uint y = 0; y < img_dim.y; ++y)
 	for (uint x = 0; x < img_dim.x; ++x)
 	{
-		buf_data[y * row_length + x] = x | (y << 16);  //(x & 3) + (y & 3) * 4;
+		buf_data[y * row_length + x] = x | (y << 16);
 	}
 
 
@@ -55,7 +50,7 @@ bool CApp::_Test_ExplicitMemoryObjectSharing ()
 	CHECK_ERR( factory->Create(
 					gpuIDs.image,
 					gpuThread->GlobalSystems(),
-					CreateInfo::GpuImage{ ImageDescription{ EImage::Tex2D, uint4(img_dim), EPixelFormat::R32U, EImageUsage::TransferDst | EImageUsage::ColorAttachment }},
+					CreateInfo::GpuImage{ ImageDescription{ EImage::Tex2D, uint4(img_dim), EPixelFormat::R32U, EImageUsage::TransferDst | EImageUsage::ColorAttachment | EImageUsage::Sampled }},
 					OUT dst_image ));
 
 	ModulePtr	shared_buffer;
@@ -81,7 +76,7 @@ bool CApp::_Test_ExplicitMemoryObjectSharing ()
 	// write data to buffer
 	GpuMsg::WriteToGpuMemory	write_cmd{ BinArrayCRef::From(buf_data) };
 	src_buffer->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL(buf_data.Size()) );
+	CHECK_ERR( *write_cmd.wasWritten == buf_data.Size() );
 
 
 	// copy from buffer to image
@@ -92,7 +87,7 @@ bool CApp::_Test_ExplicitMemoryObjectSharing ()
 							.AddBuffer({ src_buffer,
 										 EPipelineAccess::HostWrite,
 										 EPipelineAccess::TransferRead,
-										 BytesUL(0), data_size }) );
+										 0_b, data_size }) );
 	
 		cmdBuilder->Send( GpuMsg::CmdPipelineBarrier{ EPipelineStage::TopOfPipe, EPipelineStage::Transfer }
 							.AddImage({	dst_image,
@@ -103,24 +98,24 @@ bool CApp::_Test_ExplicitMemoryObjectSharing ()
 										EImageAspect::Color }) );
 
 		cmdBuilder->Send( GpuMsg::CmdCopyBufferToImage{ src_buffer, dst_image, EImageLayout::TransferDstOptimal }
-							.AddRegion( BytesUL(0),
+							.AddRegion( 0_b,
 										row_length, img_dim.y,
-										ImageLayers{EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1},
+										ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 },
 										uint3(),
 										uint3(img_dim, 0) ));
 	
-		cmdBuilder->Send( GpuMsg::CmdPipelineBarrier{ EPipelineStage::Transfer, EPipelineStage::BottomOfPipe }
+		cmdBuilder->Send( GpuMsg::CmdPipelineBarrier{ EPipelineStage::Transfer, EPipelineStage::FragmentShader }
 							.AddImage({	dst_image,
 										EPipelineAccess::TransferWrite,
-										EPipelineAccess::ColorAttachment,
+										EPipelineAccess::ShaderRead,
 										EImageLayout::TransferDstOptimal,
-										EImageLayout::General,
+										EImageLayout::ShaderReadOnlyOptimal,
 										EImageAspect::Color }) );
 
 		ModulePtr	cmd_buffer	= cmdBuilder->Request( GpuMsg::CmdEnd{} );
 		auto		fence		= syncManager->Request( GpuMsg::CreateFence{} );
 		
-		gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ cmd_buffer }.SetFence( fence ));
+		gpuThread->Send( GpuMsg::SubmitCommands{ cmd_buffer }.SetFence( fence ));
 		syncManager->Send( GpuMsg::ClientWaitFence{ fence });
 	}
 
@@ -129,12 +124,12 @@ bool CApp::_Test_ExplicitMemoryObjectSharing ()
 	{
 		cmdBuilder->Send( GpuMsg::CmdBegin{} );
 
-		cmdBuilder->Send( GpuMsg::CmdCopyBuffer{ shared_buffer, src_buffer }.AddRegion( 0_b, 0_b, BytesU(data_size) ));
+		cmdBuilder->Send( GpuMsg::CmdCopyBuffer{ shared_buffer, src_buffer }.AddRegion( 0_b, 0_b, data_size ));
 
 		ModulePtr	cmd_buffer	= cmdBuilder->Request( GpuMsg::CmdEnd{} );
 		auto		fence		= syncManager->Request( GpuMsg::CreateFence{} );
 		
-		gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ cmd_buffer }.SetFence( fence ));
+		gpuThread->Send( GpuMsg::SubmitCommands{ cmd_buffer }.SetFence( fence ));
 		syncManager->Send( GpuMsg::ClientWaitFence{ fence });
 	}
 	

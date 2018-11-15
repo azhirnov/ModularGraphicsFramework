@@ -12,7 +12,7 @@
 #define VK_VERSION_MAJOR(version) ((uint32_t)(version) >> 22)
 #define VK_VERSION_MINOR(version) (((uint32_t)(version) >> 12) & 0x3ff)
 #define VK_VERSION_PATCH(version) ((uint32_t)(version) & 0xfff)
-#define VK_HEADER_VERSION 74
+#define VK_HEADER_VERSION 83
 #define VK_NULL_HANDLE 0
 
 #define VK_DEFINE_HANDLE(object) typedef struct object##_T* object;
@@ -277,6 +277,9 @@ enum VkStructureType {
     VK_STRUCTURE_TYPE_IMPORT_SEMAPHORE_FD_INFO_KHR = 1000079000,
     VK_STRUCTURE_TYPE_SEMAPHORE_GET_FD_INFO_KHR = 1000079001,
     VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_DESCRIPTOR_PROPERTIES_KHR = 1000080000,
+    VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_CONDITIONAL_RENDERING_INFO_EXT = 1000081000,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONDITIONAL_RENDERING_FEATURES_EXT = 1000081001,
+    VK_STRUCTURE_TYPE_CONDITIONAL_RENDERING_BEGIN_INFO_EXT = 1000081002,
     VK_STRUCTURE_TYPE_PRESENT_REGIONS_KHR = 1000084000,
     VK_STRUCTURE_TYPE_OBJECT_TABLE_CREATE_INFO_NVX = 1000086000,
     VK_STRUCTURE_TYPE_INDIRECT_COMMANDS_LAYOUT_CREATE_INFO_NVX = 1000086001,
@@ -298,6 +301,13 @@ enum VkStructureType {
     VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONSERVATIVE_RASTERIZATION_PROPERTIES_EXT = 1000101000,
     VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_CONSERVATIVE_STATE_CREATE_INFO_EXT = 1000101001,
     VK_STRUCTURE_TYPE_HDR_METADATA_EXT = 1000105000,
+    VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2_KHR = 1000109000,
+    VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2_KHR = 1000109001,
+    VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2_KHR = 1000109002,
+    VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2_KHR = 1000109003,
+    VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2_KHR = 1000109004,
+    VK_STRUCTURE_TYPE_SUBPASS_BEGIN_INFO_KHR = 1000109005,
+    VK_STRUCTURE_TYPE_SUBPASS_END_INFO_KHR = 1000109006,
     VK_STRUCTURE_TYPE_SHARED_PRESENT_SURFACE_CAPABILITIES_KHR = 1000111000,
     VK_STRUCTURE_TYPE_IMPORT_FENCE_WIN32_HANDLE_INFO_KHR = 1000114000,
     VK_STRUCTURE_TYPE_EXPORT_FENCE_WIN32_HANDLE_INFO_KHR = 1000114001,
@@ -307,6 +317,11 @@ enum VkStructureType {
     VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SURFACE_INFO_2_KHR = 1000119000,
     VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_KHR = 1000119001,
     VK_STRUCTURE_TYPE_SURFACE_FORMAT_2_KHR = 1000119002,
+    VK_STRUCTURE_TYPE_DISPLAY_PROPERTIES_2_KHR = 1000121000,
+    VK_STRUCTURE_TYPE_DISPLAY_PLANE_PROPERTIES_2_KHR = 1000121001,
+    VK_STRUCTURE_TYPE_DISPLAY_MODE_PROPERTIES_2_KHR = 1000121002,
+    VK_STRUCTURE_TYPE_DISPLAY_PLANE_INFO_2_KHR = 1000121003,
+    VK_STRUCTURE_TYPE_DISPLAY_PLANE_CAPABILITIES_2_KHR = 1000121004,
     VK_STRUCTURE_TYPE_IOS_SURFACE_CREATE_INFO_MVK = 1000122000,
     VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK = 1000123000,
     VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT = 1000128000,
@@ -341,12 +356,16 @@ enum VkStructureType {
     VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO_EXT = 1000161003,
     VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_LAYOUT_SUPPORT_EXT = 1000161004,
     VK_STRUCTURE_TYPE_DEVICE_QUEUE_GLOBAL_PRIORITY_CREATE_INFO_EXT = 1000174000,
+    VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES_KHR = 1000177000,
     VK_STRUCTURE_TYPE_IMPORT_MEMORY_HOST_POINTER_INFO_EXT = 1000178000,
     VK_STRUCTURE_TYPE_MEMORY_HOST_POINTER_PROPERTIES_EXT = 1000178001,
     VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_HOST_PROPERTIES_EXT = 1000178002,
     VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CORE_PROPERTIES_AMD = 1000185000,
     VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_PROPERTIES_EXT = 1000190000,
     VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_DIVISOR_STATE_CREATE_INFO_EXT = 1000190001,
+    VK_STRUCTURE_TYPE_CHECKPOINT_DATA_NV = 1000206000,
+    VK_STRUCTURE_TYPE_QUEUE_FAMILY_CHECKPOINT_PROPERTIES_NV = 1000206001,
+    VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
     VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO_KHR = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO,
     VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHR = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES,
     VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHR = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES,
@@ -381,6 +400,7 @@ enum VkStructureType {
     VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO_KHR = VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO,
     VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES_KHR = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES,
     VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO_KHR = VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO,
+    VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES2_EXT = VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_EXT,
     VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_FENCE_INFO_KHR = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_FENCE_INFO,
     VK_STRUCTURE_TYPE_EXTERNAL_FENCE_PROPERTIES_KHR = VK_STRUCTURE_TYPE_EXTERNAL_FENCE_PROPERTIES,
     VK_STRUCTURE_TYPE_EXPORT_FENCE_CREATE_INFO_KHR = VK_STRUCTURE_TYPE_EXPORT_FENCE_CREATE_INFO,
@@ -1166,6 +1186,16 @@ enum VkObjectType {
     VK_OBJECT_TYPE_MAX_ENUM = 0x7FFFFFFF
 };
 
+enum VkVendorId { 
+    VK_VENDOR_ID_VIV = 0x10001,
+    VK_VENDOR_ID_VSI = 0x10002,
+    VK_VENDOR_ID_KAZAN = 0x10003,
+    VK_VENDOR_ID_BEGIN_RANGE = VK_VENDOR_ID_VIV,
+    VK_VENDOR_ID_END_RANGE = VK_VENDOR_ID_KAZAN,
+    VK_VENDOR_ID_RANGE_SIZE = (VK_VENDOR_ID_KAZAN - VK_VENDOR_ID_VIV + 1),
+    VK_VENDOR_ID_MAX_ENUM = 0x7FFFFFFF
+};
+
 typedef VkFlags VkInstanceCreateFlags;
 enum VkFormatFeatureFlagBits { 
     VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT = 0x00000001,
@@ -1308,6 +1338,7 @@ enum VkPipelineStageFlagBits {
     VK_PIPELINE_STAGE_HOST_BIT = 0x00004000,
     VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT = 0x00008000,
     VK_PIPELINE_STAGE_ALL_COMMANDS_BIT = 0x00010000,
+    VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT = 0x00040000,
     VK_PIPELINE_STAGE_COMMAND_PROCESS_BIT_NVX = 0x00020000,
     VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 };
@@ -1396,6 +1427,7 @@ enum VkBufferUsageFlagBits {
     VK_BUFFER_USAGE_INDEX_BUFFER_BIT = 0x00000040,
     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT = 0x00000080,
     VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT = 0x00000100,
+    VK_BUFFER_USAGE_CONDITIONAL_RENDERING_BIT_EXT = 0x00000200,
     VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM = 0x7FFFFFFF
 };
 
@@ -1507,6 +1539,7 @@ enum VkAccessFlagBits {
     VK_ACCESS_HOST_WRITE_BIT = 0x00004000,
     VK_ACCESS_MEMORY_READ_BIT = 0x00008000,
     VK_ACCESS_MEMORY_WRITE_BIT = 0x00010000,
+    VK_ACCESS_CONDITIONAL_RENDERING_READ_BIT_EXT = 0x00100000,
     VK_ACCESS_COMMAND_PROCESS_READ_BIT_NVX = 0x00020000,
     VK_ACCESS_COMMAND_PROCESS_WRITE_BIT_NVX = 0x00040000,
     VK_ACCESS_COLOR_ATTACHMENT_READ_NONCOHERENT_BIT_EXT = 0x00080000,
@@ -2672,6 +2705,16 @@ struct VkDrawIndirectCommand {
     uint32_t    firstInstance;
 };
 
+struct VkBaseOutStructure { 
+    VkStructureType               sType;
+    struct VkBaseOutStructure*    pNext;
+};
+
+struct VkBaseInStructure { 
+    VkStructureType                    sType;
+    const struct VkBaseInStructure*    pNext;
+};
+
 typedef VkResult (VKAPI_PTR *PFN_vkCreateInstance)(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance);
 
 typedef void (VKAPI_PTR *PFN_vkDestroyInstance)(VkInstance instance, const VkAllocationCallbacks* pAllocator);
@@ -3698,7 +3741,6 @@ typedef void (VKAPI_PTR *PFN_vkGetDescriptorSetLayoutSupport)(VkDevice device, c
 VK_DEFINE_NON_DISPATCHABLE_HANDLE(VkSurfaceKHR)
 #define VK_KHR_SURFACE_SPEC_VERSION       25
 #define VK_KHR_SURFACE_EXTENSION_NAME     "VK_KHR_surface"
-#define VK_COLORSPACE_SRGB_NONLINEAR_KHR  VK_COLOR_SPACE_SRGB_NONLINEAR_KHR
 enum VkColorSpaceKHR { 
     VK_COLOR_SPACE_SRGB_NONLINEAR_KHR = 0,
     VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT = 1000104001,
@@ -3715,6 +3757,7 @@ enum VkColorSpaceKHR {
     VK_COLOR_SPACE_ADOBERGB_NONLINEAR_EXT = 1000104012,
     VK_COLOR_SPACE_PASS_THROUGH_EXT = 1000104013,
     VK_COLOR_SPACE_EXTENDED_SRGB_NONLINEAR_EXT = 1000104014,
+    VK_COLORSPACE_SRGB_NONLINEAR_KHR = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
     VK_COLOR_SPACE_BEGIN_RANGE_KHR = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
     VK_COLOR_SPACE_END_RANGE_KHR = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
     VK_COLOR_SPACE_RANGE_SIZE_KHR = (VK_COLOR_SPACE_SRGB_NONLINEAR_KHR - VK_COLOR_SPACE_SRGB_NONLINEAR_KHR + 1),
@@ -4213,6 +4256,93 @@ typedef void (VKAPI_PTR *PFN_vkDestroyDescriptorUpdateTemplateKHR)(VkDevice devi
 
 typedef void (VKAPI_PTR *PFN_vkUpdateDescriptorSetWithTemplateKHR)(VkDevice device, VkDescriptorSet descriptorSet, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const void* pData);
 
+#define VK_KHR_create_renderpass2 1
+#define VK_KHR_CREATE_RENDERPASS_2_SPEC_VERSION 1
+#define VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME "VK_KHR_create_renderpass2"
+struct VkAttachmentDescription2KHR { 
+    VkStructureType                 sType;
+    const void*                     pNext;
+    VkAttachmentDescriptionFlags    flags;
+    VkFormat                        format;
+    VkSampleCountFlagBits           samples;
+    VkAttachmentLoadOp              loadOp;
+    VkAttachmentStoreOp             storeOp;
+    VkAttachmentLoadOp              stencilLoadOp;
+    VkAttachmentStoreOp             stencilStoreOp;
+    VkImageLayout                   initialLayout;
+    VkImageLayout                   finalLayout;
+};
+
+struct VkAttachmentReference2KHR { 
+    VkStructureType       sType;
+    const void*           pNext;
+    uint32_t              attachment;
+    VkImageLayout         layout;
+    VkImageAspectFlags    aspectMask;
+};
+
+struct VkSubpassDescription2KHR { 
+    VkStructureType                     sType;
+    const void*                         pNext;
+    VkSubpassDescriptionFlags           flags;
+    VkPipelineBindPoint                 pipelineBindPoint;
+    uint32_t                            viewMask;
+    uint32_t                            inputAttachmentCount;
+    const VkAttachmentReference2KHR*    pInputAttachments;
+    uint32_t                            colorAttachmentCount;
+    const VkAttachmentReference2KHR*    pColorAttachments;
+    const VkAttachmentReference2KHR*    pResolveAttachments;
+    const VkAttachmentReference2KHR*    pDepthStencilAttachment;
+    uint32_t                            preserveAttachmentCount;
+    const uint32_t*                     pPreserveAttachments;
+};
+
+struct VkSubpassDependency2KHR { 
+    VkStructureType         sType;
+    const void*             pNext;
+    uint32_t                srcSubpass;
+    uint32_t                dstSubpass;
+    VkPipelineStageFlags    srcStageMask;
+    VkPipelineStageFlags    dstStageMask;
+    VkAccessFlags           srcAccessMask;
+    VkAccessFlags           dstAccessMask;
+    VkDependencyFlags       dependencyFlags;
+    int32_t                 viewOffset;
+};
+
+struct VkRenderPassCreateInfo2KHR { 
+    VkStructureType                       sType;
+    const void*                           pNext;
+    VkRenderPassCreateFlags               flags;
+    uint32_t                              attachmentCount;
+    const VkAttachmentDescription2KHR*    pAttachments;
+    uint32_t                              subpassCount;
+    const VkSubpassDescription2KHR*       pSubpasses;
+    uint32_t                              dependencyCount;
+    const VkSubpassDependency2KHR*        pDependencies;
+    uint32_t                              correlatedViewMaskCount;
+    const uint32_t*                       pCorrelatedViewMasks;
+};
+
+struct VkSubpassBeginInfoKHR { 
+    VkStructureType      sType;
+    const void*          pNext;
+    VkSubpassContents    contents;
+};
+
+struct VkSubpassEndInfoKHR { 
+    VkStructureType    sType;
+    const void*        pNext;
+};
+
+typedef VkResult (VKAPI_PTR *PFN_vkCreateRenderPass2KHR)(VkDevice device, const VkRenderPassCreateInfo2KHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass);
+
+typedef void (VKAPI_PTR *PFN_vkCmdBeginRenderPass2KHR)(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo*      pRenderPassBegin, const VkSubpassBeginInfoKHR*      pSubpassBeginInfo);
+
+typedef void (VKAPI_PTR *PFN_vkCmdNextSubpass2KHR)(VkCommandBuffer commandBuffer, const VkSubpassBeginInfoKHR*      pSubpassBeginInfo, const VkSubpassEndInfoKHR*        pSubpassEndInfo);
+
+typedef void (VKAPI_PTR *PFN_vkCmdEndRenderPass2KHR)(VkCommandBuffer commandBuffer, const VkSubpassEndInfoKHR*        pSubpassEndInfo);
+
 #define VK_KHR_shared_presentable_image 1
 #define VK_KHR_SHARED_PRESENTABLE_IMAGE_SPEC_VERSION 1
 #define VK_KHR_SHARED_PRESENTABLE_IMAGE_EXTENSION_NAME "VK_KHR_shared_presentable_image"
@@ -4303,6 +4433,48 @@ typedef VkResult (VKAPI_PTR *PFN_vkGetPhysicalDeviceSurfaceFormats2KHR)(VkPhysic
 #define VK_KHR_VARIABLE_POINTERS_SPEC_VERSION 1
 #define VK_KHR_VARIABLE_POINTERS_EXTENSION_NAME "VK_KHR_variable_pointers"
 typedef VkPhysicalDeviceVariablePointerFeatures VkPhysicalDeviceVariablePointerFeaturesKHR;
+#define VK_KHR_get_display_properties2 1
+#define VK_KHR_GET_DISPLAY_PROPERTIES_2_SPEC_VERSION 1
+#define VK_KHR_GET_DISPLAY_PROPERTIES_2_EXTENSION_NAME "VK_KHR_get_display_properties2"
+struct VkDisplayProperties2KHR { 
+    VkStructureType           sType;
+    void*                     pNext;
+    VkDisplayPropertiesKHR    displayProperties;
+};
+
+struct VkDisplayPlaneProperties2KHR { 
+    VkStructureType                sType;
+    void*                          pNext;
+    VkDisplayPlanePropertiesKHR    displayPlaneProperties;
+};
+
+struct VkDisplayModeProperties2KHR { 
+    VkStructureType               sType;
+    void*                         pNext;
+    VkDisplayModePropertiesKHR    displayModeProperties;
+};
+
+struct VkDisplayPlaneInfo2KHR { 
+    VkStructureType     sType;
+    const void*         pNext;
+    VkDisplayModeKHR    mode;
+    uint32_t            planeIndex;
+};
+
+struct VkDisplayPlaneCapabilities2KHR { 
+    VkStructureType                  sType;
+    void*                            pNext;
+    VkDisplayPlaneCapabilitiesKHR    capabilities;
+};
+
+typedef VkResult (VKAPI_PTR *PFN_vkGetPhysicalDeviceDisplayProperties2KHR)(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayProperties2KHR* pProperties);
+
+typedef VkResult (VKAPI_PTR *PFN_vkGetPhysicalDeviceDisplayPlaneProperties2KHR)(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPlaneProperties2KHR* pProperties);
+
+typedef VkResult (VKAPI_PTR *PFN_vkGetDisplayModeProperties2KHR)(VkPhysicalDevice physicalDevice, VkDisplayKHR display, uint32_t* pPropertyCount, VkDisplayModeProperties2KHR* pProperties);
+
+typedef VkResult (VKAPI_PTR *PFN_vkGetDisplayPlaneCapabilities2KHR)(VkPhysicalDevice physicalDevice, const VkDisplayPlaneInfo2KHR* pDisplayPlaneInfo, VkDisplayPlaneCapabilities2KHR* pCapabilities);
+
 #define VK_KHR_dedicated_allocation 1
 #define VK_KHR_DEDICATED_ALLOCATION_SPEC_VERSION 3
 #define VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME "VK_KHR_dedicated_allocation"
@@ -4371,12 +4543,28 @@ typedef VkPhysicalDeviceMaintenance3Properties VkPhysicalDeviceMaintenance3Prope
 typedef VkDescriptorSetLayoutSupport VkDescriptorSetLayoutSupportKHR;
 typedef void (VKAPI_PTR *PFN_vkGetDescriptorSetLayoutSupportKHR)(VkDevice device, const VkDescriptorSetLayoutCreateInfo* pCreateInfo, VkDescriptorSetLayoutSupport* pSupport);
 
+#define VK_KHR_draw_indirect_count 1
+#define VK_KHR_DRAW_INDIRECT_COUNT_SPEC_VERSION 1
+#define VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME "VK_KHR_draw_indirect_count"
+typedef void (VKAPI_PTR *PFN_vkCmdDrawIndirectCountKHR)(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride);
+
+typedef void (VKAPI_PTR *PFN_vkCmdDrawIndexedIndirectCountKHR)(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride);
+
+#define VK_KHR_8bit_storage 1
+#define VK_KHR_8BIT_STORAGE_SPEC_VERSION  1
+#define VK_KHR_8BIT_STORAGE_EXTENSION_NAME "VK_KHR_8bit_storage"
+struct VkPhysicalDevice8BitStorageFeaturesKHR { 
+    VkStructureType    sType;
+    void*              pNext;
+    VkBool32           storageBuffer8BitAccess;
+    VkBool32           uniformAndStorageBuffer8BitAccess;
+    VkBool32           storagePushConstant8;
+};
+
 #define VK_EXT_debug_report 1
 VK_DEFINE_NON_DISPATCHABLE_HANDLE(VkDebugReportCallbackEXT)
 #define VK_EXT_DEBUG_REPORT_SPEC_VERSION  9
 #define VK_EXT_DEBUG_REPORT_EXTENSION_NAME "VK_EXT_debug_report"
-#define VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT
-#define VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_CALLBACK_EXT_EXT
 enum VkDebugReportObjectTypeEXT { 
     VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT = 0,
     VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT = 1,
@@ -4414,6 +4602,8 @@ enum VkDebugReportObjectTypeEXT {
     VK_DEBUG_REPORT_OBJECT_TYPE_VALIDATION_CACHE_EXT_EXT = 33,
     VK_DEBUG_REPORT_OBJECT_TYPE_SAMPLER_YCBCR_CONVERSION_EXT = 1000156000,
     VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_EXT = 1000085000,
+    VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT = VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_CALLBACK_EXT_EXT,
+    VK_DEBUG_REPORT_OBJECT_TYPE_VALIDATION_CACHE_EXT = VK_DEBUG_REPORT_OBJECT_TYPE_VALIDATION_CACHE_EXT_EXT,
     VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_KHR_EXT = VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_EXT,
     VK_DEBUG_REPORT_OBJECT_TYPE_SAMPLER_YCBCR_CONVERSION_KHR_EXT = VK_DEBUG_REPORT_OBJECT_TYPE_SAMPLER_YCBCR_CONVERSION_EXT,
     VK_DEBUG_REPORT_OBJECT_TYPE_BEGIN_RANGE_EXT = VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT,
@@ -4673,10 +4863,10 @@ enum VkValidationCheckEXT {
 };
 
 struct VkValidationFlagsEXT { 
-    VkStructureType          sType;
-    const void*              pNext;
-    uint32_t                 disabledValidationCheckCount;
-    VkValidationCheckEXT*    pDisabledValidationChecks;
+    VkStructureType                sType;
+    const void*                    pNext;
+    uint32_t                       disabledValidationCheckCount;
+    const VkValidationCheckEXT*    pDisabledValidationChecks;
 };
 
 #define VK_EXT_shader_subgroup_ballot 1
@@ -4685,6 +4875,40 @@ struct VkValidationFlagsEXT {
 #define VK_EXT_shader_subgroup_vote 1
 #define VK_EXT_SHADER_SUBGROUP_VOTE_SPEC_VERSION 1
 #define VK_EXT_SHADER_SUBGROUP_VOTE_EXTENSION_NAME "VK_EXT_shader_subgroup_vote"
+#define VK_EXT_conditional_rendering 1
+#define VK_EXT_CONDITIONAL_RENDERING_SPEC_VERSION 1
+#define VK_EXT_CONDITIONAL_RENDERING_EXTENSION_NAME "VK_EXT_conditional_rendering"
+enum VkConditionalRenderingFlagBitsEXT { 
+    VK_CONDITIONAL_RENDERING_INVERTED_BIT_EXT = 0x00000001,
+    VK_CONDITIONAL_RENDERING_FLAG_BITS_MAX_ENUM_EXT = 0x7FFFFFFF
+};
+
+typedef VkFlags VkConditionalRenderingFlagsEXT;
+struct VkConditionalRenderingBeginInfoEXT { 
+    VkStructureType                   sType;
+    const void*                       pNext;
+    VkBuffer                          buffer;
+    VkDeviceSize                      offset;
+    VkConditionalRenderingFlagsEXT    flags;
+};
+
+struct VkPhysicalDeviceConditionalRenderingFeaturesEXT { 
+    VkStructureType    sType;
+    void*              pNext;
+    VkBool32           conditionalRendering;
+    VkBool32           inheritedConditionalRendering;
+};
+
+struct VkCommandBufferInheritanceConditionalRenderingInfoEXT { 
+    VkStructureType    sType;
+    const void*        pNext;
+    VkBool32           conditionalRenderingEnable;
+};
+
+typedef void (VKAPI_PTR *PFN_vkCmdBeginConditionalRenderingEXT)(VkCommandBuffer commandBuffer, const VkConditionalRenderingBeginInfoEXT* pConditionalRenderingBegin);
+
+typedef void (VKAPI_PTR *PFN_vkCmdEndConditionalRenderingEXT)(VkCommandBuffer commandBuffer);
+
 #define VK_NVX_device_generated_commands 1
 VK_DEFINE_NON_DISPATCHABLE_HANDLE(VkObjectTableNVX)
 VK_DEFINE_NON_DISPATCHABLE_HANDLE(VkIndirectCommandsLayoutNVX)
@@ -4890,7 +5114,6 @@ typedef VkResult (VKAPI_PTR *PFN_vkReleaseDisplayEXT)(VkPhysicalDevice physicalD
 #define VK_EXT_display_surface_counter 1
 #define VK_EXT_DISPLAY_SURFACE_COUNTER_SPEC_VERSION 1
 #define VK_EXT_DISPLAY_SURFACE_COUNTER_EXTENSION_NAME "VK_EXT_display_surface_counter"
-#define VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES2_EXT VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_EXT
 enum VkSurfaceCounterFlagBitsEXT { 
     VK_SURFACE_COUNTER_VBLANK_EXT = 0x00000001,
     VK_SURFACE_COUNTER_FLAG_BITS_MAX_ENUM_EXT = 0x7FFFFFFF
@@ -5445,7 +5668,6 @@ struct VkPipelineCoverageModulationStateCreateInfoNV {
 VK_DEFINE_NON_DISPATCHABLE_HANDLE(VkValidationCacheEXT)
 #define VK_EXT_VALIDATION_CACHE_SPEC_VERSION 1
 #define VK_EXT_VALIDATION_CACHE_EXTENSION_NAME "VK_EXT_validation_cache"
-#define VK_DEBUG_REPORT_OBJECT_TYPE_VALIDATION_CACHE_EXT VK_DEBUG_REPORT_OBJECT_TYPE_VALIDATION_CACHE_EXT_EXT
 enum VkValidationCacheHeaderVersionEXT { 
     VK_VALIDATION_CACHE_HEADER_VERSION_ONE_EXT = 1,
     VK_VALIDATION_CACHE_HEADER_VERSION_BEGIN_RANGE_EXT = VK_VALIDATION_CACHE_HEADER_VERSION_ONE_EXT,
@@ -5637,7 +5859,7 @@ struct VkPhysicalDeviceShaderCorePropertiesAMD {
 };
 
 #define VK_EXT_vertex_attribute_divisor 1
-#define VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_SPEC_VERSION 1
+#define VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_SPEC_VERSION 2
 #define VK_EXT_VERTEX_ATTRIBUTE_DIVISOR_EXTENSION_NAME "VK_EXT_vertex_attribute_divisor"
 struct VkPhysicalDeviceVertexAttributeDivisorPropertiesEXT { 
     VkStructureType    sType;
@@ -5660,103 +5882,123 @@ struct VkPipelineVertexInputDivisorStateCreateInfoEXT {
 #define VK_NV_shader_subgroup_partitioned 1
 #define VK_NV_SHADER_SUBGROUP_PARTITIONED_SPEC_VERSION 1
 #define VK_NV_SHADER_SUBGROUP_PARTITIONED_EXTENSION_NAME "VK_NV_shader_subgroup_partitioned"
+#define VK_NV_device_diagnostic_checkpoints 1
+#define VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_SPEC_VERSION 2
+#define VK_NV_DEVICE_DIAGNOSTIC_CHECKPOINTS_EXTENSION_NAME "VK_NV_device_diagnostic_checkpoints"
+struct VkQueueFamilyCheckpointPropertiesNV { 
+    VkStructureType         sType;
+    void*                   pNext;
+    VkPipelineStageFlags    checkpointExecutionStageMask;
+};
+
+struct VkCheckpointDataNV { 
+    VkStructureType            sType;
+    void*                      pNext;
+    VkPipelineStageFlagBits    stage;
+    void*                      pCheckpointMarker;
+};
+
+typedef void (VKAPI_PTR *PFN_vkCmdSetCheckpointNV)(VkCommandBuffer commandBuffer, const void* pCheckpointMarker);
+
+typedef void (VKAPI_PTR *PFN_vkGetQueueCheckpointDataNV)(VkQueue queue, uint32_t* pCheckpointDataCount, VkCheckpointDataNV* pCheckpointData);
+
 #endif
 
 
 #define VK1_CORE_FUNCTIONS( _buildFunc_ ) \
-	_buildFunc_( VkResult, vkCreateInstance, ( const VkInstanceCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkInstance * pInstance ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateInstance, ( const VkInstanceCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkInstance * pInstance ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyInstance, ( VkInstance instance , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkEnumeratePhysicalDevices, ( VkInstance instance , uint32_t * pPhysicalDeviceCount , VkPhysicalDevice * pPhysicalDevices ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkEnumeratePhysicalDevices, ( VkInstance instance , uint32_t * pPhysicalDeviceCount , VkPhysicalDevice * pPhysicalDevices ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetPhysicalDeviceFeatures, ( VkPhysicalDevice physicalDevice , VkPhysicalDeviceFeatures * pFeatures ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceFormatProperties, ( VkPhysicalDevice physicalDevice , VkFormat format , VkFormatProperties * pFormatProperties ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceImageFormatProperties, ( VkPhysicalDevice physicalDevice , VkFormat format , VkImageType type , VkImageTiling tiling , VkImageUsageFlags usage , VkImageCreateFlags flags , VkImageFormatProperties * pImageFormatProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceImageFormatProperties, ( VkPhysicalDevice physicalDevice , VkFormat format , VkImageType type , VkImageTiling tiling , VkImageUsageFlags usage , VkImageCreateFlags flags , VkImageFormatProperties * pImageFormatProperties ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetPhysicalDeviceProperties, ( VkPhysicalDevice physicalDevice , VkPhysicalDeviceProperties * pProperties ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceQueueFamilyProperties, ( VkPhysicalDevice physicalDevice , uint32_t * pQueueFamilyPropertyCount , VkQueueFamilyProperties * pQueueFamilyProperties ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceMemoryProperties, ( VkPhysicalDevice physicalDevice , VkPhysicalDeviceMemoryProperties * pMemoryProperties ) , (void)(0) ) \
 	_buildFunc_( PFN_vkVoidFunction, vkGetInstanceProcAddr, ( VkInstance instance , const char * pName ) , (PFN_vkVoidFunction)(0) ) \
 	_buildFunc_( PFN_vkVoidFunction, vkGetDeviceProcAddr, ( VkDevice device , const char * pName ) , (PFN_vkVoidFunction)(0) ) \
-	_buildFunc_( VkResult, vkCreateDevice, ( VkPhysicalDevice physicalDevice , const VkDeviceCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDevice * pDevice ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateDevice, ( VkPhysicalDevice physicalDevice , const VkDeviceCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDevice * pDevice ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyDevice, ( VkDevice device , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkEnumerateInstanceExtensionProperties, ( const char * pLayerName , uint32_t * pPropertyCount , VkExtensionProperties * pProperties ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkEnumerateDeviceExtensionProperties, ( VkPhysicalDevice physicalDevice , const char * pLayerName , uint32_t * pPropertyCount , VkExtensionProperties * pProperties ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkEnumerateInstanceLayerProperties, ( uint32_t * pPropertyCount , VkLayerProperties * pProperties ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkEnumerateDeviceLayerProperties, ( VkPhysicalDevice physicalDevice , uint32_t * pPropertyCount , VkLayerProperties * pProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkEnumerateInstanceExtensionProperties, ( const char * pLayerName , uint32_t * pPropertyCount , VkExtensionProperties * pProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkEnumerateDeviceExtensionProperties, ( VkPhysicalDevice physicalDevice , const char * pLayerName , uint32_t * pPropertyCount , VkExtensionProperties * pProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkEnumerateInstanceLayerProperties, ( uint32_t * pPropertyCount , VkLayerProperties * pProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkEnumerateDeviceLayerProperties, ( VkPhysicalDevice physicalDevice , uint32_t * pPropertyCount , VkLayerProperties * pProperties ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetDeviceQueue, ( VkDevice device , uint32_t queueFamilyIndex , uint32_t queueIndex , VkQueue * pQueue ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkQueueSubmit, ( VkQueue queue , uint32_t submitCount , const VkSubmitInfo * pSubmits , VkFence fence ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkQueueWaitIdle, ( VkQueue queue ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkDeviceWaitIdle, ( VkDevice device ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkAllocateMemory, ( VkDevice device , const VkMemoryAllocateInfo * pAllocateInfo , const VkAllocationCallbacks * pAllocator , VkDeviceMemory * pMemory ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkQueueSubmit, ( VkQueue queue , uint32_t submitCount , const VkSubmitInfo * pSubmits , VkFence fence ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkQueueWaitIdle, ( VkQueue queue ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkDeviceWaitIdle, ( VkDevice device ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkAllocateMemory, ( VkDevice device , const VkMemoryAllocateInfo * pAllocateInfo , const VkAllocationCallbacks * pAllocator , VkDeviceMemory * pMemory ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkFreeMemory, ( VkDevice device , VkDeviceMemory memory , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkMapMemory, ( VkDevice device , VkDeviceMemory memory , VkDeviceSize offset , VkDeviceSize size , VkMemoryMapFlags flags , void * * ppData ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkMapMemory, ( VkDevice device , VkDeviceMemory memory , VkDeviceSize offset , VkDeviceSize size , VkMemoryMapFlags flags , void * * ppData ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkUnmapMemory, ( VkDevice device , VkDeviceMemory memory ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkFlushMappedMemoryRanges, ( VkDevice device , uint32_t memoryRangeCount , const VkMappedMemoryRange * pMemoryRanges ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkInvalidateMappedMemoryRanges, ( VkDevice device , uint32_t memoryRangeCount , const VkMappedMemoryRange * pMemoryRanges ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkFlushMappedMemoryRanges, ( VkDevice device , uint32_t memoryRangeCount , const VkMappedMemoryRange * pMemoryRanges ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkInvalidateMappedMemoryRanges, ( VkDevice device , uint32_t memoryRangeCount , const VkMappedMemoryRange * pMemoryRanges ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetDeviceMemoryCommitment, ( VkDevice device , VkDeviceMemory memory , VkDeviceSize * pCommittedMemoryInBytes ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkBindBufferMemory, ( VkDevice device , VkBuffer buffer , VkDeviceMemory memory , VkDeviceSize memoryOffset ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkBindImageMemory, ( VkDevice device , VkImage image , VkDeviceMemory memory , VkDeviceSize memoryOffset ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkBindBufferMemory, ( VkDevice device , VkBuffer buffer , VkDeviceMemory memory , VkDeviceSize memoryOffset ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkBindImageMemory, ( VkDevice device , VkImage image , VkDeviceMemory memory , VkDeviceSize memoryOffset ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetBufferMemoryRequirements, ( VkDevice device , VkBuffer buffer , VkMemoryRequirements * pMemoryRequirements ) , (void)(0) ) \
 	_buildFunc_( void, vkGetImageMemoryRequirements, ( VkDevice device , VkImage image , VkMemoryRequirements * pMemoryRequirements ) , (void)(0) ) \
 	_buildFunc_( void, vkGetImageSparseMemoryRequirements, ( VkDevice device , VkImage image , uint32_t * pSparseMemoryRequirementCount , VkSparseImageMemoryRequirements * pSparseMemoryRequirements ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceSparseImageFormatProperties, ( VkPhysicalDevice physicalDevice , VkFormat format , VkImageType type , VkSampleCountFlagBits samples , VkImageUsageFlags usage , VkImageTiling tiling , uint32_t * pPropertyCount , VkSparseImageFormatProperties * pProperties ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkQueueBindSparse, ( VkQueue queue , uint32_t bindInfoCount , const VkBindSparseInfo * pBindInfo , VkFence fence ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkCreateFence, ( VkDevice device , const VkFenceCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkFence * pFence ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkQueueBindSparse, ( VkQueue queue , uint32_t bindInfoCount , const VkBindSparseInfo * pBindInfo , VkFence fence ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateFence, ( VkDevice device , const VkFenceCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkFence * pFence ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyFence, ( VkDevice device , VkFence fence , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkResetFences, ( VkDevice device , uint32_t fenceCount , const VkFence * pFences ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetFenceStatus, ( VkDevice device , VkFence fence ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkWaitForFences, ( VkDevice device , uint32_t fenceCount , const VkFence * pFences , VkBool32 waitAll , uint64_t timeout ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkCreateSemaphore, ( VkDevice device , const VkSemaphoreCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSemaphore * pSemaphore ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkResetFences, ( VkDevice device , uint32_t fenceCount , const VkFence * pFences ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetFenceStatus, ( VkDevice device , VkFence fence ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkWaitForFences, ( VkDevice device , uint32_t fenceCount , const VkFence * pFences , VkBool32 waitAll , uint64_t timeout ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateSemaphore, ( VkDevice device , const VkSemaphoreCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSemaphore * pSemaphore ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroySemaphore, ( VkDevice device , VkSemaphore semaphore , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateEvent, ( VkDevice device , const VkEventCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkEvent * pEvent ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateEvent, ( VkDevice device , const VkEventCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkEvent * pEvent ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyEvent, ( VkDevice device , VkEvent event , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkGetEventStatus, ( VkDevice device , VkEvent event ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkSetEvent, ( VkDevice device , VkEvent event ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkResetEvent, ( VkDevice device , VkEvent event ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkCreateQueryPool, ( VkDevice device , const VkQueryPoolCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkQueryPool * pQueryPool ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetEventStatus, ( VkDevice device , VkEvent event ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkSetEvent, ( VkDevice device , VkEvent event ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkResetEvent, ( VkDevice device , VkEvent event ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateQueryPool, ( VkDevice device , const VkQueryPoolCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkQueryPool * pQueryPool ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyQueryPool, ( VkDevice device , VkQueryPool queryPool , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkGetQueryPoolResults, ( VkDevice device , VkQueryPool queryPool , uint32_t firstQuery , uint32_t queryCount , size_t dataSize , void * pData , VkDeviceSize stride , VkQueryResultFlags flags ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkCreateBuffer, ( VkDevice device , const VkBufferCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkBuffer * pBuffer ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetQueryPoolResults, ( VkDevice device , VkQueryPool queryPool , uint32_t firstQuery , uint32_t queryCount , size_t dataSize , void * pData , VkDeviceSize stride , VkQueryResultFlags flags ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateBuffer, ( VkDevice device , const VkBufferCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkBuffer * pBuffer ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyBuffer, ( VkDevice device , VkBuffer buffer , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateBufferView, ( VkDevice device , const VkBufferViewCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkBufferView * pView ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateBufferView, ( VkDevice device , const VkBufferViewCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkBufferView * pView ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyBufferView, ( VkDevice device , VkBufferView bufferView , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateImage, ( VkDevice device , const VkImageCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkImage * pImage ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateImage, ( VkDevice device , const VkImageCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkImage * pImage ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyImage, ( VkDevice device , VkImage image , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
 	_buildFunc_( void, vkGetImageSubresourceLayout, ( VkDevice device , VkImage image , const VkImageSubresource * pSubresource , VkSubresourceLayout * pLayout ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateImageView, ( VkDevice device , const VkImageViewCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkImageView * pView ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateImageView, ( VkDevice device , const VkImageViewCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkImageView * pView ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyImageView, ( VkDevice device , VkImageView imageView , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateShaderModule, ( VkDevice device , const VkShaderModuleCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkShaderModule * pShaderModule ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateShaderModule, ( VkDevice device , const VkShaderModuleCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkShaderModule * pShaderModule ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyShaderModule, ( VkDevice device , VkShaderModule shaderModule , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreatePipelineCache, ( VkDevice device , const VkPipelineCacheCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkPipelineCache * pPipelineCache ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreatePipelineCache, ( VkDevice device , const VkPipelineCacheCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkPipelineCache * pPipelineCache ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyPipelineCache, ( VkDevice device , VkPipelineCache pipelineCache , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkGetPipelineCacheData, ( VkDevice device , VkPipelineCache pipelineCache , size_t * pDataSize , void * pData ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkMergePipelineCaches, ( VkDevice device , VkPipelineCache dstCache , uint32_t srcCacheCount , const VkPipelineCache * pSrcCaches ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkCreateGraphicsPipelines, ( VkDevice device , VkPipelineCache pipelineCache , uint32_t createInfoCount , const VkGraphicsPipelineCreateInfo * pCreateInfos , const VkAllocationCallbacks * pAllocator , VkPipeline * pPipelines ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkCreateComputePipelines, ( VkDevice device , VkPipelineCache pipelineCache , uint32_t createInfoCount , const VkComputePipelineCreateInfo * pCreateInfos , const VkAllocationCallbacks * pAllocator , VkPipeline * pPipelines ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPipelineCacheData, ( VkDevice device , VkPipelineCache pipelineCache , size_t * pDataSize , void * pData ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkMergePipelineCaches, ( VkDevice device , VkPipelineCache dstCache , uint32_t srcCacheCount , const VkPipelineCache * pSrcCaches ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateGraphicsPipelines, ( VkDevice device , VkPipelineCache pipelineCache , uint32_t createInfoCount , const VkGraphicsPipelineCreateInfo * pCreateInfos , const VkAllocationCallbacks * pAllocator , VkPipeline * pPipelines ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateComputePipelines, ( VkDevice device , VkPipelineCache pipelineCache , uint32_t createInfoCount , const VkComputePipelineCreateInfo * pCreateInfos , const VkAllocationCallbacks * pAllocator , VkPipeline * pPipelines ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyPipeline, ( VkDevice device , VkPipeline pipeline , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreatePipelineLayout, ( VkDevice device , const VkPipelineLayoutCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkPipelineLayout * pPipelineLayout ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreatePipelineLayout, ( VkDevice device , const VkPipelineLayoutCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkPipelineLayout * pPipelineLayout ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyPipelineLayout, ( VkDevice device , VkPipelineLayout pipelineLayout , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateSampler, ( VkDevice device , const VkSamplerCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSampler * pSampler ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateSampler, ( VkDevice device , const VkSamplerCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSampler * pSampler ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroySampler, ( VkDevice device , VkSampler sampler , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateDescriptorSetLayout, ( VkDevice device , const VkDescriptorSetLayoutCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDescriptorSetLayout * pSetLayout ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateDescriptorSetLayout, ( VkDevice device , const VkDescriptorSetLayoutCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDescriptorSetLayout * pSetLayout ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyDescriptorSetLayout, ( VkDevice device , VkDescriptorSetLayout descriptorSetLayout , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateDescriptorPool, ( VkDevice device , const VkDescriptorPoolCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDescriptorPool * pDescriptorPool ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateDescriptorPool, ( VkDevice device , const VkDescriptorPoolCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDescriptorPool * pDescriptorPool ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyDescriptorPool, ( VkDevice device , VkDescriptorPool descriptorPool , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkResetDescriptorPool, ( VkDevice device , VkDescriptorPool descriptorPool , VkDescriptorPoolResetFlags flags ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkAllocateDescriptorSets, ( VkDevice device , const VkDescriptorSetAllocateInfo * pAllocateInfo , VkDescriptorSet * pDescriptorSets ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkFreeDescriptorSets, ( VkDevice device , VkDescriptorPool descriptorPool , uint32_t descriptorSetCount , const VkDescriptorSet * pDescriptorSets ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkResetDescriptorPool, ( VkDevice device , VkDescriptorPool descriptorPool , VkDescriptorPoolResetFlags flags ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkAllocateDescriptorSets, ( VkDevice device , const VkDescriptorSetAllocateInfo * pAllocateInfo , VkDescriptorSet * pDescriptorSets ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkFreeDescriptorSets, ( VkDevice device , VkDescriptorPool descriptorPool , uint32_t descriptorSetCount , const VkDescriptorSet * pDescriptorSets ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkUpdateDescriptorSets, ( VkDevice device , uint32_t descriptorWriteCount , const VkWriteDescriptorSet * pDescriptorWrites , uint32_t descriptorCopyCount , const VkCopyDescriptorSet * pDescriptorCopies ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateFramebuffer, ( VkDevice device , const VkFramebufferCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkFramebuffer * pFramebuffer ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateFramebuffer, ( VkDevice device , const VkFramebufferCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkFramebuffer * pFramebuffer ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyFramebuffer, ( VkDevice device , VkFramebuffer framebuffer , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateRenderPass, ( VkDevice device , const VkRenderPassCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkRenderPass * pRenderPass ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateRenderPass, ( VkDevice device , const VkRenderPassCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkRenderPass * pRenderPass ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyRenderPass, ( VkDevice device , VkRenderPass renderPass , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
 	_buildFunc_( void, vkGetRenderAreaGranularity, ( VkDevice device , VkRenderPass renderPass , VkExtent2D * pGranularity ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateCommandPool, ( VkDevice device , const VkCommandPoolCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkCommandPool * pCommandPool ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateCommandPool, ( VkDevice device , const VkCommandPoolCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkCommandPool * pCommandPool ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyCommandPool, ( VkDevice device , VkCommandPool commandPool , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkResetCommandPool, ( VkDevice device , VkCommandPool commandPool , VkCommandPoolResetFlags flags ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkAllocateCommandBuffers, ( VkDevice device , const VkCommandBufferAllocateInfo * pAllocateInfo , VkCommandBuffer * pCommandBuffers ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkResetCommandPool, ( VkDevice device , VkCommandPool commandPool , VkCommandPoolResetFlags flags ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkAllocateCommandBuffers, ( VkDevice device , const VkCommandBufferAllocateInfo * pAllocateInfo , VkCommandBuffer * pCommandBuffers ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkFreeCommandBuffers, ( VkDevice device , VkCommandPool commandPool , uint32_t commandBufferCount , const VkCommandBuffer * pCommandBuffers ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkBeginCommandBuffer, ( VkCommandBuffer commandBuffer , const VkCommandBufferBeginInfo * pBeginInfo ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkEndCommandBuffer, ( VkCommandBuffer commandBuffer ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkResetCommandBuffer, ( VkCommandBuffer commandBuffer , VkCommandBufferResetFlags flags ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkBeginCommandBuffer, ( VkCommandBuffer commandBuffer , const VkCommandBufferBeginInfo * pBeginInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkEndCommandBuffer, ( VkCommandBuffer commandBuffer ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkResetCommandBuffer, ( VkCommandBuffer commandBuffer , VkCommandBufferResetFlags flags ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkCmdBindPipeline, ( VkCommandBuffer commandBuffer , VkPipelineBindPoint pipelineBindPoint , VkPipeline pipeline ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdSetViewport, ( VkCommandBuffer commandBuffer , uint32_t firstViewport , uint32_t viewportCount , const VkViewport * pViewports ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdSetScissor, ( VkCommandBuffer commandBuffer , uint32_t firstScissor , uint32_t scissorCount , const VkRect2D * pScissors ) , (void)(0) ) \
@@ -5801,28 +6043,28 @@ struct VkPipelineVertexInputDivisorStateCreateInfoEXT {
 	_buildFunc_( void, vkCmdNextSubpass, ( VkCommandBuffer commandBuffer , VkSubpassContents contents ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdEndRenderPass, ( VkCommandBuffer commandBuffer ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdExecuteCommands, ( VkCommandBuffer commandBuffer , uint32_t commandBufferCount , const VkCommandBuffer * pCommandBuffers ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkEnumerateInstanceVersion, ( uint32_t * pApiVersion ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkBindBufferMemory2, ( VkDevice device , uint32_t bindInfoCount , const VkBindBufferMemoryInfo * pBindInfos ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkBindImageMemory2, ( VkDevice device , uint32_t bindInfoCount , const VkBindImageMemoryInfo * pBindInfos ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkEnumerateInstanceVersion, ( uint32_t * pApiVersion ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkBindBufferMemory2, ( VkDevice device , uint32_t bindInfoCount , const VkBindBufferMemoryInfo * pBindInfos ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkBindImageMemory2, ( VkDevice device , uint32_t bindInfoCount , const VkBindImageMemoryInfo * pBindInfos ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetDeviceGroupPeerMemoryFeatures, ( VkDevice device , uint32_t heapIndex , uint32_t localDeviceIndex , uint32_t remoteDeviceIndex , VkPeerMemoryFeatureFlags * pPeerMemoryFeatures ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdSetDeviceMask, ( VkCommandBuffer commandBuffer , uint32_t deviceMask ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdDispatchBase, ( VkCommandBuffer commandBuffer , uint32_t baseGroupX , uint32_t baseGroupY , uint32_t baseGroupZ , uint32_t groupCountX , uint32_t groupCountY , uint32_t groupCountZ ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkEnumeratePhysicalDeviceGroups, ( VkInstance instance , uint32_t * pPhysicalDeviceGroupCount , VkPhysicalDeviceGroupProperties * pPhysicalDeviceGroupProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkEnumeratePhysicalDeviceGroups, ( VkInstance instance , uint32_t * pPhysicalDeviceGroupCount , VkPhysicalDeviceGroupProperties * pPhysicalDeviceGroupProperties ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetImageMemoryRequirements2, ( VkDevice device , const VkImageMemoryRequirementsInfo2 * pInfo , VkMemoryRequirements2 * pMemoryRequirements ) , (void)(0) ) \
 	_buildFunc_( void, vkGetBufferMemoryRequirements2, ( VkDevice device , const VkBufferMemoryRequirementsInfo2 * pInfo , VkMemoryRequirements2 * pMemoryRequirements ) , (void)(0) ) \
 	_buildFunc_( void, vkGetImageSparseMemoryRequirements2, ( VkDevice device , const VkImageSparseMemoryRequirementsInfo2 * pInfo , uint32_t * pSparseMemoryRequirementCount , VkSparseImageMemoryRequirements2 * pSparseMemoryRequirements ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceFeatures2, ( VkPhysicalDevice physicalDevice , VkPhysicalDeviceFeatures2 * pFeatures ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceProperties2, ( VkPhysicalDevice physicalDevice , VkPhysicalDeviceProperties2 * pProperties ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceFormatProperties2, ( VkPhysicalDevice physicalDevice , VkFormat format , VkFormatProperties2 * pFormatProperties ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceImageFormatProperties2, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceImageFormatInfo2 * pImageFormatInfo , VkImageFormatProperties2 * pImageFormatProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceImageFormatProperties2, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceImageFormatInfo2 * pImageFormatInfo , VkImageFormatProperties2 * pImageFormatProperties ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetPhysicalDeviceQueueFamilyProperties2, ( VkPhysicalDevice physicalDevice , uint32_t * pQueueFamilyPropertyCount , VkQueueFamilyProperties2 * pQueueFamilyProperties ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceMemoryProperties2, ( VkPhysicalDevice physicalDevice , VkPhysicalDeviceMemoryProperties2 * pMemoryProperties ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceSparseImageFormatProperties2, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceSparseImageFormatInfo2 * pFormatInfo , uint32_t * pPropertyCount , VkSparseImageFormatProperties2 * pProperties ) , (void)(0) ) \
 	_buildFunc_( void, vkTrimCommandPool, ( VkDevice device , VkCommandPool commandPool , VkCommandPoolTrimFlags flags ) , (void)(0) ) \
 	_buildFunc_( void, vkGetDeviceQueue2, ( VkDevice device , const VkDeviceQueueInfo2 * pQueueInfo , VkQueue * pQueue ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateSamplerYcbcrConversion, ( VkDevice device , const VkSamplerYcbcrConversionCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSamplerYcbcrConversion * pYcbcrConversion ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateSamplerYcbcrConversion, ( VkDevice device , const VkSamplerYcbcrConversionCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSamplerYcbcrConversion * pYcbcrConversion ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroySamplerYcbcrConversion, ( VkDevice device , VkSamplerYcbcrConversion ycbcrConversion , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateDescriptorUpdateTemplate, ( VkDevice device , const VkDescriptorUpdateTemplateCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDescriptorUpdateTemplate * pDescriptorUpdateTemplate ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateDescriptorUpdateTemplate, ( VkDevice device , const VkDescriptorUpdateTemplateCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDescriptorUpdateTemplate * pDescriptorUpdateTemplate ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyDescriptorUpdateTemplate, ( VkDevice device , VkDescriptorUpdateTemplate descriptorUpdateTemplate , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
 	_buildFunc_( void, vkUpdateDescriptorSetWithTemplate, ( VkDevice device , VkDescriptorSet descriptorSet , VkDescriptorUpdateTemplate descriptorUpdateTemplate , const void * pData ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceExternalBufferProperties, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceExternalBufferInfo * pExternalBufferInfo , VkExternalBufferProperties * pExternalBufferProperties ) , (void)(0) ) \
@@ -5830,31 +6072,31 @@ struct VkPipelineVertexInputDivisorStateCreateInfoEXT {
 	_buildFunc_( void, vkGetPhysicalDeviceExternalSemaphoreProperties, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceExternalSemaphoreInfo * pExternalSemaphoreInfo , VkExternalSemaphoreProperties * pExternalSemaphoreProperties ) , (void)(0) ) \
 	_buildFunc_( void, vkGetDescriptorSetLayoutSupport, ( VkDevice device , const VkDescriptorSetLayoutCreateInfo * pCreateInfo , VkDescriptorSetLayoutSupport * pSupport ) , (void)(0) ) \
 	_buildFunc_( void, vkDestroySurfaceKHR, ( VkInstance instance , VkSurfaceKHR surface , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceSurfaceSupportKHR, ( VkPhysicalDevice physicalDevice , uint32_t queueFamilyIndex , VkSurfaceKHR surface , VkBool32 * pSupported ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceSurfaceCapabilitiesKHR, ( VkPhysicalDevice physicalDevice , VkSurfaceKHR surface , VkSurfaceCapabilitiesKHR * pSurfaceCapabilities ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceSurfaceFormatsKHR, ( VkPhysicalDevice physicalDevice , VkSurfaceKHR surface , uint32_t * pSurfaceFormatCount , VkSurfaceFormatKHR * pSurfaceFormats ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceSurfacePresentModesKHR, ( VkPhysicalDevice physicalDevice , VkSurfaceKHR surface , uint32_t * pPresentModeCount , VkPresentModeKHR * pPresentModes ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkCreateSwapchainKHR, ( VkDevice device , const VkSwapchainCreateInfoKHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSwapchainKHR * pSwapchain ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceSurfaceSupportKHR, ( VkPhysicalDevice physicalDevice , uint32_t queueFamilyIndex , VkSurfaceKHR surface , VkBool32 * pSupported ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceSurfaceCapabilitiesKHR, ( VkPhysicalDevice physicalDevice , VkSurfaceKHR surface , VkSurfaceCapabilitiesKHR * pSurfaceCapabilities ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceSurfaceFormatsKHR, ( VkPhysicalDevice physicalDevice , VkSurfaceKHR surface , uint32_t * pSurfaceFormatCount , VkSurfaceFormatKHR * pSurfaceFormats ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceSurfacePresentModesKHR, ( VkPhysicalDevice physicalDevice , VkSurfaceKHR surface , uint32_t * pPresentModeCount , VkPresentModeKHR * pPresentModes ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateSwapchainKHR, ( VkDevice device , const VkSwapchainCreateInfoKHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSwapchainKHR * pSwapchain ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroySwapchainKHR, ( VkDevice device , VkSwapchainKHR swapchain , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkGetSwapchainImagesKHR, ( VkDevice device , VkSwapchainKHR swapchain , uint32_t * pSwapchainImageCount , VkImage * pSwapchainImages ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkAcquireNextImageKHR, ( VkDevice device , VkSwapchainKHR swapchain , uint64_t timeout , VkSemaphore semaphore , VkFence fence , uint32_t * pImageIndex ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkQueuePresentKHR, ( VkQueue queue , const VkPresentInfoKHR * pPresentInfo ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetDeviceGroupPresentCapabilitiesKHR, ( VkDevice device , VkDeviceGroupPresentCapabilitiesKHR * pDeviceGroupPresentCapabilities ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetDeviceGroupSurfacePresentModesKHR, ( VkDevice device , VkSurfaceKHR surface , VkDeviceGroupPresentModeFlagsKHR * pModes ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetPhysicalDevicePresentRectanglesKHR, ( VkPhysicalDevice physicalDevice , VkSurfaceKHR surface , uint32_t * pRectCount , VkRect2D * pRects ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkAcquireNextImage2KHR, ( VkDevice device , const VkAcquireNextImageInfoKHR * pAcquireInfo , uint32_t * pImageIndex ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceDisplayPropertiesKHR, ( VkPhysicalDevice physicalDevice , uint32_t * pPropertyCount , VkDisplayPropertiesKHR * pProperties ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceDisplayPlanePropertiesKHR, ( VkPhysicalDevice physicalDevice , uint32_t * pPropertyCount , VkDisplayPlanePropertiesKHR * pProperties ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetDisplayPlaneSupportedDisplaysKHR, ( VkPhysicalDevice physicalDevice , uint32_t planeIndex , uint32_t * pDisplayCount , VkDisplayKHR * pDisplays ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetDisplayModePropertiesKHR, ( VkPhysicalDevice physicalDevice , VkDisplayKHR display , uint32_t * pPropertyCount , VkDisplayModePropertiesKHR * pProperties ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkCreateDisplayModeKHR, ( VkPhysicalDevice physicalDevice , VkDisplayKHR display , const VkDisplayModeCreateInfoKHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDisplayModeKHR * pMode ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetDisplayPlaneCapabilitiesKHR, ( VkPhysicalDevice physicalDevice , VkDisplayModeKHR mode , uint32_t planeIndex , VkDisplayPlaneCapabilitiesKHR * pCapabilities ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkCreateDisplayPlaneSurfaceKHR, ( VkInstance instance , const VkDisplaySurfaceCreateInfoKHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSurfaceKHR * pSurface ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkCreateSharedSwapchainsKHR, ( VkDevice device , uint32_t swapchainCount , const VkSwapchainCreateInfoKHR * pCreateInfos , const VkAllocationCallbacks * pAllocator , VkSwapchainKHR * pSwapchains ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetSwapchainImagesKHR, ( VkDevice device , VkSwapchainKHR swapchain , uint32_t * pSwapchainImageCount , VkImage * pSwapchainImages ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkAcquireNextImageKHR, ( VkDevice device , VkSwapchainKHR swapchain , uint64_t timeout , VkSemaphore semaphore , VkFence fence , uint32_t * pImageIndex ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkQueuePresentKHR, ( VkQueue queue , const VkPresentInfoKHR * pPresentInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetDeviceGroupPresentCapabilitiesKHR, ( VkDevice device , VkDeviceGroupPresentCapabilitiesKHR * pDeviceGroupPresentCapabilities ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetDeviceGroupSurfacePresentModesKHR, ( VkDevice device , VkSurfaceKHR surface , VkDeviceGroupPresentModeFlagsKHR * pModes ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDevicePresentRectanglesKHR, ( VkPhysicalDevice physicalDevice , VkSurfaceKHR surface , uint32_t * pRectCount , VkRect2D * pRects ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkAcquireNextImage2KHR, ( VkDevice device , const VkAcquireNextImageInfoKHR * pAcquireInfo , uint32_t * pImageIndex ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceDisplayPropertiesKHR, ( VkPhysicalDevice physicalDevice , uint32_t * pPropertyCount , VkDisplayPropertiesKHR * pProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceDisplayPlanePropertiesKHR, ( VkPhysicalDevice physicalDevice , uint32_t * pPropertyCount , VkDisplayPlanePropertiesKHR * pProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetDisplayPlaneSupportedDisplaysKHR, ( VkPhysicalDevice physicalDevice , uint32_t planeIndex , uint32_t * pDisplayCount , VkDisplayKHR * pDisplays ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetDisplayModePropertiesKHR, ( VkPhysicalDevice physicalDevice , VkDisplayKHR display , uint32_t * pPropertyCount , VkDisplayModePropertiesKHR * pProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateDisplayModeKHR, ( VkPhysicalDevice physicalDevice , VkDisplayKHR display , const VkDisplayModeCreateInfoKHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDisplayModeKHR * pMode ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetDisplayPlaneCapabilitiesKHR, ( VkPhysicalDevice physicalDevice , VkDisplayModeKHR mode , uint32_t planeIndex , VkDisplayPlaneCapabilitiesKHR * pCapabilities ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateDisplayPlaneSurfaceKHR, ( VkInstance instance , const VkDisplaySurfaceCreateInfoKHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSurfaceKHR * pSurface ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateSharedSwapchainsKHR, ( VkDevice device , uint32_t swapchainCount , const VkSwapchainCreateInfoKHR * pCreateInfos , const VkAllocationCallbacks * pAllocator , VkSwapchainKHR * pSwapchains ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetPhysicalDeviceFeatures2KHR, ( VkPhysicalDevice physicalDevice , VkPhysicalDeviceFeatures2 * pFeatures ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceProperties2KHR, ( VkPhysicalDevice physicalDevice , VkPhysicalDeviceProperties2 * pProperties ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceFormatProperties2KHR, ( VkPhysicalDevice physicalDevice , VkFormat format , VkFormatProperties2 * pFormatProperties ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceImageFormatProperties2KHR, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceImageFormatInfo2 * pImageFormatInfo , VkImageFormatProperties2 * pImageFormatProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceImageFormatProperties2KHR, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceImageFormatInfo2 * pImageFormatInfo , VkImageFormatProperties2 * pImageFormatProperties ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetPhysicalDeviceQueueFamilyProperties2KHR, ( VkPhysicalDevice physicalDevice , uint32_t * pQueueFamilyPropertyCount , VkQueueFamilyProperties2 * pQueueFamilyProperties ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceMemoryProperties2KHR, ( VkPhysicalDevice physicalDevice , VkPhysicalDeviceMemoryProperties2 * pMemoryProperties ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceSparseImageFormatProperties2KHR, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceSparseImageFormatInfo2 * pFormatInfo , uint32_t * pPropertyCount , VkSparseImageFormatProperties2 * pProperties ) , (void)(0) ) \
@@ -5862,84 +6104,98 @@ struct VkPipelineVertexInputDivisorStateCreateInfoEXT {
 	_buildFunc_( void, vkCmdSetDeviceMaskKHR, ( VkCommandBuffer commandBuffer , uint32_t deviceMask ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdDispatchBaseKHR, ( VkCommandBuffer commandBuffer , uint32_t baseGroupX , uint32_t baseGroupY , uint32_t baseGroupZ , uint32_t groupCountX , uint32_t groupCountY , uint32_t groupCountZ ) , (void)(0) ) \
 	_buildFunc_( void, vkTrimCommandPoolKHR, ( VkDevice device , VkCommandPool commandPool , VkCommandPoolTrimFlags flags ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkEnumeratePhysicalDeviceGroupsKHR, ( VkInstance instance , uint32_t * pPhysicalDeviceGroupCount , VkPhysicalDeviceGroupProperties * pPhysicalDeviceGroupProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkEnumeratePhysicalDeviceGroupsKHR, ( VkInstance instance , uint32_t * pPhysicalDeviceGroupCount , VkPhysicalDeviceGroupProperties * pPhysicalDeviceGroupProperties ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetPhysicalDeviceExternalBufferPropertiesKHR, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceExternalBufferInfo * pExternalBufferInfo , VkExternalBufferProperties * pExternalBufferProperties ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkGetMemoryFdKHR, ( VkDevice device , const VkMemoryGetFdInfoKHR * pGetFdInfo , int * pFd ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetMemoryFdPropertiesKHR, ( VkDevice device , VkExternalMemoryHandleTypeFlagBits handleType , int fd , VkMemoryFdPropertiesKHR * pMemoryFdProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetMemoryFdKHR, ( VkDevice device , const VkMemoryGetFdInfoKHR * pGetFdInfo , int * pFd ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetMemoryFdPropertiesKHR, ( VkDevice device , VkExternalMemoryHandleTypeFlagBits handleType , int fd , VkMemoryFdPropertiesKHR * pMemoryFdProperties ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetPhysicalDeviceExternalSemaphorePropertiesKHR, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceExternalSemaphoreInfo * pExternalSemaphoreInfo , VkExternalSemaphoreProperties * pExternalSemaphoreProperties ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkImportSemaphoreFdKHR, ( VkDevice device , const VkImportSemaphoreFdInfoKHR * pImportSemaphoreFdInfo ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetSemaphoreFdKHR, ( VkDevice device , const VkSemaphoreGetFdInfoKHR * pGetFdInfo , int * pFd ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkImportSemaphoreFdKHR, ( VkDevice device , const VkImportSemaphoreFdInfoKHR * pImportSemaphoreFdInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetSemaphoreFdKHR, ( VkDevice device , const VkSemaphoreGetFdInfoKHR * pGetFdInfo , int * pFd ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkCmdPushDescriptorSetKHR, ( VkCommandBuffer commandBuffer , VkPipelineBindPoint pipelineBindPoint , VkPipelineLayout layout , uint32_t set , uint32_t descriptorWriteCount , const VkWriteDescriptorSet * pDescriptorWrites ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdPushDescriptorSetWithTemplateKHR, ( VkCommandBuffer commandBuffer , VkDescriptorUpdateTemplate descriptorUpdateTemplate , VkPipelineLayout layout , uint32_t set , const void * pData ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateDescriptorUpdateTemplateKHR, ( VkDevice device , const VkDescriptorUpdateTemplateCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDescriptorUpdateTemplate * pDescriptorUpdateTemplate ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateDescriptorUpdateTemplateKHR, ( VkDevice device , const VkDescriptorUpdateTemplateCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDescriptorUpdateTemplate * pDescriptorUpdateTemplate ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyDescriptorUpdateTemplateKHR, ( VkDevice device , VkDescriptorUpdateTemplate descriptorUpdateTemplate , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
 	_buildFunc_( void, vkUpdateDescriptorSetWithTemplateKHR, ( VkDevice device , VkDescriptorSet descriptorSet , VkDescriptorUpdateTemplate descriptorUpdateTemplate , const void * pData ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkGetSwapchainStatusKHR, ( VkDevice device , VkSwapchainKHR swapchain ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateRenderPass2KHR, ( VkDevice device , const VkRenderPassCreateInfo2KHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkRenderPass * pRenderPass ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( void, vkCmdBeginRenderPass2KHR, ( VkCommandBuffer commandBuffer , const VkRenderPassBeginInfo * pRenderPassBegin , const VkSubpassBeginInfoKHR * pSubpassBeginInfo ) , (void)(0) ) \
+	_buildFunc_( void, vkCmdNextSubpass2KHR, ( VkCommandBuffer commandBuffer , const VkSubpassBeginInfoKHR * pSubpassBeginInfo , const VkSubpassEndInfoKHR * pSubpassEndInfo ) , (void)(0) ) \
+	_buildFunc_( void, vkCmdEndRenderPass2KHR, ( VkCommandBuffer commandBuffer , const VkSubpassEndInfoKHR * pSubpassEndInfo ) , (void)(0) ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetSwapchainStatusKHR, ( VkDevice device , VkSwapchainKHR swapchain ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetPhysicalDeviceExternalFencePropertiesKHR, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceExternalFenceInfo * pExternalFenceInfo , VkExternalFenceProperties * pExternalFenceProperties ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkImportFenceFdKHR, ( VkDevice device , const VkImportFenceFdInfoKHR * pImportFenceFdInfo ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetFenceFdKHR, ( VkDevice device , const VkFenceGetFdInfoKHR * pGetFdInfo , int * pFd ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceSurfaceCapabilities2KHR, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceSurfaceInfo2KHR * pSurfaceInfo , VkSurfaceCapabilities2KHR * pSurfaceCapabilities ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceSurfaceFormats2KHR, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceSurfaceInfo2KHR * pSurfaceInfo , uint32_t * pSurfaceFormatCount , VkSurfaceFormat2KHR * pSurfaceFormats ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkImportFenceFdKHR, ( VkDevice device , const VkImportFenceFdInfoKHR * pImportFenceFdInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetFenceFdKHR, ( VkDevice device , const VkFenceGetFdInfoKHR * pGetFdInfo , int * pFd ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceSurfaceCapabilities2KHR, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceSurfaceInfo2KHR * pSurfaceInfo , VkSurfaceCapabilities2KHR * pSurfaceCapabilities ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceSurfaceFormats2KHR, ( VkPhysicalDevice physicalDevice , const VkPhysicalDeviceSurfaceInfo2KHR * pSurfaceInfo , uint32_t * pSurfaceFormatCount , VkSurfaceFormat2KHR * pSurfaceFormats ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceDisplayProperties2KHR, ( VkPhysicalDevice physicalDevice , uint32_t * pPropertyCount , VkDisplayProperties2KHR * pProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceDisplayPlaneProperties2KHR, ( VkPhysicalDevice physicalDevice , uint32_t * pPropertyCount , VkDisplayPlaneProperties2KHR * pProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetDisplayModeProperties2KHR, ( VkPhysicalDevice physicalDevice , VkDisplayKHR display , uint32_t * pPropertyCount , VkDisplayModeProperties2KHR * pProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetDisplayPlaneCapabilities2KHR, ( VkPhysicalDevice physicalDevice , const VkDisplayPlaneInfo2KHR * pDisplayPlaneInfo , VkDisplayPlaneCapabilities2KHR * pCapabilities ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetImageMemoryRequirements2KHR, ( VkDevice device , const VkImageMemoryRequirementsInfo2 * pInfo , VkMemoryRequirements2 * pMemoryRequirements ) , (void)(0) ) \
 	_buildFunc_( void, vkGetBufferMemoryRequirements2KHR, ( VkDevice device , const VkBufferMemoryRequirementsInfo2 * pInfo , VkMemoryRequirements2 * pMemoryRequirements ) , (void)(0) ) \
 	_buildFunc_( void, vkGetImageSparseMemoryRequirements2KHR, ( VkDevice device , const VkImageSparseMemoryRequirementsInfo2 * pInfo , uint32_t * pSparseMemoryRequirementCount , VkSparseImageMemoryRequirements2 * pSparseMemoryRequirements ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateSamplerYcbcrConversionKHR, ( VkDevice device , const VkSamplerYcbcrConversionCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSamplerYcbcrConversion * pYcbcrConversion ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateSamplerYcbcrConversionKHR, ( VkDevice device , const VkSamplerYcbcrConversionCreateInfo * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSamplerYcbcrConversion * pYcbcrConversion ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroySamplerYcbcrConversionKHR, ( VkDevice device , VkSamplerYcbcrConversion ycbcrConversion , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkBindBufferMemory2KHR, ( VkDevice device , uint32_t bindInfoCount , const VkBindBufferMemoryInfo * pBindInfos ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkBindImageMemory2KHR, ( VkDevice device , uint32_t bindInfoCount , const VkBindImageMemoryInfo * pBindInfos ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkBindBufferMemory2KHR, ( VkDevice device , uint32_t bindInfoCount , const VkBindBufferMemoryInfo * pBindInfos ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkBindImageMemory2KHR, ( VkDevice device , uint32_t bindInfoCount , const VkBindImageMemoryInfo * pBindInfos ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetDescriptorSetLayoutSupportKHR, ( VkDevice device , const VkDescriptorSetLayoutCreateInfo * pCreateInfo , VkDescriptorSetLayoutSupport * pSupport ) , (void)(0) ) \
+	_buildFunc_( void, vkCmdDrawIndirectCountKHR, ( VkCommandBuffer commandBuffer , VkBuffer buffer , VkDeviceSize offset , VkBuffer countBuffer , VkDeviceSize countBufferOffset , uint32_t maxDrawCount , uint32_t stride ) , (void)(0) ) \
+	_buildFunc_( void, vkCmdDrawIndexedIndirectCountKHR, ( VkCommandBuffer commandBuffer , VkBuffer buffer , VkDeviceSize offset , VkBuffer countBuffer , VkDeviceSize countBufferOffset , uint32_t maxDrawCount , uint32_t stride ) , (void)(0) ) \
 	_buildFunc_( VkBool32, vkDebugReportCallbackEXT, ( VkDebugReportFlagsEXT flags , VkDebugReportObjectTypeEXT objectType , uint64_t object , size_t location , int32_t messageCode , const char * pLayerPrefix , const char * pMessage , void * pUserData ) , (VkBool32)(0) ) \
-	_buildFunc_( VkResult, vkCreateDebugReportCallbackEXT, ( VkInstance instance , const VkDebugReportCallbackCreateInfoEXT * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDebugReportCallbackEXT * pCallback ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateDebugReportCallbackEXT, ( VkInstance instance , const VkDebugReportCallbackCreateInfoEXT * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDebugReportCallbackEXT * pCallback ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyDebugReportCallbackEXT, ( VkInstance instance , VkDebugReportCallbackEXT callback , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
 	_buildFunc_( void, vkDebugReportMessageEXT, ( VkInstance instance , VkDebugReportFlagsEXT flags , VkDebugReportObjectTypeEXT objectType , uint64_t object , size_t location , int32_t messageCode , const char * pLayerPrefix , const char * pMessage ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkDebugMarkerSetObjectTagEXT, ( VkDevice device , const VkDebugMarkerObjectTagInfoEXT * pTagInfo ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkDebugMarkerSetObjectNameEXT, ( VkDevice device , const VkDebugMarkerObjectNameInfoEXT * pNameInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkDebugMarkerSetObjectTagEXT, ( VkDevice device , const VkDebugMarkerObjectTagInfoEXT * pTagInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkDebugMarkerSetObjectNameEXT, ( VkDevice device , const VkDebugMarkerObjectNameInfoEXT * pNameInfo ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkCmdDebugMarkerBeginEXT, ( VkCommandBuffer commandBuffer , const VkDebugMarkerMarkerInfoEXT * pMarkerInfo ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdDebugMarkerEndEXT, ( VkCommandBuffer commandBuffer ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdDebugMarkerInsertEXT, ( VkCommandBuffer commandBuffer , const VkDebugMarkerMarkerInfoEXT * pMarkerInfo ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdDrawIndirectCountAMD, ( VkCommandBuffer commandBuffer , VkBuffer buffer , VkDeviceSize offset , VkBuffer countBuffer , VkDeviceSize countBufferOffset , uint32_t maxDrawCount , uint32_t stride ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdDrawIndexedIndirectCountAMD, ( VkCommandBuffer commandBuffer , VkBuffer buffer , VkDeviceSize offset , VkBuffer countBuffer , VkDeviceSize countBufferOffset , uint32_t maxDrawCount , uint32_t stride ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkGetShaderInfoAMD, ( VkDevice device , VkPipeline pipeline , VkShaderStageFlagBits shaderStage , VkShaderInfoTypeAMD infoType , size_t * pInfoSize , void * pInfo ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceExternalImageFormatPropertiesNV, ( VkPhysicalDevice physicalDevice , VkFormat format , VkImageType type , VkImageTiling tiling , VkImageUsageFlags usage , VkImageCreateFlags flags , VkExternalMemoryHandleTypeFlagsNV externalHandleType , VkExternalImageFormatPropertiesNV * pExternalImageFormatProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetShaderInfoAMD, ( VkDevice device , VkPipeline pipeline , VkShaderStageFlagBits shaderStage , VkShaderInfoTypeAMD infoType , size_t * pInfoSize , void * pInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceExternalImageFormatPropertiesNV, ( VkPhysicalDevice physicalDevice , VkFormat format , VkImageType type , VkImageTiling tiling , VkImageUsageFlags usage , VkImageCreateFlags flags , VkExternalMemoryHandleTypeFlagsNV externalHandleType , VkExternalImageFormatPropertiesNV * pExternalImageFormatProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( void, vkCmdBeginConditionalRenderingEXT, ( VkCommandBuffer commandBuffer , const VkConditionalRenderingBeginInfoEXT * pConditionalRenderingBegin ) , (void)(0) ) \
+	_buildFunc_( void, vkCmdEndConditionalRenderingEXT, ( VkCommandBuffer commandBuffer ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdProcessCommandsNVX, ( VkCommandBuffer commandBuffer , const VkCmdProcessCommandsInfoNVX * pProcessCommandsInfo ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdReserveSpaceForCommandsNVX, ( VkCommandBuffer commandBuffer , const VkCmdReserveSpaceForCommandsInfoNVX * pReserveSpaceInfo ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateIndirectCommandsLayoutNVX, ( VkDevice device , const VkIndirectCommandsLayoutCreateInfoNVX * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkIndirectCommandsLayoutNVX * pIndirectCommandsLayout ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateIndirectCommandsLayoutNVX, ( VkDevice device , const VkIndirectCommandsLayoutCreateInfoNVX * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkIndirectCommandsLayoutNVX * pIndirectCommandsLayout ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyIndirectCommandsLayoutNVX, ( VkDevice device , VkIndirectCommandsLayoutNVX indirectCommandsLayout , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateObjectTableNVX, ( VkDevice device , const VkObjectTableCreateInfoNVX * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkObjectTableNVX * pObjectTable ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateObjectTableNVX, ( VkDevice device , const VkObjectTableCreateInfoNVX * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkObjectTableNVX * pObjectTable ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyObjectTableNVX, ( VkDevice device , VkObjectTableNVX objectTable , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkRegisterObjectsNVX, ( VkDevice device , VkObjectTableNVX objectTable , uint32_t objectCount , const VkObjectTableEntryNVX * const * ppObjectTableEntries , const uint32_t * pObjectIndices ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkUnregisterObjectsNVX, ( VkDevice device , VkObjectTableNVX objectTable , uint32_t objectCount , const VkObjectEntryTypeNVX * pObjectEntryTypes , const uint32_t * pObjectIndices ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkRegisterObjectsNVX, ( VkDevice device , VkObjectTableNVX objectTable , uint32_t objectCount , const VkObjectTableEntryNVX * const * ppObjectTableEntries , const uint32_t * pObjectIndices ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkUnregisterObjectsNVX, ( VkDevice device , VkObjectTableNVX objectTable , uint32_t objectCount , const VkObjectEntryTypeNVX * pObjectEntryTypes , const uint32_t * pObjectIndices ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkGetPhysicalDeviceGeneratedCommandsPropertiesNVX, ( VkPhysicalDevice physicalDevice , VkDeviceGeneratedCommandsFeaturesNVX * pFeatures , VkDeviceGeneratedCommandsLimitsNVX * pLimits ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdSetViewportWScalingNV, ( VkCommandBuffer commandBuffer , uint32_t firstViewport , uint32_t viewportCount , const VkViewportWScalingNV * pViewportWScalings ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkReleaseDisplayEXT, ( VkPhysicalDevice physicalDevice , VkDisplayKHR display ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetPhysicalDeviceSurfaceCapabilities2EXT, ( VkPhysicalDevice physicalDevice , VkSurfaceKHR surface , VkSurfaceCapabilities2EXT * pSurfaceCapabilities ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkDisplayPowerControlEXT, ( VkDevice device , VkDisplayKHR display , const VkDisplayPowerInfoEXT * pDisplayPowerInfo ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkRegisterDeviceEventEXT, ( VkDevice device , const VkDeviceEventInfoEXT * pDeviceEventInfo , const VkAllocationCallbacks * pAllocator , VkFence * pFence ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkRegisterDisplayEventEXT, ( VkDevice device , VkDisplayKHR display , const VkDisplayEventInfoEXT * pDisplayEventInfo , const VkAllocationCallbacks * pAllocator , VkFence * pFence ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetSwapchainCounterEXT, ( VkDevice device , VkSwapchainKHR swapchain , VkSurfaceCounterFlagBitsEXT counter , uint64_t * pCounterValue ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetRefreshCycleDurationGOOGLE, ( VkDevice device , VkSwapchainKHR swapchain , VkRefreshCycleDurationGOOGLE * pDisplayTimingProperties ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetPastPresentationTimingGOOGLE, ( VkDevice device , VkSwapchainKHR swapchain , uint32_t * pPresentationTimingCount , VkPastPresentationTimingGOOGLE * pPresentationTimings ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkReleaseDisplayEXT, ( VkPhysicalDevice physicalDevice , VkDisplayKHR display ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPhysicalDeviceSurfaceCapabilities2EXT, ( VkPhysicalDevice physicalDevice , VkSurfaceKHR surface , VkSurfaceCapabilities2EXT * pSurfaceCapabilities ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkDisplayPowerControlEXT, ( VkDevice device , VkDisplayKHR display , const VkDisplayPowerInfoEXT * pDisplayPowerInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkRegisterDeviceEventEXT, ( VkDevice device , const VkDeviceEventInfoEXT * pDeviceEventInfo , const VkAllocationCallbacks * pAllocator , VkFence * pFence ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkRegisterDisplayEventEXT, ( VkDevice device , VkDisplayKHR display , const VkDisplayEventInfoEXT * pDisplayEventInfo , const VkAllocationCallbacks * pAllocator , VkFence * pFence ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetSwapchainCounterEXT, ( VkDevice device , VkSwapchainKHR swapchain , VkSurfaceCounterFlagBitsEXT counter , uint64_t * pCounterValue ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetRefreshCycleDurationGOOGLE, ( VkDevice device , VkSwapchainKHR swapchain , VkRefreshCycleDurationGOOGLE * pDisplayTimingProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetPastPresentationTimingGOOGLE, ( VkDevice device , VkSwapchainKHR swapchain , uint32_t * pPresentationTimingCount , VkPastPresentationTimingGOOGLE * pPresentationTimings ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkCmdSetDiscardRectangleEXT, ( VkCommandBuffer commandBuffer , uint32_t firstDiscardRectangle , uint32_t discardRectangleCount , const VkRect2D * pDiscardRectangles ) , (void)(0) ) \
 	_buildFunc_( void, vkSetHdrMetadataEXT, ( VkDevice device , uint32_t swapchainCount , const VkSwapchainKHR * pSwapchains , const VkHdrMetadataEXT * pMetadata ) , (void)(0) ) \
 	_buildFunc_( VkBool32, vkDebugUtilsMessengerCallbackEXT, ( VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity , VkDebugUtilsMessageTypeFlagsEXT messageType , const VkDebugUtilsMessengerCallbackDataEXT * pCallbackData , void * pUserData ) , (VkBool32)(0) ) \
-	_buildFunc_( VkResult, vkSetDebugUtilsObjectNameEXT, ( VkDevice device , const VkDebugUtilsObjectNameInfoEXT * pNameInfo ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkSetDebugUtilsObjectTagEXT, ( VkDevice device , const VkDebugUtilsObjectTagInfoEXT * pTagInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkSetDebugUtilsObjectNameEXT, ( VkDevice device , const VkDebugUtilsObjectNameInfoEXT * pNameInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkSetDebugUtilsObjectTagEXT, ( VkDevice device , const VkDebugUtilsObjectTagInfoEXT * pTagInfo ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkQueueBeginDebugUtilsLabelEXT, ( VkQueue queue , const VkDebugUtilsLabelEXT * pLabelInfo ) , (void)(0) ) \
 	_buildFunc_( void, vkQueueEndDebugUtilsLabelEXT, ( VkQueue queue ) , (void)(0) ) \
 	_buildFunc_( void, vkQueueInsertDebugUtilsLabelEXT, ( VkQueue queue , const VkDebugUtilsLabelEXT * pLabelInfo ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdBeginDebugUtilsLabelEXT, ( VkCommandBuffer commandBuffer , const VkDebugUtilsLabelEXT * pLabelInfo ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdEndDebugUtilsLabelEXT, ( VkCommandBuffer commandBuffer ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdInsertDebugUtilsLabelEXT, ( VkCommandBuffer commandBuffer , const VkDebugUtilsLabelEXT * pLabelInfo ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateDebugUtilsMessengerEXT, ( VkInstance instance , const VkDebugUtilsMessengerCreateInfoEXT * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDebugUtilsMessengerEXT * pMessenger ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateDebugUtilsMessengerEXT, ( VkInstance instance , const VkDebugUtilsMessengerCreateInfoEXT * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkDebugUtilsMessengerEXT * pMessenger ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyDebugUtilsMessengerEXT, ( VkInstance instance , VkDebugUtilsMessengerEXT messenger , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
 	_buildFunc_( void, vkSubmitDebugUtilsMessageEXT, ( VkInstance instance , VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity , VkDebugUtilsMessageTypeFlagsEXT messageTypes , const VkDebugUtilsMessengerCallbackDataEXT * pCallbackData ) , (void)(0) ) \
 	_buildFunc_( void, vkCmdSetSampleLocationsEXT, ( VkCommandBuffer commandBuffer , const VkSampleLocationsInfoEXT * pSampleLocationsInfo ) , (void)(0) ) \
 	_buildFunc_( void, vkGetPhysicalDeviceMultisamplePropertiesEXT, ( VkPhysicalDevice physicalDevice , VkSampleCountFlagBits samples , VkMultisamplePropertiesEXT * pMultisampleProperties ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkCreateValidationCacheEXT, ( VkDevice device , const VkValidationCacheCreateInfoEXT * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkValidationCacheEXT * pValidationCache ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateValidationCacheEXT, ( VkDevice device , const VkValidationCacheCreateInfoEXT * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkValidationCacheEXT * pValidationCache ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkDestroyValidationCacheEXT, ( VkDevice device , VkValidationCacheEXT validationCache , const VkAllocationCallbacks * pAllocator ) , (void)(0) ) \
-	_buildFunc_( VkResult, vkMergeValidationCachesEXT, ( VkDevice device , VkValidationCacheEXT dstCache , uint32_t srcCacheCount , const VkValidationCacheEXT * pSrcCaches ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetValidationCacheDataEXT, ( VkDevice device , VkValidationCacheEXT validationCache , size_t * pDataSize , void * pData ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetMemoryHostPointerPropertiesEXT, ( VkDevice device , VkExternalMemoryHandleTypeFlagBits handleType , const void * pHostPointer , VkMemoryHostPointerPropertiesEXT * pMemoryHostPointerProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkMergeValidationCachesEXT, ( VkDevice device , VkValidationCacheEXT dstCache , uint32_t srcCacheCount , const VkValidationCacheEXT * pSrcCaches ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetValidationCacheDataEXT, ( VkDevice device , VkValidationCacheEXT validationCache , size_t * pDataSize , void * pData ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetMemoryHostPointerPropertiesEXT, ( VkDevice device , VkExternalMemoryHandleTypeFlagBits handleType , const void * pHostPointer , VkMemoryHostPointerPropertiesEXT * pMemoryHostPointerProperties ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( void, vkCmdWriteBufferMarkerAMD, ( VkCommandBuffer commandBuffer , VkPipelineStageFlagBits pipelineStage , VkBuffer dstBuffer , VkDeviceSize dstOffset , uint32_t marker ) , (void)(0) ) \
+	_buildFunc_( void, vkCmdSetCheckpointNV, ( VkCommandBuffer commandBuffer , const void * pCheckpointMarker ) , (void)(0) ) \
+	_buildFunc_( void, vkGetQueueCheckpointDataNV, ( VkQueue queue , uint32_t * pCheckpointDataCount , VkCheckpointDataNV * pCheckpointData ) , (void)(0) ) \
 
 

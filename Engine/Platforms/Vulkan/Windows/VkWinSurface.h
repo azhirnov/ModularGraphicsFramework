@@ -6,12 +6,12 @@
 
 #if defined( GRAPHICS_API_VULKAN ) and defined( PLATFORM_WINDOWS )
 
+#include "Engine/Platforms/Public/Tools/WindowHelper.h"
+
 namespace Engine
 {
 namespace PlatformVK
 {
-	using namespace Engine::Platforms;
-
 
 	//
 	// Vulkan Windows Surface
@@ -28,7 +28,7 @@ namespace PlatformVK
 		VkWinSurface ();
 		~VkWinSurface ();
 
-		bool Create (vk::VkInstance instance, const HWND_t &windowHandle, OUT vk::VkSurfaceKHR &surface);
+		bool Create (vk::VkInstance instance, const PlatformTools::WindowHelper::WinAPIWindow &, OUT vk::VkSurfaceKHR &surface);
 		void Destroy ();
 		void RequestExtensions (INOUT Array<const char*> &ext);
 	};

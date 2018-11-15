@@ -12,6 +12,8 @@ private:
 	using TestFunc_t	= bool (SApp::*) ();
 	using TestQueue_t	= Queue< TestFunc_t >;
 
+	using ImageRange	= GpuMsg::ImageRange;
+
 	struct GPU
 	{
 		ModulePtr			gpuThread;
@@ -26,6 +28,7 @@ private:
 	Ptr< Module >		ms;
 	bool				looping					= true;
 	bool				sharedThreadInitialized	= false;
+	bool				debugContext			= false;
 	ComputeModuleIDs	gpuIDs;
 	
 	ModulePtr			gpuThread;
@@ -52,7 +55,7 @@ public:
 	SApp ();
 	~SApp ();
 
-	bool Initialize (GAPI::type api, GAPI::type sharedApi, StringCRef dev);
+	bool Initialize (GAPI::type api, GAPI::type sharedApi, StringCRef dev, bool debug);
 	void Quit ();
 	bool Update ();
 

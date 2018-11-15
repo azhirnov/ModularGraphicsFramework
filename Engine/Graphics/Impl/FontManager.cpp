@@ -17,15 +17,11 @@ namespace Graphics
 	{
 	// types
 	private:
-		//using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
-		//								> >;
-
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -53,7 +49,6 @@ namespace Graphics
 
 
 	
-	const TypeIdList	FontManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	FontManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -62,7 +57,7 @@ namespace Graphics
 =================================================
 */
 	FontManager::FontManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::FontManager &ci) :
-		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
+		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes )
 	{
 		SetDebugName( "FontManager" );
 
@@ -76,8 +71,6 @@ namespace Graphics
 		_SubscribeOnMsg( this, &FontManager::_Compose );
 		_SubscribeOnMsg( this, &FontManager::_Delete );
 		_SubscribeOnMsg( this, &FontManager::_OnManagerChanged_Empty );
-
-		CHECK( _ValidateMsgSubscriptions() );
 
 		_AttachSelfToManager( _GetGpuThread( ci.gpuThread ), UntypedID_t(0), true );
 	}

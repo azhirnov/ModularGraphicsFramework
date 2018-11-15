@@ -18,7 +18,7 @@ namespace OSMsg
 	//
 	// Request Window Handle
 	//
-	struct GetWinWindowHandle : _MessageBase_
+	struct GetWinWindowHandle : _MsgBase_
 	{
 		using HWND_t = DeferredTypeFrom<void*>;
 
@@ -29,7 +29,7 @@ namespace OSMsg
 	//
 	// Window Raw Message from OS
 	//
-	struct OnWinWindowRawMessage : _MessageBase_
+	struct OnWinWindowRawMessage : _MsgBase_
 	{
 	// variables
 		const uint		uMsg			= 0;
@@ -47,7 +47,7 @@ namespace OSMsg
 	//
 	// Platform Created Message
 	//
-	struct OnWinPlatformCreated : _MessageBase_
+	struct OnWinPlatformCreated : _MsgBase_
 	{
 	// types
 		using HMODULE_t		= DeferredTypeFrom<void*>;

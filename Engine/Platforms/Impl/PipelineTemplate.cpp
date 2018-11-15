@@ -38,55 +38,6 @@
 
 namespace Engine
 {
-namespace GpuMsg
-{
-
-#	if not defined( GRAPHICS_API_VULKAN )
-	// default
-	struct GetVkShaderModuleIDs
-	{};
-
-	struct GetVkDeviceInfo
-	{};
-#	endif
-	
-#	if not defined( GRAPHICS_API_OPENGL )
-	// default
-	struct GetGLShaderModuleIDs
-	{};
-
-	struct GetGLDeviceInfo
-	{};
-#	endif
-
-#	if not defined( COMPUTE_API_OPENCL )
-	// default
-	struct GetCLShaderModuleIDs
-	{};
-
-	struct GetCLDeviceInfo
-	{};
-#	endif
-	
-#	if not defined( GRAPHICS_API_SOFT )
-	// default
-	struct GetSWShaderModuleIDs
-	{};
-
-	struct GetSWDeviceInfo
-	{};
-#	endif
-	
-#	if not defined( GRAPHICS_API_DIRECTX )
-	struct GetDXShaderModuleIDs
-	{};
-
-	struct GetDXDeviceInfo
-	{};
-#	endif
-
-}	// GpuMsg
-
 namespace Platforms
 {
 
@@ -98,28 +49,26 @@ namespace Platforms
 	{
 	// types
 	private:
-		using SupportedMessages_t	= MessageListFrom< 
-											ModuleMsg::Delete,
-											GpuMsg::GetVkShaderModuleIDs,
-											GpuMsg::GetGLShaderModuleIDs,
-											GpuMsg::GetCLShaderModuleIDs,
-											GpuMsg::GetSWShaderModuleIDs,
+		using SupportedMessages_t	= MessageListFrom<
 											GpuMsg::CreateGraphicsPipelineDescription,
 											GpuMsg::CreateComputePipelineDescription,
 											GpuMsg::CreateGraphicsPipeline,
 											GpuMsg::CreateComputePipeline,
-											GpuMsg::GetPipelineTemplateInfo
+											GpuMsg::GetPipelineTemplateInfo,
+											GpuMsg::GetPipelineLayoutDescription
 										>;
 		using SupportedEvents_t		= MessageListFrom< 
 											ModuleMsg::Delete
 										>;
 
-		using Vk1Shaders			= StaticArray< /*VkShaderModule*/ ulong, EShader::_Count >;
-		using GL4Shaders			= StaticArray< /*GLuint program*/ uint, EShader::_Count >;
-		using CL1Shaders			= StaticArray< /*cl_program*/ void*, EShader::_Count >;		// compute only
+		using Vk1Shaders_t			= StaticArray< /*VkShaderModule*/ ulong, EShader::_Count >;
+		using GL4Shaders_t			= StaticArray< /*GLuint program*/ uint, EShader::_Count >;
+		using CL1Shaders_t			= StaticArray< /*cl_program*/ void*, EShader::_Count >;		// compute only
 
-		using SWInvoke				= PipelineTemplateDescription::ShaderSource::SWInvoke;
-		using SWShaders				= StaticArray< SWInvoke, EShader::_Count >;
+		using SWInvoke_t			= PipelineTemplateDescription::ShaderSource::SWInvoke_t;
+		using SWShaders_t			= StaticArray< SWInvoke_t, EShader::_Count >;
+
+		using ShaderFormats_t		= FixedSizeArray< EShaderLangFormat::type, 16 >;
 		
 		using VkDeviceMsgList_t		= MessageListFrom< GpuMsg::GetDeviceInfo, GpuMsg::GetVkDeviceInfo >;
 		using GLDeviceMsgList_t		= MessageListFrom< GpuMsg::GetDeviceInfo, GpuMsg::GetGLDeviceInfo >;
@@ -130,33 +79,36 @@ namespace Platforms
 
 		struct VulkanShaders
 		{
-			Vk1Shaders		shaders;
+			Vk1Shaders_t	shaders;
 			void *			device			= null;
+			uint			version			= 0;
 		};
 
 		struct OpenGLShaders
 		{
-			GL4Shaders		shaders;
+			GL4Shaders_t	shaders;
+			uint			version			= 0;
 			bool			isInitialized	= false;
 		};
 
 		struct OpenCLShaders
 		{
-			CL1Shaders		shaders;
+			CL1Shaders_t	shaders;
 			void *			device			= null;
 			void *			context			= null;
+			uint			version			= 0;
 		};
 
 		struct SWRendererShaders
 		{
-			SWShaders		shaders;
+			SWShaders_t		shaders;
+			uint			version			= 0;
 			bool			isInitialized	= false;
 		};
 		
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -184,37 +136,44 @@ namespace Platforms
 		bool _CreateGraphicsPipeline (const GpuMsg::CreateGraphicsPipeline &);
 		bool _CreateComputePipeline (const GpuMsg::CreateComputePipeline &);
 		bool _GetPipelineTemplateInfo (const GpuMsg::GetPipelineTemplateInfo &);
+		bool _GetPipelineLayoutDescription (const GpuMsg::GetPipelineLayoutDescription &);
+		
 
+#	ifdef GRAPHICS_API_VULKAN
 		bool _GetVkShaderModuleIDs (const GpuMsg::GetVkShaderModuleIDs &);
-		bool _GetGLShaderModuleIDs (const GpuMsg::GetGLShaderModuleIDs &);
-		bool _GetCLShaderModuleIDs (const GpuMsg::GetCLShaderModuleIDs &);
-		bool _GetSWShaderModuleIDs (const GpuMsg::GetSWShaderModuleIDs &);
-
 		bool _VkDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
-		bool _GLDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
-		bool _CLDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
-		bool _SWDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
-
-	private:
 		bool _AttachToVulkanDevice ();
 		bool _CreateVulkanShaders ();
 		bool _DeleteVulkanShaders ();
 		bool _HasVulkanShaders () const;
-
+#	endif
+		
+#	ifdef GRAPHICS_API_OPENGL
+		bool _GetGLShaderModuleIDs (const GpuMsg::GetGLShaderModuleIDs &);
+		bool _GLDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
 		bool _AttachToOpenGLDevice ();
 		bool _CreateOpenGLShaders ();
 		bool _DeleteOpenGLShaders ();
 		bool _HasOpenGLShaders () const;
-
+#	endif
+		
+#	ifdef COMPUTE_API_OPENCL
+		bool _GetCLShaderModuleIDs (const GpuMsg::GetCLShaderModuleIDs &);
+		bool _CLDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
 		bool _AttachToOpenCLDevice ();
 		bool _CreateOpenCLShaders ();
 		bool _DeleteOpenCLShaders ();
 		bool _HasOpenCLShaders () const;
-
+#	endif
+		
+#	ifdef GRAPHICS_API_SOFT
+		bool _GetSWShaderModuleIDs (const GpuMsg::GetSWShaderModuleIDs &);
+		bool _SWDeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &);
 		bool _AttachToSWRendererDevice ();
 		bool _CreateSWRendererShaders ();
 		bool _DeleteSWRendererShaders ();
 		bool _HasSWRendererShaders () const;
+#	endif
 
 		bool _GetGraphicsPipelineDescription (const VertexInputState &vertexInput, EPrimitive::type topology,
 											 OUT GraphicsPipelineDescription &result) const;
@@ -225,7 +184,6 @@ namespace Platforms
 
 
 	
-	const TypeIdList	PipelineTemplate::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	PipelineTemplate::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 	
 /*
@@ -234,23 +192,37 @@ namespace Platforms
 =================================================
 */
 	PipelineTemplate::PipelineTemplate (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineTemplate &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_descr( ci.descr )
 	{
 		SetDebugName( "PipelineTemplate" );
 
 		_SubscribeOnMsg( this, &PipelineTemplate::_Delete );
+
+#		ifdef GRAPHICS_API_VULKAN
 		_SubscribeOnMsg( this, &PipelineTemplate::_GetVkShaderModuleIDs );
+#		endif
+		
+#		ifdef GRAPHICS_API_OPENGL
 		_SubscribeOnMsg( this, &PipelineTemplate::_GetGLShaderModuleIDs );
+#		endif
+		
+#		ifdef COMPUTE_API_OPENCL
 		_SubscribeOnMsg( this, &PipelineTemplate::_GetCLShaderModuleIDs );
+#		endif
+		
+#		ifdef GRAPHICS_API_SOFT
 		_SubscribeOnMsg( this, &PipelineTemplate::_GetSWShaderModuleIDs );
+#		endif
+
 		_SubscribeOnMsg( this, &PipelineTemplate::_CreateGraphicsPipelineDescription );
 		_SubscribeOnMsg( this, &PipelineTemplate::_CreateComputePipelineDescription );
 		_SubscribeOnMsg( this, &PipelineTemplate::_CreateGraphicsPipeline );
 		_SubscribeOnMsg( this, &PipelineTemplate::_CreateComputePipeline );
 		_SubscribeOnMsg( this, &PipelineTemplate::_GetPipelineTemplateInfo );
+		_SubscribeOnMsg( this, &PipelineTemplate::_GetPipelineLayoutDescription );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 	}
 	
 /*
@@ -273,17 +245,25 @@ namespace Platforms
 */
 	bool PipelineTemplate::_Delete (const ModuleMsg::Delete &msg)
 	{
+#	ifdef GRAPHICS_API_VULKAN
 		if ( _vkData.device )
 			_DeleteVulkanShaders();
-
+#	endif
+		
+#	ifdef GRAPHICS_API_OPENGL
 		if ( _glData.isInitialized )
 			_DeleteOpenGLShaders();
+#	endif
 		
+#	ifdef COMPUTE_API_OPENCL
 		if ( _clData.device )
 			_DeleteOpenCLShaders();
-
+#	endif
+		
+#	ifdef GRAPHICS_API_SOFT
 		if ( _swData.isInitialized )
 			_DeleteSWRendererShaders();
+#	endif
 
 		_vkData	= Uninitialized;
 		_glData	= Uninitialized;
@@ -360,37 +340,28 @@ namespace Platforms
 */
 	bool PipelineTemplate::_GetPipelineTemplateInfo (const GpuMsg::GetPipelineTemplateInfo &msg)
 	{
-		using EGraphicsAPI = GpuMsg::GetPipelineTemplateInfo::EGraphicsAPI;
-
 		GpuMsg::GetPipelineTemplateInfo::Info	info;
 
 		FOR( i, _descr.shaders )
 		{
-			auto&	sh		= _descr.shaders[i];
-			bool	exists	= false;
+			auto&	sh	= _descr.shaders[i];
 
-			if ( not sh.GetSPIRV().Empty() ) {
-				info.apiVersions	|= EGraphicsAPI::Vulkan_10;
-				exists				|= true;
-			}
-			if ( not sh.GetCL().Empty() or not sh.GetCLAsm().Empty() ) {
-				info.apiVersions	|= EGraphicsAPI::OpenCL_120;
-				exists				|= true;
-			}
-			if ( not sh.GetGLSL().Empty() ) {
-				info.apiVersions	|= EGraphicsAPI::OpenGL_450;
-				exists				|= true;
-			}
-			if ( sh.GetSW() ) {
-				info.apiVersions	|= EGraphicsAPI::Soft;
-				exists				|= true;
-			}
-
-			if ( exists )
+			if ( not sh.Empty() )
 				info.shaders |= EShader::type(i);
 		}
 
 		msg.result.Set( info );
+		return true;
+	}
+		
+/*
+=================================================
+	_GetPipelineLayoutDescription
+=================================================
+*/
+	bool PipelineTemplate::_GetPipelineLayoutDescription (const GpuMsg::GetPipelineLayoutDescription &msg)
+	{
+		msg.result.Set( _descr.layout );
 		return true;
 	}
 //-----------------------------------------------------------------------------
@@ -416,15 +387,19 @@ namespace Platforms
 		GpuMsg::GetVkDeviceInfo		req_dev;
 		dev->Send( req_dev );
 
-		dev->Subscribe( this, &PipelineTemplate::_VkDeviceBeforeDestroy );
-
-		if ( not req_dev.result.IsDefined() or
+		if ( not req_dev.result or
 			 req_dev.result->logicalDevice == VK_NULL_HANDLE )
 		{
 			return false;
 		}
+		
+		GpuMsg::GetComputeSettings	req_settings;
+		dev->Send( req_settings );
 
-		_vkData.device = req_dev.result->logicalDevice;
+		dev->Subscribe( this, &PipelineTemplate::_VkDeviceBeforeDestroy );
+
+		_vkData.device	= req_dev.result->logicalDevice;
+		_vkData.version	= req_settings.result->GetAPIVersion();
 		return true;
 	}
 	
@@ -463,14 +438,33 @@ namespace Platforms
 
 		_DeleteVulkanShaders();
 
+		ShaderFormats_t		formats;
+
+		if ( _vkData.version >= 110 )
+			formats << (EShaderLangFormat::Vulkan_110 | EShaderLangFormat::SPIRV);
+
+		if ( _vkData.version >= 100 )
+			formats << (EShaderLangFormat::Vulkan_100 | EShaderLangFormat::SPIRV);
+
 		FOR( i, _vkData.shaders )
 		{
 			if ( not _descr.supportedShaders[EShader::type(i)] )
 				continue;
 			
-			ArrayCRef<uint>		data = _descr.shaders[i].GetSPIRV();
+
+			// find existing shader source
+			ArrayCRef<uint>			data;
+			EShaderLangFormat::type	fmt;
+
+			for (usize j = 0; j < formats.Count() and data.Empty(); ++j)
+			{
+				fmt  = formats[j];
+				data = _descr.shaders[i].GetSpirv( fmt );
+			}
 			CHECK_ERR( not data.Empty() );
 
+
+			// create shader module
 			VkShaderModuleCreateInfo	shader_info = {};
 			shader_info.sType		= VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 			shader_info.codeSize	= usize(data.Size());
@@ -541,17 +535,6 @@ namespace Platforms
 		msg.result.Set( RVREF(result) );
 		return true;
 	}
-
-#else
-
-	bool PipelineTemplate::_GetVkShaderModuleIDs (const GpuMsg::GetVkShaderModuleIDs &) {
-		return false;
-	}
-
-	bool PipelineTemplate::_DeleteVulkanShaders () {
-		return false;
-	}
-
 #endif	// GRAPHICS_API_VULKAN
 //-----------------------------------------------------------------------------
 	
@@ -572,10 +555,14 @@ namespace Platforms
 
 		if ( not dev )
 			return false;
+		
+		GpuMsg::GetComputeSettings	req_settings;
+		dev->Send( req_settings );
 
 		dev->Subscribe( this, &PipelineTemplate::_GLDeviceBeforeDestroy );
 
-		_glData.isInitialized = true;
+		_glData.version			= req_settings.result->GetAPIVersion();
+		_glData.isInitialized	= true;
 		return true;
 	}
 
@@ -649,15 +636,41 @@ namespace Platforms
 		CHECK_ERR( _glData.isInitialized );
 
 		_DeleteOpenGLShaders();
+		
+		ShaderFormats_t		formats;
+
+		// TODO: SPIRV
+		//if ( _glData.version >= 460 )
+		//	formats << (EShaderLangFormat::OpenGL_460 | EShaderLangFormat::SPIRV);
+		
+		//if ( _glData.version >= 450 )
+		//	formats << (EShaderLangFormat::OpenGL_450 | EShaderLangFormat::SPIRV);
+		
+		if ( _glData.version >= 460 )
+			formats << (EShaderLangFormat::OpenGL_460 | EShaderLangFormat::HighLevel);
+		
+		if ( _glData.version >= 450 )
+			formats << (EShaderLangFormat::OpenGL_450 | EShaderLangFormat::HighLevel);
+
 
 		FOR( i, _glData.shaders )
 		{
 			if ( not _descr.supportedShaders[EShader::type(i)] )
 				continue;
 			
-			StringCRef	src = _descr.shaders[i].GetGLSL();
+			// find existing shader source
+			StringCRef				src;
+			EShaderLangFormat::type	fmt;
+
+			for (usize j = 0; j < formats.Count() and src.Empty(); ++j)
+			{
+				fmt  = formats[j];
+				src = _descr.shaders[i].GetString( fmt );
+			}
 			CHECK_ERR( not src.Empty() );
 
+
+			// create shader program
 			CHECK_ERR( CreateGLProgram( OUT _glData.shaders[i], EShader::type(i), src.cstr() ) );
 		}
 		return true;
@@ -720,16 +733,6 @@ namespace Platforms
 		msg.result.Set( RVREF(result) );
 		return true;
 	}
-
-#else
-	
-	bool PipelineTemplate::_GetGLShaderModuleIDs (const GpuMsg::GetGLShaderModuleIDs &) {
-		return false;
-	}
-
-	bool PipelineTemplate::_DeleteOpenGLShaders () {
-		return false;
-	}
 #endif	// GRAPHICS_API_OPENGL
 //-----------------------------------------------------------------------------
 
@@ -752,7 +755,9 @@ namespace Platforms
 			return false;
 
 		GpuMsg::GetCLDeviceInfo		req_dev;
+		GpuMsg::GetComputeSettings	req_settings;
 		dev->Send( req_dev );
+		dev->Send( req_settings );
 
 		dev->Subscribe( this, &PipelineTemplate::_CLDeviceBeforeDestroy );
 
@@ -765,6 +770,7 @@ namespace Platforms
 
 		_clData.device	= req_dev.result->device;
 		_clData.context	= req_dev.result->context;
+		_clData.version	= req_settings.result->GetAPIVersion();
 		return true;
 	}
 	
@@ -803,18 +809,49 @@ namespace Platforms
 		CHECK_ERR( _clData.device and _clData.context );
 
 		_DeleteOpenCLShaders();
-
 		CHECK_ERR( _descr.supportedShaders[EShader::Compute] );
-
-		StringCRef	data = _descr.shaders[EShader::Compute].GetCL();
-		CHECK_ERR( not data.Empty() );
 		
+
+		ShaderFormats_t		formats;
+		{
+			// TODO: SPIRV
+			//if ( _clData.version >= 210 )
+			//	formats << (EShaderLangFormat::OpenCL_210 | EShaderLangFormat::SPIRV);
+			
+			// TODO: binary
+			//if ( _clData.version >= 210 )
+			//	formats << (EShaderLangFormat::OpenCL_210 | EShaderLangFormat::CL_Asm);
+
+			if ( _clData.version >= 210 )
+				formats << (EShaderLangFormat::OpenCL_210 | EShaderLangFormat::HighLevel);
+			
+			//if ( _clData.version >= 120 )
+			//	formats << (EShaderLangFormat::OpenCL_120 | EShaderLangFormat::CL_Asm);
+
+			if ( _clData.version >= 120 )
+				formats << (EShaderLangFormat::OpenCL_120 | EShaderLangFormat::HighLevel);
+		}
+
+
+		// find existing shader source
+		StringCRef				data;
+		EShaderLangFormat::type	fmt;
+
+		for (usize j = 0; j < formats.Count() and data.Empty(); ++j)
+		{
+			fmt  = formats[j];
+			data = _descr.shaders[EShader::Compute].GetString( fmt );
+		}
+		CHECK_ERR( not data.Empty() );
+
+
+		// compile program
 		const cl_device_id	devices[]	= { cl_device_id(_clData.device) };
 		usize				log_size	= 0;
 		cl_int				cl_err		= 0;
 		cl_program			prog_id		= null;
 		const char*			src			= data.cstr();
-		static const char	options[]	=				// TODO: add options to descriptor
+		static const char	options[]	=				// TODO: add options to description
 			" -cl-single-precision-constant"
 			" -cl-mad-enable"
 			//" -cl-denorms-are-zero"
@@ -910,16 +947,6 @@ namespace Platforms
 		msg.result.Set( RVREF(result) );
 		return true;
 	}
-
-#else
-
-	bool PipelineTemplate::_GetCLShaderModuleIDs (const GpuMsg::GetCLShaderModuleIDs &) {
-		return false;
-	}
-
-	bool PipelineTemplate::_DeleteOpenCLShaders () {
-		return false;
-	}
 #endif	// COMPUTE_API_OPENCL
 //-----------------------------------------------------------------------------
 	
@@ -941,10 +968,14 @@ namespace Platforms
 
 		if ( not dev )
 			return false;
+		
+		GpuMsg::GetComputeSettings	req_settings;
+		dev->Send( req_settings );
 
 		dev->Subscribe( this, &PipelineTemplate::_SWDeviceBeforeDestroy );
 
-		_swData.isInitialized = true;
+		_swData.isInitialized	= true;
+		_swData.version			= req_settings.result->GetAPIVersion();
 		return true;
 	}
 	
@@ -959,7 +990,7 @@ namespace Platforms
 		
 		CHECK_ERR( _descr.supportedShaders[EShader::Compute] );
 		
-		SWInvoke	func = _descr.shaders[EShader::Compute].GetSW();
+		SWInvoke_t	func = _descr.shaders[EShader::Compute].GetInvocable( EShaderLangFormat::Software_100 | EShaderLangFormat::CPP_Invocable );
 		CHECK_ERR( func );
 		
 		_swData.shaders[EShader::Compute] = func;
@@ -1031,16 +1062,6 @@ namespace Platforms
 		msg.result.Set( RVREF(result) );
 		return true;
 	}
-#else
-
-	bool PipelineTemplate::_GetSWShaderModuleIDs (const GpuMsg::GetSWShaderModuleIDs &) {
-		return false;
-	}
-
-	bool PipelineTemplate::_DeleteSWRendererShaders () {
-		return false;
-	}
-
 #endif	// GRAPHICS_API_SOFT
 //-----------------------------------------------------------------------------
 
@@ -1055,7 +1076,6 @@ namespace Platforms
 		// copy from template
 		result.dynamicStates		= _descr.dynamicStates;
 		result.fragOutput			= _descr.fragOutput;
-		result.layout				= _descr.layout;
 		result.patchControlPoints	= _descr.patchControlPoints;
 		result.renderState			= _descr.renderState;
 		result.subpass				= _descr.subpass;
@@ -1077,7 +1097,6 @@ namespace Platforms
 	{
 		CHECK_ERR( _descr.supportedShaders[ EShader::Compute ] );
 
-		result.layout			= _descr.layout;
 		result.localGroupSize	= _descr.localGroupSize;
 
 		return true;
@@ -1093,7 +1112,7 @@ namespace Platforms
 		GraphicsPipelineDescription	result;
 		CHECK_ERR( _GetGraphicsPipelineDescription( msg.vertexInput, msg.topology, OUT result ) );
 
-		msg.result.Set( result );
+		msg.result.Set({ result, _descr.layout });
 		return true;
 	}
 	
@@ -1112,7 +1131,7 @@ namespace Platforms
 		//if ( msg.localGroupSize.IsDefined() )
 		//	result.localGroupSize = *msg.localGroupSize;
 
-		msg.result.Set( result );
+		msg.result.Set({ result, _descr.layout });
 		return true;
 	}
 	
@@ -1132,7 +1151,8 @@ namespace Platforms
 					GlobalSystems(),
 					CreateInfo::GraphicsPipeline{
 						msg.gpuThread,
-						gpp_descr
+						gpp_descr,
+						_descr.layout
 					},
 					OUT pipeline
 		));
@@ -1168,7 +1188,8 @@ namespace Platforms
 					GlobalSystems(),
 					CreateInfo::ComputePipeline{
 						msg.gpuThread,
-						cpp_descr
+						cpp_descr,
+						_descr.layout
 					},
 					OUT pipeline
 		));

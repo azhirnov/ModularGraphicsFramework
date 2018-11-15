@@ -57,7 +57,7 @@ bool PApp::_Test_GlobalToLocal ()
 					OUT resource_table ) );
 	
 	resource_table->Send( ModuleMsg::AttachModule{ "pipeline", pipeline });
-	resource_table->Send( GpuMsg::PipelineAttachBuffer{ "ssb", buffer, buf_size, 0_b });
+	resource_table->Send( GpuMsg::PipelineAttachBuffer{ "ssb", buffer, 0_b, buf_size });
 
 	ModuleUtils::Initialize({ cmd_buffer, buffer, pipeline, resource_table });
 	
@@ -65,7 +65,7 @@ bool PApp::_Test_GlobalToLocal ()
 	// write data to buffer
 	GpuMsg::WriteToGpuMemory	write_cmd{ BinArrayCRef::FromValue(in_data) };
 	buffer->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL::SizeOf(in_data) );
+	CHECK_ERR( *write_cmd.wasWritten == BytesU::SizeOf(in_data) );
 
 
 	// build command buffer
@@ -80,7 +80,7 @@ bool PApp::_Test_GlobalToLocal ()
 
 
 	// submit and sync
-	gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
+	gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
 
 	syncManager->Send( GpuMsg::ClientWaitFence{ *fence_ctor.result });
 

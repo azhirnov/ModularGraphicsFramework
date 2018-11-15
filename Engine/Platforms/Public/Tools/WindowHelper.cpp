@@ -161,8 +161,9 @@ namespace PlatformTools
 	WinAPIWindow
 =================================================
 */
-	WindowHelper::WinAPIWindow::WinAPIWindow (void *inst, void *wnd) :
-		window{Cast<HWND>(wnd)}, instance{Cast<HMODULE>(inst)}
+	WindowHelper::WinAPIWindow::WinAPIWindow () :
+		window{ UninitializedT<HWND>() },
+		instance{ UninitializedT<HMODULE>() }
 	{}
 
 /*
@@ -175,32 +176,38 @@ namespace PlatformTools
 	#ifdef PLATFORM_SDL
 		using SDLMsgList_t	= ModuleMsg::MessageListFrom< OSMsg::GetSDLWindowHandle >;
 
-		if ( window->GetSupportedMessages().HasAllTypes< SDLMsgList_t >() )
+		if ( window->SupportsAllMessages< SDLMsgList_t >() )
 		{
 			OSMsg::GetSDLWindowHandle	req_wnd;
 			CHECK( window->Send( req_wnd ) );
 
 			SDL_SysWMinfo	info = {};
-			SDL_VERSION( &info.version );
+			SDL_VERSION( OUT &info.version );
 
 			CHECK_ERR( SDL_GetWindowWMInfo( *req_wnd.result, OUT &info ) == SDL_TRUE );
 			CHECK_ERR( info.subsystem == SDL_SYSWM_WINDOWS );
 
-			CHECK_ERR( func( WinAPIWindow( info.info.win.hinstance, info.info.win.window ) ) );
+			WinAPIWindow	handle;
+			handle.instance	= info.info.win.hinstance;
+			handle.window	= info.info.win.window;
+
+			CHECK_ERR( func( handle ) );
 			return true;
 		}
 	#endif
 		
 		using WinMsgList_t	= ModuleMsg::MessageListFrom< OSMsg::GetWinWindowHandle >;
 		
-		if ( window->GetSupportedMessages().HasAllTypes< WinMsgList_t >() )
+		if ( window->SupportsAllMessages< WinMsgList_t >() )
 		{
 			OSMsg::GetWinWindowHandle	req_wnd;
 			CHECK( window->Send( req_wnd ) );
 
-			void* inst = ReferenceCast<void*>(::GetWindowLongPtrA( req_wnd.result->Get<HWND>(), GWLP_HINSTANCE ));
+			WinAPIWindow	handle;
+			handle.instance	= ReferenceCast<HMODULE>(::GetWindowLongPtrA( req_wnd.result->Get<HWND>(), GWLP_HINSTANCE ));
+			handle.window	= req_wnd.result->Get<HWND>();
 
-			CHECK_ERR( func( WinAPIWindow( inst, req_wnd.result->Get<HWND>() ) ) );
+			CHECK_ERR( func( handle ) );
 			return true;
 		}
 
@@ -211,14 +218,14 @@ namespace PlatformTools
 //-----------------------------------------------------------------------------
 	
 
-#ifdef PLATFORM_ANDROID	
+#ifdef PLATFORM_ANDROID
 /*
 =================================================
 	AndroidWindow
 =================================================
 */
-	WindowHelper::AndroidWindow::AndroidWindow (void *wnd) :
-		window{Cast<ANativeWindow*>(wnd)}
+	WindowHelper::AndroidWindow::AndroidWindow () :
+		window{ UninitializedT<ANativeWindow*>() }
 	{}
 
 /*
@@ -231,18 +238,21 @@ namespace PlatformTools
 	#ifdef PLATFORM_SDL
 		using SDLMsgList_t	= CompileTime::TypeListFrom< OSMsg::GetSDLWindowHandle> >;
 
-		if ( window->GetSupportedMessages().HasAllTypes< SDLMsgList_t >() )
+		if ( window->SupportsAllMessages< SDLMsgList_t >() )
 		{
 			OSMsg::GetSDLWindowHandle>	req_wnd;
 			CHECK( window->Send( req_wnd ) );
 
 			SDL_SysWMinfo	info = {};
-			SDL_VERSION( &info.version );
+			SDL_VERSION( OUT &info.version );
 
 			CHECK_ERR( SDL_GetWindowWMInfo( *req_wnd->result, OUT &info ) == SDL_TRUE );
 			CHECK_ERR( info.subsystem == SDL_SYSWM_ANDROID );
 
-			CHECK_ERR( func( AndroidWindow( info.info.android.window ) ) );
+			AndroidWindow	handle;
+			handle.window	= info.info.android.window;
+
+			CHECK_ERR( func( handle ) );
 			return true;
 		}
 	#endif
@@ -253,5 +263,53 @@ namespace PlatformTools
 #endif	// PLATFORM_ANDROID
 //-----------------------------------------------------------------------------
 		
+
+#ifdef PLATFORM_LINUX
+/*
+=================================================
+	XlibWindow
+=================================================
+*/
+	WindowHelper::XlibWindow::XlibWindow () :
+		display{ UninitializedT<Display*>() },
+		window{ UninitializedT<Window>() }
+	{}
+
+/*
+=================================================
+	GetWindowHandle
+=================================================
+*/
+	bool WindowHelper::GetWindowHandle (const ModulePtr &window, const Function<bool (const XlibWindow &)> &func)
+	{
+	#ifdef PLATFORM_SDL
+		using SDLMsgList_t	= ModuleMsg::MessageListFrom< OSMsg::GetSDLWindowHandle >;
+
+		if ( window->SupportsAllMessages< SDLMsgList_t >() )
+		{
+			OSMsg::GetSDLWindowHandle	req_wnd;
+			CHECK( window->Send( req_wnd ) );
+
+			SDL_SysWMinfo	info = {};
+			SDL_VERSION( OUT &info.version );
+
+			CHECK_ERR( SDL_GetWindowWMInfo( *req_wnd.result, OUT &info ) == SDL_TRUE );
+			CHECK_ERR( info.subsystem == SDL_SYSWM_X11 );
+
+			XlibWindow	handle;
+			handle.display	= info.info.x11.display;
+			handle.window	= info.info.x11.window;
+
+			CHECK_ERR( func( handle ) );
+			return true;
+		}
+	#endif
+
+		return false;
+	}
+
+#endif	// PLATFORM_LINUX
+//-----------------------------------------------------------------------------
+
 }	// PlatformTools
 }	// Engine

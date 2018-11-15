@@ -50,7 +50,6 @@ namespace PlatformCL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -90,7 +89,6 @@ namespace PlatformCL
 
 
 	
-	const TypeIdList	CL1SyncManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	CL1SyncManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -99,7 +97,7 @@ namespace PlatformCL
 =================================================
 */
 	CL1SyncManager::CL1SyncManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci) :
-		CL1BaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		CL1BaseModule( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_counter{ 0 }
 	{
 		SetDebugName( "CL1SyncManager" );
@@ -132,7 +130,7 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1SyncManager::_CLSemaphoreEnqueue );
 		_SubscribeOnMsg( this, &CL1SyncManager::_WaitCLSemaphore );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -175,7 +173,7 @@ namespace PlatformCL
 		_DeleteSync_Func	func;
 
 		FOR( i, _syncs ) {
-			_syncs[i].second.Apply( func );
+			_syncs[i].second.Accept( func );
 		}
 
 		_syncs.Clear();

@@ -2,16 +2,15 @@
 
 #include "GApp.h"
 	
-extern void Test_GraphicsApi (StringCRef device)
+extern void Test_GraphicsApi (StringCRef device, bool debug)
 {
 	CHECK( OS::FileSystem::FindAndSetCurrentDir( "EngineTests/Platforms.GAPI/Graphics" ) );
 
-	#ifdef GRAPHICS_API_OPENGL
+	#if 0 //def GRAPHICS_API_OPENGL
 	{
 		GApp	app;
-		app.Initialize( "GL 4.5"_GAPI, device );
+		app.Initialize( "GL 4.5"_GAPI, device, debug );
 
-		// main loop
 		for (; app.Update();) {}
 
 		app.Quit();
@@ -22,9 +21,8 @@ extern void Test_GraphicsApi (StringCRef device)
 	#ifdef GRAPHICS_API_VULKAN
 	{
 		GApp	app;
-		app.Initialize( "VK 1.0"_GAPI, device );
+		app.Initialize( "VK 1.0"_GAPI, device, debug );
 
-		// main loop
 		for (; app.Update();) {}
 
 		app.Quit();
@@ -35,9 +33,8 @@ extern void Test_GraphicsApi (StringCRef device)
 	#ifdef GRAPHICS_API_SOFT
 	{
 		GApp	app;
-		app.Initialize( "SW 1.0"_GAPI, device );
+		app.Initialize( "SW 1.0"_GAPI, device, debug );
 
-		// main loop
 		for (; app.Update();) {}
 
 		app.Quit();

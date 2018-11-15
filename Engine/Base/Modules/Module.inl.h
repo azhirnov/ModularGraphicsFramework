@@ -28,7 +28,7 @@ namespace Base
 	template <typename MsgT>
 	GX_NO_INLINE bool Module::SendAsync (const MsgT &msg) noexcept
 	{
-		STATIC_ASSERT( MsgT::__is_message(true) );
+        STATIC_ASSERT( typename MsgT::__is_message(true) );
 		
 		GX_PROFILE_MSG( _SendUncheckedEvent( ProfilingMsg::OnSendMsg{ this, msg }) );
 		
@@ -148,14 +148,19 @@ namespace Base
 =================================================
 */
 	template <typename Class, typename Func>
-	forceinline bool Module::_SubscribeOnEvent (const Class &obj, Func func, EHandlerPriority priority)
+	inline bool Module::_SubscribeOnEvent (const Class &obj, Func func, EHandlerPriority priority)
 	{
 		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
 		
 		if ( priority == EHandlerPriority::Auto )
 			priority = (Cast<void const*>(obj) == Cast<void const*>(this) ? EHandlerPriority::High : EHandlerPriority::Normal);
+		
+		const TypeId	id = TypeIdOf< CompileTime::FunctionInfo< Func >::args::Get<0> >();
 
-		_msgHandler.Subscribe( GetSupportedEvents(), obj, func, priority );
+		if ( not GetSupportedEvents().HasType( id ) )
+			RETURN_ERR( "Can't subscribe for event '" << ToString( id ) << "'" );
+
+		_msgHandler.Subscribe( obj, func, priority );
 		return true;
 	}
 
@@ -167,7 +172,7 @@ namespace Base
 	it is recomended to use this method instead of 'Send'
 	when you send message to oneself.
 =================================================
-*/
+*
 	template <typename MsgT>
 	GX_NO_INLINE bool Module::_SendMsg (const MsgT &msg)
 	{
@@ -226,7 +231,7 @@ namespace Base
 		if ( priority == EHandlerPriority::Auto )
 			priority = (Cast<void const*>(obj) == Cast<void const*>(this) ? EHandlerPriority::High : EHandlerPriority::Normal);
 
-		_msgHandler.Subscribe( GetSupportedMessages(), obj, func, priority );
+		_msgHandler.Subscribe( obj, func, priority );
 		return true;
 	}
 
@@ -341,41 +346,98 @@ namespace Base
 	
 /*
 =================================================
+	SupportsAllMessages
+=================================================
+*/
+	struct Module::_SupportsAllMessages_Func
+	{
+		Module const*	_self;
+		bool			result	= true;
+
+		_SupportsAllMessages_Func (const Module *self) : _self{self}
+		{}
+	
+		template <typename T, usize Index>
+		void Process ()
+		{
+			result &= _self->_msgHandler._handlers.CustomSearch().IsExist( MessageHandler::HandlerSearch{ TypeIdOf<T>() } );
+		}
+	};
+
+	template <typename Typelist>
+	inline bool  Module::SupportsAllMessages () const
+	{
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+
+		_SupportsAllMessages_Func	func{ this };
+		Typelist::RuntimeForEach( func );
+
+		return func.result;
+	}
+	
+/*
+=================================================
+	SupportsAnyMessage
+=================================================
+*/
+	struct Module::_SupportsAnyMessage_Func
+	{
+		Module const*	_self;
+		bool			result	= false;
+
+		_SupportsAnyMessage_Func (const Module *self) : _self{self}
+		{}
+	
+		template <typename T, usize Index>
+		void Process ()
+		{
+			result |= _self->_msgHandler._handlers.CustomSearch().IsExist( MessageHandler::HandlerSearch{ TypeIdOf<T>() } );
+		}
+	};
+
+	template <typename Typelist>
+	inline bool  Module::SupportsAnyMessage () const
+	{
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+
+		_SupportsAnyMessage_Func	func{ this };
+		Typelist::RuntimeForEach( func );
+
+		return func.result;
+	}
+
+/*
+=================================================
 	_CopySubscriptions
 ----
 	will copy message handlers from 'other' to self
 =================================================
 */
 	template <typename MsgList>
-	forceinline bool Module::_CopySubscriptions (const ModulePtr &other, bool removeUnsupported)
+	forceinline bool Module::_CopySubscriptions (const ModulePtr &other, bool warnIfNotExist)
 	{
-		return _CopySubscriptions<MsgList>( other, removeUnsupported, EHandlerPriority::Auto );
+		return _CopySubscriptions<MsgList>( other, warnIfNotExist, EHandlerPriority::Auto );
 	}
 
 	template <typename MsgList>
-	inline bool Module::_CopySubscriptions (const ModulePtr &other, bool removeUnsupported, EHandlerPriority priority)
+	inline bool Module::_CopySubscriptions (const ModulePtr &other, bool warnIfNotExist, EHandlerPriority priority)
 	{
 		CHECK_ERR( other );
 
 		TypeIdList	tlist{ UninitializedT<MsgList>() };
 
-		FOR( i, tlist )
-		{
-			if ( other->GetSupportedMessages().HasType( tlist.Get(i) ) )
-				continue;
-
-			if ( removeUnsupported )
-			{
-				tlist.EraseByIndex( i );
-				--i;
-			}
-			else
-			{
-				RETURN_ERR( "Message with type '" << ToString( tlist.Get(i) ) << "' is not supported" );
-			}
-		}
-
-		return _msgHandler.CopySubscriptions( GetSupportedMessages(), other, other->_msgHandler, tlist, priority );
+		return _msgHandler.CopySubscriptions( this, other, other->_msgHandler, tlist, warnIfNotExist, priority );
+	}
+	
+/*
+=================================================
+	_ValidateMsgSubscriptions
+=================================================
+*/
+	template <typename MsgList>
+	inline bool Module::_ValidateMsgSubscriptions () const
+	{
+		return _msgHandler.Validate( TypeIdList{ UninitializedT<MsgList>() } );
 	}
 
 	

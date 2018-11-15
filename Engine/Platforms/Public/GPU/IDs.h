@@ -29,7 +29,11 @@ namespace Platforms
 		OModID::type	resourceTable	= OModID::type(0);
 		OModID::type	commandBuffer	= OModID::type(0);
 		OModID::type	commandBuilder	= OModID::type(0);
+		OModID::type	queryPool		= OModID::type(0);
+
+		ComputeModuleIDs (GX_DEFCTOR) {}
 	};
+
 
 	struct GraphicsModuleIDs
 	{
@@ -46,6 +50,9 @@ namespace Platforms
 		OModID::type	commandBuilder	= OModID::type(0);
 		OModID::type	framebuffer		= OModID::type(0);
 		OModID::type	renderPass		= OModID::type(0);
+		OModID::type	queryPool		= OModID::type(0);
+		
+		GraphicsModuleIDs (GX_DEFCTOR) {}
 	};
 
 

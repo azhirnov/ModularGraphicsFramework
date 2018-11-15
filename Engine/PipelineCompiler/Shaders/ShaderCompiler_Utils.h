@@ -74,7 +74,7 @@ namespace PipelineCompiler
 			case glslang::TLayoutFormat::ElfRgba16Snorm :	return EPixelFormat::RGBA16_SNorm;
 			case glslang::TLayoutFormat::ElfRg16Snorm :		return EPixelFormat::RG16_SNorm;
 			case glslang::TLayoutFormat::ElfRg8Snorm :		return EPixelFormat::RG8_SNorm;
-			case glslang::TLayoutFormat::ElfR16Snorm :		return EPixelFormat::RG16_SNorm;
+			case glslang::TLayoutFormat::ElfR16Snorm :		return EPixelFormat::R16_SNorm;
 			case glslang::TLayoutFormat::ElfR8Snorm :		return EPixelFormat::R8_SNorm;
 			case glslang::TLayoutFormat::ElfRgba32i :		return EPixelFormat::RGBA32I;
 			case glslang::TLayoutFormat::ElfRgba16i :		return EPixelFormat::RGBA16I;

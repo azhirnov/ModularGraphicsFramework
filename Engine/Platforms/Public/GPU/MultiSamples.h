@@ -14,7 +14,7 @@ namespace Platforms
 	// Multi Samples
 	//
 	
-	struct MultiSamples : CompileTime::PODStruct
+	struct MultiSamples final : CompileTime::PODStruct
 	{
 	// types
 	private:
@@ -28,24 +28,22 @@ namespace Platforms
 
 	// methods
 	public:
-		MultiSamples (GX_DEFCTOR) : _value(0)
-		{}
+		constexpr MultiSamples (GX_DEFCTOR) : _value(0) {}
 
-		explicit
-		MultiSamples (PowOf2Value<uint> samples) : _value(samples)
-		{}
+		explicit constexpr MultiSamples (PowOf2Value<uint> samples) : _value(samples) {}
 
-		explicit
-		MultiSamples (uint samples) : _value( PowOf2Value<uint>::From(samples) )
-		{}
+		explicit constexpr MultiSamples (uint samples) : _value( PowOf2Value<uint>::From(samples) ) {}
 
-		ND_ uint Get ()			const		{ return _value.GetValue(); }
-		ND_ uint GetPowerOf2 ()	const		{ return _value.GetPower(); }
+		ND_ constexpr uint Get ()			const		{ return _value.GetValue(); }
+		ND_ constexpr uint GetPowerOf2 ()	const		{ return _value.GetPower(); }
 
-		ND_ bool IsEnabled ()	const		{ return _value.GetPower() > 0; }
+		ND_ constexpr bool IsEnabled ()		const		{ return _value.GetPower() > 0; }
 
 		_GX_DIM_CMP_OPERATORS_SELF( _value )
 	};
+	
+
+	ND_ inline constexpr MultiSamples operator "" _samples (unsigned long long value)	{ return MultiSamples( uint(value) ); }
 
 
 }	// Platforms

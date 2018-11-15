@@ -92,7 +92,7 @@ namespace Base
 	private:
 		ModConstructors_t		_constructors;
 		ModGroups_t				_groups;
-		mutable OS::Mutex		_lock;		// TODO: read-write sync
+		mutable ReadWriteSync	_lock;
 
 
 	// methods
@@ -246,7 +246,7 @@ namespace Base
 		ModulePtr	unit;
 		CHECK_ERR( GlobalSystems()->modulesFactory->Create( id, GlobalSystems(), createInfo, OUT unit ) );
 
-		CHECK_ERR( _SendMsg( ModuleMsg::AttachModule{ name, unit }) );
+		CHECK_ERR( Send( ModuleMsg::AttachModule{ name, unit }) );
 		return true;
 	}
 

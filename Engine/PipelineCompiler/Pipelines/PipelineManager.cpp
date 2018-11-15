@@ -146,6 +146,40 @@ namespace PipelineCompiler
 			}
 			return true;
 		}
+
+/*
+=================================================
+	operator (SubpassInput)
+=================================================
+*/
+		bool operator () (const SubpassInput &spi)
+		{
+			NamedTypes&		map = bindings[ Id(spi) ];
+			usize			idx;
+			bool			found = false;
+			
+			if ( map.FindFirstIndex( spi.name, OUT idx ) )
+			{
+				for (; idx < map.Count() and map[idx].first == spi.name; ++idx)
+				{
+					auto&	dst = map[idx].second.Get<SubpassInput>();
+					
+					if ( dst.name				== spi.name				and
+						 dst.attachmentIndex	== spi.attachmentIndex	and
+						 dst.isMultisample		== spi.isMultisample )
+					{
+						dst.shaderUsage |= spi.shaderUsage;
+						found = true;
+						break;
+					}
+				}
+			}
+
+			if ( not found ) {
+				map.Add( spi.name, Uniform(spi) );
+			}
+			return true;
+		}
 		
 /*
 =================================================
@@ -286,7 +320,7 @@ namespace PipelineCompiler
 				_AddBinding_Func	func( INOUT _sharedBindings );
 
 				FOR( j, pp->bindings.uniforms ) {
-					pp->bindings.uniforms[j].Apply( func );
+					pp->bindings.uniforms[j].Accept( func );
 				}
 			}
 
@@ -455,6 +489,17 @@ namespace Pipelines
 		}
 
 
+		void operator () (SubpassInput &img)
+		{
+			if ( bindings.Find( img.name, OUT iter ) )
+			{
+				img.location.index = iter->second.Get<SubpassInput>().location.index;
+			}
+			else
+				img.location.index = UMax;	// invalidate to refresh binding indices
+		}
+
+
 		void operator () (UniformBuffer &buf)
 		{
 			if ( bindings.Find( buf.name, OUT iter ) )
@@ -551,7 +596,7 @@ namespace Pipelines
 						auto&					map		= _sharedBindings[ bind.GetCurrentIndex() ];
 						_ReplaceBinding_Func	func( map );
 
-						bind.Apply( func );
+						bind.Accept( func );
 					}
 				}
 

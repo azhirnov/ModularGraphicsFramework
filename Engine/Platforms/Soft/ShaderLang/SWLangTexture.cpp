@@ -522,7 +522,6 @@ namespace Impl
 		if ( Engine::PlatformSW::SWDeviceProperties.vulkanCompatibility )
 		{
 			CHECK_ERR( mipmap.layout == EImageLayout::General or mipmap.layout == EImageLayout::ShaderReadOnlyOptimal );
-			CHECK_ERR( mipmap.access[ EPipelineAccess::ShaderRead ] );
 		}
 		return true;
 	}

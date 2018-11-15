@@ -59,7 +59,10 @@ namespace Platforms
 
 		GX_ENUM_BITFIELD( EImageUsage );
 
-		static constexpr EImageUsage::bits	All = EImageUsage::bits().SetAll();
+		static constexpr bits	All			= bits().SetAll();
+		static constexpr bits	Transfer	= bits() | TransferSrc | TransferDst;
+
+		static String ToString (bits values);
 	};
 	
 
@@ -73,11 +76,14 @@ namespace Platforms
 			ColorAttachmentOptimal,
 			DepthStencilAttachmentOptimal,
 			DepthStencilReadOnlyOptimal,
+			DepthReadOnlyStencilAttachmentOptimal,
+			DepthAttachmentStencilReadOptimal,
 			ShaderReadOnlyOptimal,
 			TransferSrcOptimal,
 			TransferDstOptimal,
 			Preinitialized,
 			PresentSrc,
+			SharedPresent,
 
 			_Count,
 			Unknown = ~0u,

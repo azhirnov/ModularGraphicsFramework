@@ -69,6 +69,7 @@ namespace Platforms
 	static ModulePtr CreateDefaultSampler (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSampler &);
 	static ModulePtr CreateDefaultGraphicsPipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GraphicsPipeline &);
 	static ModulePtr CreateDefaultComputePipeline (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::ComputePipeline &);
+	static ModulePtr CreateDefaultPipelineResourceTable (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::PipelineResourceTable &);
 
 /*
 =================================================
@@ -128,6 +129,7 @@ namespace Platforms
 		factory->Register( 0, &CreateDefaultSampler );
 		factory->Register( 0, &CreateDefaultGraphicsPipeline );
 		factory->Register( 0, &CreateDefaultComputePipeline );
+		factory->Register( 0, &CreateDefaultPipelineResourceTable );
 	}
 	
 /*
@@ -264,7 +266,7 @@ namespace Platforms
 		GpuMsg::GetGraphicsModules	req_ids;
 		CHECK( ctx->Send( req_ids ) );
 
-		CHECK_ERR( factory->Create( req_ids.graphics->thread, gs, ci, OUT mod ) );
+		CHECK_ERR( factory->Create( req_ids.result->graphics.thread, gs, ci, OUT mod ) );
 		return mod;
 	}
 	
@@ -309,7 +311,7 @@ namespace Platforms
 		GpuMsg::GetGraphicsModules	req_ids;
 		gpuThread->Send( req_ids );
 
-		CHECK_ERR( req_ids.compute or req_ids.graphics );
+		CHECK_ERR( req_ids.result );
 
 		return cb( req_ids );
 	}
@@ -325,7 +327,7 @@ namespace Platforms
 					LAMBDA( &gs, &ci ) (auto &ids)
 					{
 						ModulePtr mod;
-						gs->modulesFactory->Create( ids.compute->buffer, gs, ci, OUT mod );
+						gs->modulesFactory->Create( ids.result->compute.buffer, gs, ci, OUT mod );
 						return mod;
 					});
 	}
@@ -341,7 +343,7 @@ namespace Platforms
 					LAMBDA( &gs, &ci ) (auto &ids)
 					{
 						ModulePtr mod;
-						gs->modulesFactory->Create( ids.compute->commandBuffer, gs, ci, OUT mod );
+						gs->modulesFactory->Create( ids.result->compute.commandBuffer, gs, ci, OUT mod );
 						return mod;
 					});
 	}
@@ -357,7 +359,7 @@ namespace Platforms
 					LAMBDA( &gs, &ci ) (auto &ids)
 					{
 						ModulePtr mod;
-						gs->modulesFactory->Create( ids.compute->commandBuilder, gs, ci, OUT mod );
+						gs->modulesFactory->Create( ids.result->compute.commandBuilder, gs, ci, OUT mod );
 						return mod;
 					});
 	}
@@ -373,7 +375,7 @@ namespace Platforms
 					LAMBDA( &gs, &ci ) (auto &ids)
 					{
 						ModulePtr mod;
-						gs->modulesFactory->Create( ids.graphics->framebuffer, gs, ci, OUT mod );
+						gs->modulesFactory->Create( ids.result->graphics.framebuffer, gs, ci, OUT mod );
 						return mod;
 					});
 	}
@@ -389,7 +391,7 @@ namespace Platforms
 					LAMBDA( &gs, &ci ) (auto &ids)
 					{
 						ModulePtr mod;
-						gs->modulesFactory->Create( ids.compute->image, gs, ci, OUT mod );
+						gs->modulesFactory->Create( ids.result->compute.image, gs, ci, OUT mod );
 						return mod;
 					});
 	}
@@ -405,7 +407,7 @@ namespace Platforms
 					LAMBDA( &gs, &ci ) (auto &ids)
 					{
 						ModulePtr mod;
-						gs->modulesFactory->Create( ids.graphics->renderPass, gs, ci, OUT mod );
+						gs->modulesFactory->Create( ids.result->graphics.renderPass, gs, ci, OUT mod );
 						return mod;
 					});
 	}
@@ -421,7 +423,7 @@ namespace Platforms
 					LAMBDA( &gs, &ci ) (auto &ids)
 					{
 						ModulePtr mod;
-						gs->modulesFactory->Create( ids.graphics->sampler, gs, ci, OUT mod );
+						gs->modulesFactory->Create( ids.result->graphics.sampler, gs, ci, OUT mod );
 						return mod;
 					});
 	}
@@ -437,7 +439,7 @@ namespace Platforms
 					LAMBDA( &gs, &ci ) (auto &ids)
 					{
 						ModulePtr mod;
-						gs->modulesFactory->Create( ids.graphics->pipeline, gs, ci, OUT mod );
+						gs->modulesFactory->Create( ids.result->graphics.pipeline, gs, ci, OUT mod );
 						return mod;
 					});
 	}
@@ -453,10 +455,27 @@ namespace Platforms
 					LAMBDA( &gs, &ci ) (auto &ids)
 					{
 						ModulePtr mod;
-						gs->modulesFactory->Create( ids.compute->pipeline, gs, ci, OUT mod );
+						gs->modulesFactory->Create( ids.result->compute.pipeline, gs, ci, OUT mod );
 						return mod;
 					});
 	}
+	
+/*
+=================================================
+	CreateDefaultPipelineResourceTable
+=================================================
+*/
+	static ModulePtr CreateDefaultPipelineResourceTable (ModuleMsg::UntypedID_t, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci)
+	{
+		return CreateGraphicsObject( gs, ci.gpuThread,
+					LAMBDA( &gs, &ci ) (auto &ids)
+					{
+						ModulePtr mod;
+						gs->modulesFactory->Create( ids.result->compute.resourceTable, gs, ci, OUT mod );
+						return mod;
+					});
+	}
+
 
 }	// Platforms
 }	// Engine

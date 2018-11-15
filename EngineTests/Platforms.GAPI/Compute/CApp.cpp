@@ -49,7 +49,7 @@ CApp::~CApp ()
 	Initialize
 =================================================
 */
-bool CApp::Initialize (GAPI::type api, StringCRef dev)
+bool CApp::Initialize (GAPI::type api, StringCRef dev, bool debug)
 {
 	auto	factory	= ms->GlobalSystems()->modulesFactory;
 
@@ -58,16 +58,14 @@ bool CApp::Initialize (GAPI::type api, StringCRef dev)
 	ComputeSettings	settings;
 	settings.version	= api;
 	settings.device		= dev;
-	settings.isDebug	= true;
+	settings.isDebug	= debug;
 
 	{
 		ModulePtr	context;
 		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ settings }, OUT context ) );
 		ms->Send( ModuleMsg::AttachModule{ context });
-
-		GpuMsg::GetGraphicsModules	req_ids;
-		context->Send( req_ids );
-		gpuIDs = *req_ids.compute;
+		
+		gpuIDs = context->Request( GpuMsg::GetGraphicsModules{} ).compute;
 	}
 
 	auto		thread	= ms->GlobalSystems()->parallelThread;
@@ -187,6 +185,9 @@ bool CApp::_GInit (const GpuMsg::DeviceCreated &)
 
 	syncManager = gpuThread->GetModuleByMsg<ModuleMsg::MessageListFrom< GpuMsg::CreateFence >>();
 	CHECK_ERR( syncManager );
+
+	cmdQueue  = gpuThread->GetModuleByName( "queue0" );
+	cmdQueue2 = gpuThread->GetModuleByName( "queue1" );
 
 	CHECK_ERR( ms->GlobalSystems()->modulesFactory->Create(
 					gpuIDs.commandBuilder,

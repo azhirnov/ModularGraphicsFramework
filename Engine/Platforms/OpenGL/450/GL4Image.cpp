@@ -30,8 +30,8 @@ namespace PlatformGL
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
 											DSMsg::GetDataSourceDescription,
-											DSMsg::ReadRegion,
-											DSMsg::WriteRegion,
+											DSMsg::ReadMemRange,
+											DSMsg::WriteMemRange,
 											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
@@ -48,9 +48,8 @@ namespace PlatformGL
 											GpuMsg::SetImageDescription,
 											GpuMsg::GetGLImageID,
 											GpuMsg::CreateGLImageView,
-											GpuMsg::GpuMemoryRegionChanged,
 											GpuMsg::GetImageMemoryLayout
-										> >::Append< ForwardToMem_t >;
+										> >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::SetImageDescription
@@ -66,7 +65,6 @@ namespace PlatformGL
 		
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -102,7 +100,6 @@ namespace PlatformGL
 		bool _CreateGLImageView (const GpuMsg::CreateGLImageView &);
 		bool _GetImageDescription (const GpuMsg::GetImageDescription &);
 		bool _SetImageDescription (const GpuMsg::SetImageDescription &);
-		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
 		bool _GetImageMemoryLayout (const GpuMsg::GetImageMemoryLayout &);
 		
 	// event handlers
@@ -118,12 +115,14 @@ namespace PlatformGL
 		void _DestroyViews ();
 
 		bool _CanHaveImageView () const;
+
+		static void _ValidateMemFlags (INOUT EGpuMemory::bits &flags);
+		static void _ValidateDescription (INOUT ImageDescription &descr);
 	};
 //-----------------------------------------------------------------------------
 
 
 	
-	const TypeIdList	GL4Image::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4Image::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -132,7 +131,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Image::GL4Image (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),				_imageId( 0 ),
 		_imageView( 0 ),				_memFlags( ci.memFlags ),
 		_memAccess( ci.access ),		_useMemMngr( ci.allocMem ),
@@ -157,14 +156,14 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Image::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Image::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Image::_GetGLPrivateClasses );
-		_SubscribeOnMsg( this, &GL4Image::_GpuMemoryRegionChanged );
 		_SubscribeOnMsg( this, &GL4Image::_GetImageMemoryLayout );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 		
-		// descriptor may be invalid for sharing or for delayed initialization
-		if ( Utils::IsValidDescription( _descr ) )
-			Utils::ValidateDescription( INOUT _descr );
+		_ValidateMemFlags( INOUT _memFlags );
+		_ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -303,7 +302,7 @@ namespace PlatformGL
 
 		const GLenum	target = GL4Enum( _descr.imageType );
 		
-		GL_CALL( glGenTextures( 1, &_imageId ) );
+		GL_CALL( glGenTextures( 1, OUT &_imageId ) );
 		CHECK_ERR( _imageId != 0 );
 		
 		GL_CALL( glActiveTexture( GL_TEXTURE0 ) );
@@ -564,7 +563,7 @@ namespace PlatformGL
 		}
 
 		// create new image view
-		GL_CALL( glGenTextures( 1, &img_view ) );
+		GL_CALL( glGenTextures( 1, OUT &img_view ) );
 		CHECK_ERR( img_view != 0 );
 		
 		GLenum	target = GL4Enum( descr.viewType );
@@ -645,22 +644,10 @@ namespace PlatformGL
 			}
 			else
 			{
-				_SendMsg( ModuleMsg::Delete{} );
+				Send( ModuleMsg::Delete{} );
 			}
 		}
 		return true;
-	}
-
-/*
-=================================================
-	_GpuMemoryRegionChanged
-=================================================
-*/
-	bool GL4Image::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
-	{
-		// request image memory barrier
-		TODO( "" );
-		return false;
 	}
 	
 /*
@@ -674,13 +661,13 @@ namespace PlatformGL
 		CHECK_ERR( msg.mipLevel < _descr.maxLevel );
 
 		const uint4		lvl_size	= Max( Utils::LevelDimension( _descr.imageType, _descr.dimension, msg.mipLevel.Get() ), 1u );
-		const BytesUL	bpp			= BytesUL(EPixelFormat::BitPerPixel( _descr.format ));
-		const BytesUL	row_align	= BytesUL(uint(bpp) % 4 == 0 ? 4 : 1);
+		const BytesU	bpp			= BytesU(EPixelFormat::BitPerPixel( _descr.format ));
+		const BytesU	row_align	= BytesU(uint(bpp) % 4 == 0 ? 4 : 1);
 
 		GpuMsg::GetImageMemoryLayout::MemLayout	result;
-		result.offset		= BytesUL(0);	// not supported
+		result.offset		= 0_b;	// not supported
 		result.rowPitch		= GXImageUtils::AlignedRowSize( lvl_size.x, bpp, row_align );
-		result.slicePitch	= GXImageUtils::AlignedRowSize( lvl_size.y * result.rowPitch, BytesUL(1), row_align );
+		result.slicePitch	= GXImageUtils::AlignedRowSize( lvl_size.y * result.rowPitch, 1_b, row_align );
 		result.size			= result.slicePitch * lvl_size.z * lvl_size.w;
 		result.dimension	= lvl_size.xyz();
 		
@@ -698,6 +685,31 @@ namespace PlatformGL
 	bool GL4Image::_CanHaveImageView () const
 	{
 		return _descr.usage != (_descr.usage & (EImageUsage::TransferSrc | EImageUsage::TransferDst));
+	}
+	
+/*
+=================================================
+	_ValidateMemFlags
+=================================================
+*/
+	void GL4Image::_ValidateMemFlags (INOUT EGpuMemory::bits &flags)
+	{
+		ASSERT( not flags[EGpuMemory::SupportAliasing] );	// not supported
+
+		flags[EGpuMemory::SupportAliasing]	= false;
+		flags[EGpuMemory::Dedicated]		= true;
+	}
+	
+/*
+=================================================
+	_ValidateDescription
+=================================================
+*/
+	void GL4Image::_ValidateDescription (INOUT ImageDescription &descr)
+	{
+		// description may be invalid for sharing or for delayed initialization
+		if ( Utils::IsValidDescription( descr ) )
+			Utils::ValidateDescription( INOUT descr );
 	}
 
 }	// PlatformGL

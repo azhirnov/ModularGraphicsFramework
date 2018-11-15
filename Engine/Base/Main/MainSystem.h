@@ -45,7 +45,6 @@ namespace Base
 		
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 

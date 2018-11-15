@@ -23,7 +23,8 @@ namespace PlatformCL
 	private:
 		using SupportedMessages_t	= CL1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											ModuleMsg::Update,
-											GpuMsg::SubmitComputeQueueCommands
+											GpuMsg::SubmitCommands,
+											GpuMsg::GetCommandQueueDescription
 										> >;
 
 		using SupportedEvents_t		= CL1BaseModule::SupportedEvents_t::Append< MessageListFrom<
@@ -39,13 +40,13 @@ namespace PlatformCL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
 	// variables
 	private:
-		ModulePtr		_syncManager;
+		ModulePtr					_syncManager;
+		CommandQueueDescription		_descr;
 
 
 	// methods
@@ -60,16 +61,12 @@ namespace PlatformCL
 		bool _Delete (const ModuleMsg::Delete &);
 		bool _Update (const ModuleMsg::Update &);
 		
-		bool _SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &);
-
-	private:
-		bool _Submit (const GpuMsg::SubmitGraphicsQueueCommands &msg);
-		bool _SubmitQueue (const GpuMsg::SubmitGraphicsQueueCommands &cmd) const;
+		bool _SubmitCommands (const GpuMsg::SubmitCommands &);
+		bool _GetCommandQueueDescription (const GpuMsg::GetCommandQueueDescription &);
 	};
 //-----------------------------------------------------------------------------
 
 	
-	const TypeIdList	CL1CommandQueue::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	CL1CommandQueue::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -78,7 +75,8 @@ namespace PlatformCL
 =================================================
 */
 	CL1CommandQueue::CL1CommandQueue (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandQueue &ci) :
-		CL1BaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
+		CL1BaseModule( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
+		_descr{ ci.descr }
 	{
 		SetDebugName( "CL1CommandQueue" );
 
@@ -96,9 +94,10 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1CommandQueue::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &CL1CommandQueue::_GetCLPrivateClasses );
 		_SubscribeOnMsg( this, &CL1CommandQueue::_OnManagerChanged );
-		_SubscribeOnMsg( this, &CL1CommandQueue::_SubmitComputeQueueCommands );
+		_SubscribeOnMsg( this, &CL1CommandQueue::_SubmitCommands );
+		_SubscribeOnMsg( this, &CL1CommandQueue::_GetCommandQueueDescription );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -119,6 +118,8 @@ namespace PlatformCL
 */
 	bool CL1CommandQueue::_Delete (const ModuleMsg::Delete &msg)
 	{
+		_descr = Uninitialized;
+
 		return Module::_Delete_Impl( msg );
 	}
 	
@@ -155,10 +156,10 @@ namespace PlatformCL
 
 /*
 =================================================
-	_SubmitComputeQueueCommands
+	_SubmitCommands
 =================================================
 */
-	bool CL1CommandQueue::_SubmitComputeQueueCommands (const GpuMsg::SubmitComputeQueueCommands &msg)
+	bool CL1CommandQueue::_SubmitCommands (const GpuMsg::SubmitCommands &msg)
 	{
 		using namespace cl;
 		
@@ -166,13 +167,9 @@ namespace PlatformCL
 		CHECK_ERR( GetDevice()->HasCommandQueue() );
 		
 		DEBUG_ONLY(
-			for (auto& cmd : msg.commands)
-			{
-				GpuMsg::GetCommandBufferDescription	req_descr;
-				cmd->Send( req_descr );
-				CHECK_ERR( req_descr.result and not req_descr.result->flags[ ECmdBufferCreate::Secondary ] );
-			}
-		);
+		for (auto& cmd : msg.commands) {
+			CHECK_ERR( not cmd->Request(GpuMsg::GetCommandBufferDescription{}).flags[ ECmdBufferCreate::Secondary ] );
+		});
 		
 		ModuleUtils::Send( msg.commands, GpuMsg::SetCommandBufferState{ GpuMsg::SetCommandBufferState::EState::Pending });
 
@@ -206,6 +203,17 @@ namespace PlatformCL
 			GpuMsg::CLSemaphoreEnqueue	sem_sync{ msg.signalSemaphores[i] };
 			CHECK( _syncManager->Send( sem_sync ) );
 		}
+		return true;
+	}
+	
+/*
+=================================================
+	_GetCommandQueueDescription
+=================================================
+*/
+	bool CL1CommandQueue::_GetCommandQueueDescription (const GpuMsg::GetCommandQueueDescription &msg)
+	{
+		msg.result.Set( _descr );
 		return true;
 	}
 

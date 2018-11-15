@@ -58,19 +58,19 @@ namespace ResPack
 				self.minimalRebuild			= true;
 				self.includings				<< "common.h";
 				self.nameSpace				= "Pipelines";
-				self.target					|= EShaderDstFormat::GLSL_Source;
-				self.target					|= EShaderDstFormat::SPIRV_Binary;
-				self.target					|= EShaderDstFormat::CL_Source;
-				self.target					|= EShaderDstFormat::CPP_Module;
+				self.targets				<< EShaderFormat::GLSL_450;
+				self.targets				<< EShaderFormat::VK_100_SPIRV;
+				self.targets				<< EShaderFormat::CL_120;
+				self.targets				<< EShaderFormat::Soft_100_Exe;
 			}
 		};
 
-		_Bind_EShaderDstFormat( se );
+		_Bind_EShaderFormatSet( se );
 
 		ClassBinder< ConverterConfig >	binder{ se };
 
 		binder.CreateClassValue();
-		binder.AddProperty( &ConverterConfig::target,				"targets" );
+		binder.AddProperty( &ConverterConfig::targets,				"targets" );
 		binder.AddProperty( &ConverterConfig::errorIfFileExist,		"errorIfFileExist" );
 		binder.AddProperty( &ConverterConfig::optimizeSource,		"optimizeSource" );
 		binder.AddProperty( &ConverterConfig::searchForSharedTypes,	"searchForSharedTypes" );
@@ -141,7 +141,7 @@ namespace ResPack
 */
 	void ScriptPipeline::_Bind_RenderState (ScriptEnginePtr se)
 	{
-		_Bind_EShaderSrcFormat( se );
+		_Bind_EShaderFormat( se );
 		_Bind_EPrimitive( se );
 		_Bind_EPipelineDynamicState( se );
 		_Bind_EBlendFunc( se);
@@ -249,7 +249,7 @@ namespace ResPack
 		binder.AddProperty( &DB::func,		"func" );
 		binder.AddProperty( &DB::range,		"range" );
 		binder.AddProperty( &DB::write,		"write" );
-		binder.AddProperty( &DB::enabled,	"enabled" );
+		binder.AddProperty( &DB::test,		"test" );
 	}
 	
 /*
@@ -358,20 +358,64 @@ namespace ResPack
 	
 /*
 =================================================
-	_Bind_EShaderSrcFormat
+	_Bind_EShaderFormat
 =================================================
 */
-	void ScriptPipeline::_Bind_EShaderSrcFormat (ScriptEnginePtr se)
+	void ScriptPipeline::_Bind_EShaderFormat (ScriptEnginePtr se)
 	{
-		EnumBinder< EShaderSrcFormat::type >	binder{ se };
+		EnumBinder< EShaderFormat::type >	binder{ se };
 		
 		binder.Create();
-		binder.AddValue( "GLSL",		EShaderSrcFormat::GLSL );
-		binder.AddValue( "GXSL",		EShaderSrcFormat::GXSL );
-		binder.AddValue( "GLSL_Vulkan", EShaderSrcFormat::GLSL_Vulkan );
-		binder.AddValue( "GXSL_Vulkan", EShaderSrcFormat::GXSL_Vulkan );
+		binder.AddValue( "GXSL_100",		EShaderFormat::GXSL_100 );
+		
+		binder.AddValue( "GLSL_450",		EShaderFormat::GLSL_450 );
+		binder.AddValue( "GLSL_460",		EShaderFormat::GLSL_460 );
+		binder.AddValue( "GL_450_SPIRV",	EShaderFormat::GL_450_SPIRV );
+		binder.AddValue( "GL_460_SPIRV",	EShaderFormat::GL_460_SPIRV );
+		binder.AddValue( "GL_450_Asm",		EShaderFormat::GL_450_Asm );
+		binder.AddValue( "GL_460_Asm",		EShaderFormat::GL_460_Asm );
+		
+		binder.AddValue( "VKSL_100",		EShaderFormat::VKSL_100 );
+		binder.AddValue( "VKSL_110",		EShaderFormat::VKSL_110 );
+		binder.AddValue( "VK_100_SPIRV",	EShaderFormat::VK_100_SPIRV );
+		binder.AddValue( "VK_110_SPIRV",	EShaderFormat::VK_110_SPIRV );
+		binder.AddValue( "VK_100_Asm",		EShaderFormat::VK_100_Asm );
+		binder.AddValue( "VK_110_Asm",		EShaderFormat::VK_110_Asm );
+
+		binder.AddValue( "CL_120",			EShaderFormat::CL_120 );
+		binder.AddValue( "CL_210",			EShaderFormat::CL_210 );
+		binder.AddValue( "CL_120_Asm",		EShaderFormat::CL_120_Asm );
+		binder.AddValue( "CL_210_Asm",		EShaderFormat::CL_210_Asm );
+
+		binder.AddValue( "HLSL_11",			EShaderFormat::HLSL_11 );
+		binder.AddValue( "HLSL_12",			EShaderFormat::HLSL_12 );
+		binder.AddValue( "HLSL_11_BC",		EShaderFormat::HLSL_11_BC );
+		binder.AddValue( "HLSL_12_IL",		EShaderFormat::HLSL_12_IL );
+
+		binder.AddValue( "Soft_100_Exe",	EShaderFormat::Soft_100_Exe );
 	}
 	
+/*
+=================================================
+	_Bind_EShaderFormatSet
+=================================================
+*/
+	void ScriptPipeline::_Bind_EShaderFormatSet (ScriptEnginePtr se)
+	{
+		struct Utils {
+			static EShaderFormatSet& AddFormat (EShaderFormatSet &self, EShaderFormat::type fmt) {
+				self.Add( fmt );
+				return self;
+			}
+		};
+
+		ClassBinder< EShaderFormatSet >		binder{ se };
+
+		binder.CreateClassValue();
+		binder.Operators().BinaryAssign( EBinaryOperator::Or, &Utils::AddFormat );
+		binder.AddMethod( &EShaderFormatSet::Clear, "Clear" );
+	}
+
 /*
 =================================================
 	_Bind_EPrimitive
@@ -680,42 +724,6 @@ namespace ResPack
 		
 		binder.CreateClassValue();
 		binder.Operators().BinaryAssign( EBinaryOperator::Assign, &UNormClampedFUtils::Set );
-	}
-	
-/*
-=================================================
-	_Bind_EShaderDstFormat
-=================================================
-*/
-	void ScriptPipeline::_Bind_EShaderDstFormat (ScriptEnginePtr se)
-	{
-		// enum
-		{
-			EnumBinder< EShaderDstFormat::type >	binder{ se };
-		
-			binder.Create();
-			binder.AddValue( "GLSL_Source",			EShaderDstFormat::GLSL_Source );
-			//binder.AddValue( "GLSL_VulkanSource",	EShaderDstFormat::GLSL_VulkanSource );
-			binder.AddValue( "GLSL_Binary",			EShaderDstFormat::GLSL_Binary );
-			//binder.AddValue( "GLSL_ES_Source",	EShaderDstFormat::GLSL_ES_Source );
-			//binder.AddValue( "GLSL_ES_Binary",	EShaderDstFormat::GLSL_ES_Binary );
-			binder.AddValue( "CL_Source",			EShaderDstFormat::CL_Source );
-			binder.AddValue( "CL_Binary",			EShaderDstFormat::CL_Binary );
-			binder.AddValue( "HLSL_Source",			EShaderDstFormat::HLSL_Source );
-			binder.AddValue( "HLSL_Binary",			EShaderDstFormat::HLSL_Binary );
-			binder.AddValue( "SPIRV_Asm",			EShaderDstFormat::SPIRV_Source );
-			binder.AddValue( "SPIRV_Binary",		EShaderDstFormat::SPIRV_Binary );
-			//binder.AddValue( "Metal_Source",		EShaderDstFormat::Metal_Source );
-			//binder.AddValue( "Metal_Binary",		EShaderDstFormat::Metal_Binary );
-			binder.AddValue( "CPP_Module",			EShaderDstFormat::CPP_Module );
-		}
-
-		// bitfield
-		{
-			EnumBitfieldBinder< EShaderDstFormat::bits >	binder{ se };
-
-			binder.BindDefaults();
-		}
 	}
 
 }	// ResPack

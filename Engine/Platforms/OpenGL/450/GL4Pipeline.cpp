@@ -36,24 +36,25 @@ namespace PlatformGL
 		using ShadersMsgList_t		= MessageListFrom< GpuMsg::GetGLShaderModuleIDs >;
 		using RenderPassMsgList_t	= MessageListFrom< GpuMsg::GetRenderPassDescription >;
 
-		using Description			= GraphicsPipelineDescription;
+		using Description_t			= GraphicsPipelineDescription;
+		using LayoutDesc_t			= PipelineLayoutDescription;
 		using Programs_t			= StaticArray< GLuint, Platforms::EShader::_Count >;
 		using PushConstants_t		= GpuMsg::GetGLPipelineLayoutPushConstants::PushConstants_t;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
 	// variables
 	private:
-		GLuint			_pipelineId;
-		Programs_t		_programs;
-		GLuint			_vertexAttribs;
-		Description		_descr;
-		PushConstants_t	_pushConstants;
+		GLuint				_pipelineId;
+		Programs_t			_programs;
+		GLuint				_vertexAttribs;
+		Description_t		_descr;
+		LayoutDesc_t		_layoutDesc;
+		PushConstants_t		_pushConstants;
 
 
 	// methods
@@ -126,14 +127,13 @@ namespace PlatformGL
 		MakePushConstantsCache_Func		func( cache );
 
 		FOR( i, layout.GetUniforms() ) {
-			layout.GetUniforms()[i].Apply( func );
+			layout.GetUniforms()[i].Accept( func );
 		}
 	}
 //-----------------------------------------------------------------------------
 
 
 	
-	const TypeIdList	GL4GraphicsPipeline::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4GraphicsPipeline::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -142,9 +142,9 @@ namespace PlatformGL
 =================================================
 */
 	GL4GraphicsPipeline::GL4GraphicsPipeline (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
-		_pipelineId( 0 ),				_vertexAttribs( 0 ),
-		_descr( ci.descr )
+		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
+		_pipelineId{ 0 },			_vertexAttribs{ 0 },
+		_descr{ ci.descr },			_layoutDesc{ ci.layout }
 	{
 		SetDebugName( "GL4GraphicsPipeline" );
 
@@ -166,11 +166,11 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4GraphicsPipeline::_GetPipelineLayoutDescription );
 		_SubscribeOnMsg( this, &GL4GraphicsPipeline::_GetGLPipelineLayoutPushConstants );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
-		MakePushConstantsCache( _descr.layout, OUT _pushConstants );
+		MakePushConstantsCache( _layoutDesc, OUT _pushConstants );
 	}
 	
 /*
@@ -246,8 +246,8 @@ namespace PlatformGL
 		CHECK_ERR( msg.newModule );
 
 		// render pass and shader must be unique
-		bool	is_dependent =  msg.newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >() or
-								msg.newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		bool	is_dependent =  msg.newModule->SupportsAllMessages< RenderPassMsgList_t >() or
+								msg.newModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		if ( _Attach( msg.name, msg.newModule ) and is_dependent )
 		{
@@ -266,8 +266,8 @@ namespace PlatformGL
 	{
 		CHECK_ERR( msg.oldModule );
 		
-		bool	is_dependent =  msg.oldModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >() or
-								msg.oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		bool	is_dependent =  msg.oldModule->SupportsAllMessages< RenderPassMsgList_t >() or
+								msg.oldModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		if ( _Detach( msg.oldModule ) and is_dependent )
 		{
@@ -322,7 +322,7 @@ namespace PlatformGL
 */
 	bool GL4GraphicsPipeline::_GetPipelineLayoutDescription (const GpuMsg::GetPipelineLayoutDescription &msg)
 	{
-		msg.result.Set( _descr.layout );
+		msg.result.Set( _layoutDesc );
 		return true;
 	}
 	
@@ -401,7 +401,7 @@ namespace PlatformGL
 		shaders->Send( req_shader_ids );
 		CHECK_ERR( req_shader_ids.result and not req_shader_ids.result->Empty() );
 
-		GL_CALL( glGenProgramPipelines( 1, &_pipelineId ) );
+		GL_CALL( glGenProgramPipelines( 1, OUT &_pipelineId ) );
 		CHECK_ERR( _pipelineId != 0 );
 
 		FOR( i, *req_shader_ids.result )
@@ -450,7 +450,7 @@ namespace PlatformGL
 
 		CHECK_ERR( _vertexAttribs == 0 );
 		
-		GL_CALL( glGenVertexArrays( 1, &_vertexAttribs ) );
+		GL_CALL( glGenVertexArrays( 1, OUT &_vertexAttribs ) );
 		CHECK_ERR( _vertexAttribs != 0 );
 		GL_CALL( glBindVertexArray( _vertexAttribs ) );
 
@@ -518,10 +518,7 @@ namespace PlatformGL
 */
 	bool GL4GraphicsPipeline::_ValidateRenderPass (const ModulePtr &renderPass) const
 	{
-		GpuMsg::GetRenderPassDescription		req_descr;
-		renderPass->Send( req_descr );
-
-		const auto&	descr = *req_descr.result;
+		const auto&	descr = renderPass->Request( GpuMsg::GetRenderPassDescription{} );
 
 		CHECK_ERR( _descr.subpass < descr.Subpasses().Count() );
 		
@@ -564,22 +561,23 @@ namespace PlatformGL
 		
 		using ShadersMsgList_t		= MessageListFrom< GpuMsg::GetGLShaderModuleIDs >;
 
-		using Description			= ComputePipelineDescription;
+		using Description_t			= ComputePipelineDescription;
+		using LayoutDesc_t			= PipelineLayoutDescription;
 		using PushConstants_t		= GpuMsg::GetGLPipelineLayoutPushConstants::PushConstants_t;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
 	// variables
 	private:
-		GLuint			_pipelineId;
-		GLuint			_programId;
-		Description		_descr;
-		PushConstants_t	_pushConstants;
+		GLuint				_pipelineId;
+		GLuint				_programId;
+		Description_t		_descr;
+		LayoutDesc_t		_layoutDesc;
+		PushConstants_t		_pushConstants;
 
 
 	// methods
@@ -610,7 +608,6 @@ namespace PlatformGL
 //-----------------------------------------------------------------------------
 
 
-	const TypeIdList	GL4ComputePipeline::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4ComputePipeline::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -619,9 +616,9 @@ namespace PlatformGL
 =================================================
 */
 	GL4ComputePipeline::GL4ComputePipeline (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
-		_pipelineId( 0 ),		_programId( 0 ),
-		_descr( ci.descr )
+		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
+		_pipelineId{ 0 },		_programId{ 0 },
+		_descr{ ci.descr },		_layoutDesc{ ci.layout }
 	{
 		SetDebugName( "GL4ComputePipeline" );
 
@@ -643,11 +640,11 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4ComputePipeline::_GetPipelineLayoutDescription );
 		_SubscribeOnMsg( this, &GL4ComputePipeline::_GetGLPipelineLayoutPushConstants );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 		
-		MakePushConstantsCache( _descr.layout, OUT _pushConstants );
+		MakePushConstantsCache( _layoutDesc, OUT _pushConstants );
 	}
 	
 /*
@@ -710,7 +707,7 @@ namespace PlatformGL
 		CHECK_ERR( msg.newModule );
 
 		// render pass and shader must be unique
-		bool	is_dependent = msg.newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		bool	is_dependent = msg.newModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		if ( _Attach( msg.name, msg.newModule ) and is_dependent )
 		{
@@ -729,7 +726,7 @@ namespace PlatformGL
 	{
 		CHECK_ERR( msg.oldModule );
 		
-		bool	is_dependent = msg.oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		bool	is_dependent = msg.oldModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		if ( _Detach( msg.oldModule ) and is_dependent )
 		{
@@ -784,7 +781,7 @@ namespace PlatformGL
 */
 	bool GL4ComputePipeline::_GetPipelineLayoutDescription (const GpuMsg::GetPipelineLayoutDescription &msg)
 	{
-		msg.result.Set( _descr.layout );
+		msg.result.Set( _layoutDesc );
 		return true;
 	}
 	
@@ -827,7 +824,7 @@ namespace PlatformGL
 		shaders->Send( req_shader_ids );
 		CHECK_ERR( req_shader_ids.result and not req_shader_ids.result->Empty() );
 
-		GL_CALL( glGenProgramPipelines( 1, &_pipelineId ) );
+		GL_CALL( glGenProgramPipelines( 1, OUT &_pipelineId ) );
 		CHECK_ERR( _pipelineId != 0 );
 
 		FOR( i, *req_shader_ids.result )

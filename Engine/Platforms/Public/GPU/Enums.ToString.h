@@ -19,6 +19,68 @@ namespace Engine
 {
 namespace Platforms
 {
+
+//-----------------------------------------------------------------------------//
+// EImageAspect
+
+	ND_ inline String  EImageAspect::ToString (bits values)
+	{
+		String	str;
+
+		FOR( i, values )
+		{
+			const auto	t = type(i);
+
+			if ( not values[t] )
+				continue;
+
+			str << (str.Empty() ? "" : " | ");
+
+			switch ( t )
+			{
+				case Color :		str << "Color";		break;
+				case Depth :		str << "Depth";		break;
+				case Stencil :		str << "Stencil";	break;
+				case Metadata :		str << "Metadata";	break;
+				default :			RETURN_ERR( "unknown image aspect type!" );
+			}
+		}
+		return str;
+	}
+
+	
+		
+//-----------------------------------------------------------------------------//
+// EQueueFamily
+
+	ND_ inline String  EQueueFamily::ToString (bits values)
+	{
+		String	str;
+
+		FOR( i, values )
+		{
+			const auto	t = type(i);
+
+			if ( not values[t] )
+				continue;
+
+			str << (str.Empty() ? "" : " | ");
+
+			switch ( t )
+			{
+				case Graphics :			str << "Graphics";		break;
+				case Compute :			str << "Compute";		break;
+				case Transfer :			str << "Transfer";		break;
+				case SparseBinding :	str << "SparseBinding";	break;
+				case Present :			str << "Present";		break;
+				case Protected :		str << "Protected";		break;
+				default :				RETURN_ERR( "unknown queue family type!" );
+			}
+		}
+		return str;
+	}
+
+
 	
 //-----------------------------------------------------------------------------//
 // EBlendFunc
@@ -189,6 +251,41 @@ namespace Platforms
 		RETURN_ERR( "invalid polygon face", "unknown" );
 	}
 	
+	
+
+//-----------------------------------------------------------------------------//
+// EPipelineDynamicState
+	
+	ND_ inline String  EPipelineDynamicState::ToString (bits values)
+	{
+		String	str;
+
+		FOR( i, values )
+		{
+			const auto	t = type(i);
+
+			if ( not values[t] )
+				continue;
+
+			str << (str.Empty() ? "" : " | ");
+
+			switch ( t )
+			{
+				case Viewport :				str << "Viewport";				break;
+				case Scissor :				str << "Scissor";				break;
+				case LineWidth :			str << "LineWidth";				break;
+				case DepthBias :			str << "DepthBias";				break;
+				case BlendConstants :		str << "BlendConstants";		break;
+				case DepthBounds :			str << "DepthBounds";			break;
+				case StencilCompareMask :	str << "StencilCompareMask";	break;
+				case StencilWriteMask :		str << "StencilWriteMask";		break;
+				case StencilReference :		str << "StencilReference";		break;
+				default :					RETURN_ERR( "unknown dynamic pipeline state!" );
+			}
+		}
+		return str;
+	}
+
 
 
 //-----------------------------------------------------------------------------//
@@ -311,6 +408,22 @@ namespace Platforms
 	}
 	
 
+	ND_ inline String  EShader::ToString (bits values)
+	{
+		String	str;
+		FOR( i, values )
+		{
+			const auto	t = type(i);
+
+			if ( not values[t] )
+				continue;
+
+			str << (str.Empty() ? "" : " | ") << ToString( t );
+		}
+		return str;
+	}
+
+
 
 //-----------------------------------------------------------------------------//
 // EShaderMemoryModel
@@ -327,6 +440,42 @@ namespace Platforms
 			case WriteOnly :	return "WriteOnly";
 		}
 		RETURN_ERR( "invalid memory model!", "unknown" );
+	}
+	
+
+
+//-----------------------------------------------------------------------------//
+// EBufferUsage
+	
+	ND_ inline String  EBufferUsage::ToString (bits values)
+	{
+		String	str;
+
+		FOR( i, values )
+		{
+			const auto	t = type(i);
+
+			if ( not values[t] )
+				continue;
+
+			if ( not str.Empty() )
+				str << " | ";
+
+			switch ( t )
+			{
+				case TransferSrc :		str << "TransferSrc";	break;
+				case TransferDst :		str << "TransferDst";	break;
+				case UniformTexel :		str << "UniformTexel";	break;
+				case StorageTexel :		str << "StorageTexel";	break;
+				case Uniform :			str << "Uniform";		break;
+				case Storage :			str << "Storage";		break;
+				case Index :			str << "Index";			break;
+				case Vertex :			str << "Vertex";		break;
+				case Indirect :			str << "Indirect";		break;
+				default :				RETURN_ERR( "unknown image usage type!" );
+			}
+		}
+		return str;
 	}
 
 
@@ -351,8 +500,43 @@ namespace Platforms
 		}
 		RETURN_ERR( "unknown texture type!" );
 	}
+	
 
 	
+//-----------------------------------------------------------------------------//
+// EImageUsage
+	
+	ND_ inline String  EImageUsage::ToString (bits values)
+	{
+		String	str;
+
+		FOR( i, values )
+		{
+			const auto	t = type(i);
+
+			if ( not values[t] )
+				continue;
+
+			if ( not str.Empty() )
+				str << " | ";
+
+			switch ( t )
+			{
+				case TransferSrc :				str << "";	break;
+				case TransferDst :				str << "";	break;
+				case Sampled :					str << "";	break;
+				case Storage :					str << "";	break;
+				case ColorAttachment :			str << "";	break;
+				case DepthStencilAttachment :	str << "";	break;
+				case TransientAttachment :		str << "";	break;
+				case InputAttachment :			str << "";	break;
+				default :						RETURN_ERR( "unknown image usage type!" );
+			}
+		}
+		return str;
+	}
+	
+
 
 //-----------------------------------------------------------------------------//
 // EImageLayout
@@ -495,6 +679,101 @@ namespace Platforms
 		}
 		return str;
 	}
+
+	
+
+//-----------------------------------------------------------------------------//
+// EIndex
+
+	ND_ inline StringCRef  EIndex::ToString (type value)
+	{
+		switch ( value )
+		{
+			case UShort :	return "UShort";
+			case UInt :		return "UInt";
+		}
+		RETURN_ERR( "unknown index type!" );
+	}
+	
+
+
+//-----------------------------------------------------------------------------//
+// EVertexInputRate
+
+	ND_ inline StringCRef  EVertexInputRate::ToString (type value)
+	{
+		switch ( value )
+		{
+			case Vertex :	return "Vertex";
+			case Instance :	return "Instance";
+		}
+		RETURN_ERR( "unknown vertex input rate type!" );
+	}
+	
+	
+
+//-----------------------------------------------------------------------------//
+// EVertexAttribute
+
+	ND_ inline String  EVertexAttribute::ToString (type value)
+	{
+		String	str;
+
+		switch ( value & ~NormalizedFlag )
+		{
+			case Byte :		str << "Byte";		break;
+			case Byte2 :	str << "Byte2";		break;
+			case Byte3 :	str << "Byte3";		break;
+			case Byte4 :	str << "Byte4";		break;
+			case UByte :	str << "UByte";		break;
+			case UByte2 :	str << "UByte2";	break;
+			case UByte3 :	str << "UByte3";	break;
+			case UByte4 :	str << "UByte4";	break;
+			case Short :	str << "Short";		break;
+			case Short2 :	str << "Short2";	break;
+			case Short3 :	str << "Short3";	break;
+			case Short4 :	str << "Short4";	break;
+			case UShort :	str << "UShort";	break;
+			case UShort2 :	str << "UShort2";	break;
+			case UShort3 :	str << "UShort3";	break;
+			case UShort4 :	str << "UShort4";	break;
+			case Int :		str << "Int";		break;
+			case Int2 :		str << "Int2";		break;
+			case Int3 :		str << "Int3";		break;
+			case Int4 :		str << "Int4";		break;
+			case UInt :		str << "UInt";		break;
+			case UInt2 :	str << "UInt2";		break;
+			case UInt3 :	str << "UInt3";		break;
+			case UInt4 :	str << "UInt4";		break;
+			case Long :		str << "Long";		break;
+			case Long2 :	str << "Long2";		break;
+			case Long3 :	str << "Long3";		break;
+			case Long4 :	str << "Long4";		break;
+			case ULong :	str << "ULong";		break;
+			case ULong2 :	str << "ULong2";	break;
+			case ULong3 :	str << "ULong3";	break;
+			case ULong4 :	str << "ULong4";	break;
+			case Half :		str << "Half";		break;
+			case Half2 :	str << "Half2";		break;
+			case Half3 :	str << "Half3";		break;
+			case Half4 :	str << "Half4";		break;
+			case Float :	str << "Float";		break;
+			case Float2 :	str << "Float2";	break;
+			case Float3 :	str << "Float3";	break;
+			case Float4 :	str << "Float4";	break;
+			case Double :	str << "Double";	break;
+			case Double2 :	str << "Double2";	break;
+			case Double3 :	str << "Double3";	break;
+			case Double4 :	str << "Double4";	break;
+			default :		RETURN_ERR( "unknown vertex type!" );
+		}
+
+		if ( value & NormalizedFlag )
+			str << "_Norm";
+
+		return str;
+	}
+
 
 
 //-----------------------------------------------------------------------------//

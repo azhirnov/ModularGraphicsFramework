@@ -17,6 +17,7 @@ namespace CreateInfo
 	struct GpuMemoryManager;
 	struct GpuBuffer;
 	struct GpuSampler;
+	struct GpuQueryPool;
 	struct GpuRenderPass;
 	struct GpuFramebuffer;
 	struct PipelineTemplate;
@@ -50,6 +51,7 @@ namespace Platforms
 	static constexpr OModID::type  VkRenderPassModuleID				= "vk.renpass"_OModID;
 	static constexpr OModID::type  VkSamplerModuleID				= "vk.sampler"_OModID;
 	static constexpr OModID::type  VkSyncManagerModuleID			= "vk.sync"_OModID;
+	static constexpr OModID::type  VkQueryPoolModuleID				= "vk.query"_OModID;
 
 
 	//
@@ -71,6 +73,7 @@ namespace Platforms
 		static ModulePtr CreateVk1Image (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuImage &);
 		static ModulePtr CreateVk1Buffer (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuBuffer &);
 		static ModulePtr CreateVk1Sampler (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSampler &);
+		static ModulePtr CreateVk1QueryPool (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuQueryPool &);
 		static ModulePtr CreateVk1ManagedMemory (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuMemory &);
 		static ModulePtr CreateVk1RenderPass (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuRenderPass &);
 		static ModulePtr CreateVk1SyncManager (ModuleMsg::UntypedID_t, GlobalSystemsRef, const CreateInfo::GpuSyncManager &);

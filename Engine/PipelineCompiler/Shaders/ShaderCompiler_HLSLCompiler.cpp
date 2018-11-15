@@ -4,7 +4,17 @@
 #include "Engine/PipelineCompiler/Shaders/glslang_Include.h"
 
 #ifdef GX_ENABLE_DXCOMPILER
+
+# ifdef COMPILER_MSVC
+#	pragma warning (push)
+#	pragma warning (disable: 4668)
+# endif
+
 #	include <d3dcompiler.h>
+
+# ifdef COMPILER_MSVC
+#	pragma warning (pop)
+# endif
 #endif
 
 namespace PipelineCompiler

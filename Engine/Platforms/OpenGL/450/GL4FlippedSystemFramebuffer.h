@@ -40,7 +40,6 @@ namespace PlatformGL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -85,7 +84,6 @@ namespace PlatformGL
 
 
 	
-	const TypeIdList	GL4Device::GL4FlippedSystemFramebuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4Device::GL4FlippedSystemFramebuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -94,7 +92,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Device::GL4FlippedSystemFramebuffer::GL4FlippedSystemFramebuffer (GlobalSystemsRef gs) :
-		GL4BaseModule( gs, ModuleConfig{ GLFramebufferModuleID, 1 }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLFramebufferModuleID, 1 }, &_eventTypes ),
 		_framebufferId( 0 ),			_flippedFramebufferId( 0 ),
 		_colorBufferId( 0 ),			_depthBufferId( 0 ),
 		_colorFormat( Uninitialized ),	_depthStencilFormat( Uninitialized )
@@ -115,7 +113,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4FlippedSystemFramebuffer::_GetGLPrivateClasses );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( null ), UntypedID_t(0), true );
 	}
@@ -159,7 +157,7 @@ namespace PlatformGL
 		if ( EPixelFormat::IsColor( format ) )
 			attachment = GL_COLOR_ATTACHMENT0;
 		else
-		if ( EPixelFormat::HasDepth( format ) and EPixelFormat::HasStencil( format ) )
+		if ( EPixelFormat::IsDepthStencil( format ) )
 			attachment = GL_DEPTH_STENCIL_ATTACHMENT;
 		else
 		if ( EPixelFormat::HasDepth( format ) )

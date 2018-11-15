@@ -24,21 +24,16 @@ namespace Base
 	private:
 		SHARED_POINTER( TaskModuleImpl );
 
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Link,
-											ModuleMsg::Compose
-										> >
-										::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::PushAsyncMessage,
 											ModuleMsg::OnManagerChanged
-										> >;
+										>;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 		using MsgQueue_t			= MtQueue< CircularQueue< AsyncMessage > >;
 		
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -71,7 +66,6 @@ namespace Base
 
 
 
-	const TypeIdList	TaskModuleImpl::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	TaskModuleImpl::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -80,7 +74,7 @@ namespace Base
 =================================================
 */
 	TaskModuleImpl::TaskModuleImpl (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::TaskModule &info) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes )
 	{
 		GlobalSystems()->taskModule._Set( this );
 
@@ -97,7 +91,7 @@ namespace Base
 		_SubscribeOnMsg( this, &TaskModuleImpl::_Delete );
 		_SubscribeOnMsg( this, &TaskModuleImpl::_PushAsyncMessage );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_msgQueue.ReserveCurrent( 256 );
 		_msgQueue.ReservePending( 128 );
@@ -112,13 +106,12 @@ namespace Base
 		else
 		{
 			CHECK( _PushAsyncMessage( ModuleMsg::PushAsyncMessage{
-						AsyncMessage{
-							LAMBDA( mngr = _GetManager(), task = TaskModuleImplPtr(this) ) (GlobalSystemsRef) {
-								mngr->Send( ModuleMsg::AddTaskSchedulerToManager{ task, DelegateBuilder(task, &TaskModuleImpl::_Push) });
-							}
-						}, _GetManager()->GetThreadID()
-					})
-			);
+						_GetManager()->GetThreadID(),
+						LAMBDA( mngr = _GetManager(), task = TaskModuleImplPtr(this) ) (GlobalSystemsRef)
+						{
+							mngr->Send( ModuleMsg::AddTaskSchedulerToManager{ task, DelegateBuilder(task, &TaskModuleImpl::_Push) });
+						}}
+					));
 		}
 
 		CHECK( _SetState( EState::ComposedImmutable ) );
@@ -133,7 +126,7 @@ namespace Base
 */
 	TaskModuleImpl::~TaskModuleImpl ()
 	{
-		LOG( "TaskModule finalized", ELog::Debug );
+		//LOG( "TaskModule finalized", ELog::Debug );
 
 		ASSERT( _msgQueue.GetCurrentQueueCount() == 0 );
 		ASSERT( _msgQueue.GetPendingQueueCount() == 0 );

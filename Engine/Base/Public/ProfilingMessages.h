@@ -15,7 +15,7 @@ namespace ProfilingMsg
 	//
 	// On Send Message
 	//
-	struct OnSendMsg : _MessageBase_
+	struct OnSendMsg : _MsgBase_
 	{
 	// variables
 		ModulePtr							target;

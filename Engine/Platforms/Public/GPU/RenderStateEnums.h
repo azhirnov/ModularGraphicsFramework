@@ -205,6 +205,8 @@ namespace Platforms
 		};
 
 		GX_ENUM_BITFIELD( EPipelineDynamicState );
+
+		static String ToString (bits values);
 	};
 
 

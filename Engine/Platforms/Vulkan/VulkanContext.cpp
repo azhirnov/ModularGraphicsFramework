@@ -13,6 +13,7 @@
 #include "Engine/Platforms/Public/GPU/Memory.h"
 #include "Engine/Platforms/Public/GPU/RenderPass.h"
 #include "Engine/Platforms/Public/GPU/Sampler.h"
+#include "Engine/Platforms/Public/GPU/Query.h"
 #include "Engine/Platforms/Vulkan/110/Vk1Messages.h"
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 
@@ -29,11 +30,11 @@ namespace Platforms
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											GpuMsg::GetGraphicsModules
-										> >;
+										>;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
 		using VkThreads_t			= Set< ModulePtr >;
@@ -44,7 +45,6 @@ namespace Platforms
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		
@@ -71,7 +71,6 @@ namespace Platforms
 
 
 
-	const TypeIdList	VulkanContext::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	VulkanContext::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -80,7 +79,7 @@ namespace Platforms
 =================================================
 */
 	VulkanContext::VulkanContext (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_createInfo( ci )
 	{
 		SetDebugName( "VulkanContext" );
@@ -99,7 +98,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &VulkanContext::_RemoveFromManager );
 		_SubscribeOnMsg( this, &VulkanContext::_GetGraphicsModules );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 	}
 	
 /*
@@ -109,7 +108,7 @@ namespace Platforms
 */
 	VulkanContext::~VulkanContext ()
 	{
-		LOG( "VulkanContext finalized", ELog::Debug );
+		//LOG( "VulkanContext finalized", ELog::Debug );
 
 		ASSERT( _threads.Empty() );
 	}
@@ -122,7 +121,7 @@ namespace Platforms
 	bool VulkanContext::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
 		CHECK_ERR( msg.module );
-		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< VkThreadMsgList_t >() );
+		CHECK_ERR( msg.module->SupportsAllMessages< VkThreadMsgList_t >() );
 		CHECK_ERR( msg.module->GetSupportedEvents().HasAllTypes< VkThreadEventList_t >() );
 		ASSERT( not _threads.IsExist( msg.module ) );
 
@@ -157,8 +156,8 @@ namespace Platforms
 */	
 	bool VulkanContext::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg.compute.Set( VulkanObjectsConstructor::GetComputeModules() );
-		msg.graphics.Set( VulkanObjectsConstructor::GetGraphicsModules() );
+		msg.result.Set({ VulkanObjectsConstructor::GetComputeModules(),
+						 VulkanObjectsConstructor::GetGraphicsModules() });
 		return true;
 	}
 //-----------------------------------------------------------------------------
@@ -186,6 +185,7 @@ namespace Platforms
 		graphics.memory			= VkManagedMemoryModuleID;
 		graphics.memoryManager	= VkMemoryManagerModuleID;
 		graphics.resourceTable	= VkPipelineResourceTableModuleID;
+		graphics.queryPool		= VkQueryPoolModuleID;
 		return graphics;
 	}
 	
@@ -208,6 +208,7 @@ namespace Platforms
 		compute.memory			= VkManagedMemoryModuleID;
 		compute.memoryManager	= VkMemoryManagerModuleID;
 		compute.resourceTable	= VkPipelineResourceTableModuleID;
+		compute.queryPool		= VkQueryPoolModuleID;
 		return compute;
 	}
 
@@ -226,6 +227,7 @@ namespace Platforms
 		CHECK( mf->Register( VkImageModuleID, &CreateVk1Image ) );
 		CHECK( mf->Register( VkBufferModuleID, &CreateVk1Buffer ) );
 		CHECK( mf->Register( VkSamplerModuleID, &CreateVk1Sampler ) );
+		CHECK( mf->Register( VkQueryPoolModuleID, &CreateVk1QueryPool ) );
 		CHECK( mf->Register( VkRenderPassModuleID, &CreateVk1RenderPass ) );
 		CHECK( mf->Register( VkSyncManagerModuleID, CreateVk1SyncManager ) );
 		CHECK( mf->Register( VkFramebufferModuleID, &CreateVk1Framebuffer ) );
@@ -257,6 +259,7 @@ namespace Platforms
 		mf->UnregisterAll( VkImageModuleID );
 		mf->UnregisterAll( VkBufferModuleID );
 		mf->UnregisterAll( VkSamplerModuleID );
+		mf->UnregisterAll( VkQueryPoolModuleID );
 		mf->UnregisterAll( VkRenderPassModuleID );
 		mf->UnregisterAll( VkFramebufferModuleID );
 		mf->UnregisterAll( VkCommandQueueModuleID );

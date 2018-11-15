@@ -5,8 +5,36 @@
 #include "Engine/Profilers/Engine.Profilers.h"
 #include "Engine/ImportExport/Engine.ImportExport.h"
 
-using Vertex1		= Graphics::DefVertices::Vertex2D;
+
+struct Vertex1 : Graphics::DefVertices::Vertex2D
+{
+	int		_padding[ (CompileTime::AlignToLarge< uint, sizeof(Self), 16 > - sizeof(Self)) / sizeof(int) ];		// TODO
+
+	Vertex1 ()
+	{}
+
+	Vertex1 (const float2 &pos, const float2 &texc, const color4u &color) :
+		Vertex2D{ pos, texc, color }
+	{}
+
+	ND_ static VertexInputState  GetAttribs ()
+	{
+		return VertexInputState()
+			.Add( "at_Position",	&Self::position )
+			.Add( "at_Texcoord",	&Self::texcoord )
+			.Add( "at_Color",		&Self::color,	true )
+			.Bind( "", SizeOf<Vertex1> );
+	}
+
+	ND_ static TypeId GetTypeId ()
+	{
+		return TypeIdOf< Vertex1 >();
+	}
+};
+
 using Rectangle1	= Graphics::DefPrimitives::Rectangle< Vertex1 >;
+
+
 
 
 /*
@@ -55,9 +83,7 @@ bool GApp::Initialize (GAPI::type api)
 		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ api }, OUT context ) );
 		ms->Send( ModuleMsg::AttachModule{ context });
 
-		GpuMsg::GetGraphicsModules	req_ids;
-		context->Send( req_ids );
-		ids = *req_ids.graphics;
+		ids = context->Request( GpuMsg::GetGraphicsModules{} ).graphics;
 	}
 
 	auto		thread	= ms->GlobalSystems()->parallelThread;
@@ -232,10 +258,7 @@ bool GApp::_CreatePipeline ()
 	create_gpp.gpuThread	= gthread;
 	create_gpp.moduleID		= ids.pipeline;
 	create_gpp.topology		= EPrimitive::TriangleList;
-	create_gpp.vertexInput.Add( "at_Position",		&Vertex1::position )
-							.Add( "at_Texcoord",	&Vertex1::texcoord )
-							.Add( "at_Color",		&Vertex1::color,	true )
-							.Bind( "",				AlignToLarge( SizeOf<Vertex1>, 16_b ) );
+	create_gpp.vertexInput	= Vertex1::GetAttribs();
 	
 	pipelineTemplate->Send( create_gpp );
 	gpipeline = *create_gpp.result;
@@ -292,7 +315,8 @@ bool GApp::_CreatePipeline ()
 											EImageLayout::Undefined, EImageLayout::TransferDstOptimal,
 											EImageAspect::Color }) );
 
-		asyncCmdBuilder->Send( GpuMsg::CmdClearColorImage{ texture, EImageLayout::TransferDstOptimal }.Clear( float4(1.0f) ));
+		asyncCmdBuilder->Send( GpuMsg::CmdClearColorImage{ texture, EImageLayout::TransferDstOptimal }
+								.Clear( float4(1.0f) ).AddRange({ EImageAspect::Color, 0_mipmap }) );
 
 		asyncCmdBuilder->Send( GpuMsg::CmdPipelineBarrier{ EPipelineStage::Transfer, EPipelineStage::FragmentShader }
 								.AddImage({	texture,

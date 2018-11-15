@@ -32,7 +32,6 @@ namespace PlatformGL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -67,7 +66,6 @@ namespace PlatformGL
 
 
 
-	const TypeIdList	GL4Sampler::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4Sampler::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -76,7 +74,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Sampler::GL4Sampler (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),
 		_samplerId( 0 )
 	{
@@ -98,7 +96,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Sampler::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4Sampler::_GetGLPrivateClasses );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}

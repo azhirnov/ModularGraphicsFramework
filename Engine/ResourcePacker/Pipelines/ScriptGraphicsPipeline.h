@@ -25,7 +25,7 @@ namespace ResPack
 		public:
 			explicit Pipeline (StringCRef name) : GraphicsPipeline(name) {}
 
-			EShaderSrcFormat::type &		GetShaderFormat ()			{ return shaderFormat; }
+			EShaderFormat::type &			GetShaderFormat ()			{ return shaderFormat; }
 			Shaders &						GetShaders ()				{ return shaders; }
 			RenderState &					GetRenderState ()			{ return renderState; }
 			EPrimitive::bits &				GetSupportedTopology ()		{ return supportedTopology; }
@@ -39,7 +39,7 @@ namespace ResPack
 	private:
 		PipelinePtr						_pipeline;
 
-		EShaderSrcFormat::type			_shaderFormat		= EShaderSrcFormat::GLSL;
+		EShaderFormat::type				_shaderFormat		= EShaderFormat::DefaultSrc;
 		Shaders							_shaders;
 		RenderState						_renderState;
 		EPrimitive::bits				_supportedTopology;

@@ -181,15 +181,15 @@ struct VkWin32KeyedMutexAcquireReleaseInfoNV {
 #endif
 
 
-#define VK1_OS_FUNCTIONS( _buildFunc_ ) \
-	_buildFunc_( VkResult, vkCreateWin32SurfaceKHR, ( VkInstance instance , const VkWin32SurfaceCreateInfoKHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSurfaceKHR * pSurface ) , VK_RESULT_MAX_ENUM ) \
+#define VK1_WIN32_FUNCTIONS( _buildFunc_ ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateWin32SurfaceKHR, ( VkInstance instance , const VkWin32SurfaceCreateInfoKHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSurfaceKHR * pSurface ) , VK_RESULT_MAX_ENUM ) \
 	_buildFunc_( VkBool32, vkGetPhysicalDeviceWin32PresentationSupportKHR, ( VkPhysicalDevice physicalDevice , uint32_t queueFamilyIndex ) , (VkBool32)(0) ) \
-	_buildFunc_( VkResult, vkGetMemoryWin32HandleKHR, ( VkDevice device , const VkMemoryGetWin32HandleInfoKHR * pGetWin32HandleInfo , HANDLE * pHandle ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetMemoryWin32HandlePropertiesKHR, ( VkDevice device , VkExternalMemoryHandleTypeFlagBits handleType , HANDLE handle , VkMemoryWin32HandlePropertiesKHR * pMemoryWin32HandleProperties ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkImportSemaphoreWin32HandleKHR, ( VkDevice device , const VkImportSemaphoreWin32HandleInfoKHR * pImportSemaphoreWin32HandleInfo ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetSemaphoreWin32HandleKHR, ( VkDevice device , const VkSemaphoreGetWin32HandleInfoKHR * pGetWin32HandleInfo , HANDLE * pHandle ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkImportFenceWin32HandleKHR, ( VkDevice device , const VkImportFenceWin32HandleInfoKHR * pImportFenceWin32HandleInfo ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetFenceWin32HandleKHR, ( VkDevice device , const VkFenceGetWin32HandleInfoKHR * pGetWin32HandleInfo , HANDLE * pHandle ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetMemoryWin32HandleNV, ( VkDevice device , VkDeviceMemory memory , VkExternalMemoryHandleTypeFlagsNV handleType , HANDLE * pHandle ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetMemoryWin32HandleKHR, ( VkDevice device , const VkMemoryGetWin32HandleInfoKHR * pGetWin32HandleInfo , HANDLE * pHandle ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetMemoryWin32HandlePropertiesKHR, ( VkDevice device , VkExternalMemoryHandleTypeFlagBits handleType , HANDLE handle , VkMemoryWin32HandlePropertiesKHR * pMemoryWin32HandleProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkImportSemaphoreWin32HandleKHR, ( VkDevice device , const VkImportSemaphoreWin32HandleInfoKHR * pImportSemaphoreWin32HandleInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetSemaphoreWin32HandleKHR, ( VkDevice device , const VkSemaphoreGetWin32HandleInfoKHR * pGetWin32HandleInfo , HANDLE * pHandle ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkImportFenceWin32HandleKHR, ( VkDevice device , const VkImportFenceWin32HandleInfoKHR * pImportFenceWin32HandleInfo ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetFenceWin32HandleKHR, ( VkDevice device , const VkFenceGetWin32HandleInfoKHR * pGetWin32HandleInfo , HANDLE * pHandle ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetMemoryWin32HandleNV, ( VkDevice device , VkDeviceMemory memory , VkExternalMemoryHandleTypeFlagsNV handleType , HANDLE * pHandle ) , VK_RESULT_MAX_ENUM ) \
 
 

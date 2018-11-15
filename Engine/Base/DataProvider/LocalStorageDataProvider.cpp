@@ -17,9 +17,7 @@ namespace Base
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
@@ -30,7 +28,7 @@ namespace Base
 											DSMsg::IsUriExists,
 											DSMsg::CreateDataInputModule,
 											DSMsg::CreateDataOutputModule
-										> >;
+										>;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 		
@@ -48,7 +46,6 @@ namespace Base
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -83,7 +80,6 @@ namespace Base
 //-----------------------------------------------------------------------------
 
 
-	const TypeIdList	LocalStorageDataProvider::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	LocalStorageDataProvider::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -92,10 +88,8 @@ namespace Base
 =================================================
 */
 	LocalStorageDataProvider::LocalStorageDataProvider (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::LocalStorageDataProvider &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes )
 	{
-		SetDebugName( "LocalStorageDataProvider" );
-
 		_SubscribeOnMsg( this, &LocalStorageDataProvider::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &LocalStorageDataProvider::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &LocalStorageDataProvider::_AttachModule_Empty );
@@ -117,13 +111,15 @@ namespace Base
 		_SubscribeOnMsg( this, &LocalStorageDataProvider::_CreateDataInputModule );
 		_SubscribeOnMsg( this, &LocalStorageDataProvider::_CreateDataOutputModule );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		String	dir;
 		OS::FileSystem::GetCurrentDirectory( OUT dir );
 
 		_baseFolder = FileAddress::BuildPath( dir, ci.baseFolder );
 		
+		SetDebugName( "LocalStorageDataProvider: "_str << _baseFolder );
+
 		_AttachSelfToManager( ci.manager, DataProviderManagerModuleID, false );
 	}
 	

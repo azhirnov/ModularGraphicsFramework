@@ -39,12 +39,12 @@ namespace PipelineCompiler
 		UsedNames_t			_existingFuncs;
 		const bool			_funcOverloadingSupported;
 
-		const EShaderDstFormat::type	_dstShader;
+		const EShaderFormat::type	_dstShader;
 
 
 	// methods
 	public:
-		explicit ShaderVarNameValidator (EShaderDstFormat::type dstShader, bool funcOverloading = true) :
+		explicit ShaderVarNameValidator (EShaderFormat::type dstShader, bool funcOverloading = true) :
 			_funcOverloadingSupported{funcOverloading}, _dstShader{dstShader}
 		{}
 

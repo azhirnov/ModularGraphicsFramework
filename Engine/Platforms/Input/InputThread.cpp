@@ -15,15 +15,12 @@ namespace Platforms
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::InputKeyBind,
 											ModuleMsg::InputMotionBind,
 											ModuleMsg::InputKeyUnbindAll,
-											ModuleMsg::InputMotionUnbindAll,
-											ModuleMsg::AddToManager,
-											ModuleMsg::RemoveFromManager,
-											ModuleMsg::OnManagerChanged
-										> >;
+											ModuleMsg::InputMotionUnbindAll
+										>;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											ModuleMsg::InputKey,		// not recomended to use
 											ModuleMsg::InputMotion		// not recomended to use
@@ -48,7 +45,6 @@ namespace Platforms
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		
@@ -84,7 +80,6 @@ namespace Platforms
 
 
 	
-	const TypeIdList	InputThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	InputThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -93,7 +88,7 @@ namespace Platforms
 =================================================
 */
 	InputThread::InputThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InputThread &) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_lockBindings( false )
 	{
 		SetDebugName( "InputThread" );
@@ -116,7 +111,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &InputThread::_AddToManager );
 		_SubscribeOnMsg( this, &InputThread::_RemoveFromManager );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( null, InputManagerModuleID, false );
 	}
@@ -128,7 +123,7 @@ namespace Platforms
 */
 	InputThread::~InputThread ()
 	{
-		LOG( "InputThread finalized", ELog::Debug );
+		//LOG( "InputThread finalized", ELog::Debug );
 
 		ASSERT( _inputs.Empty() );
 	}

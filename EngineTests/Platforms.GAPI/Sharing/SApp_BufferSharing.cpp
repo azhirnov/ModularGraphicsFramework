@@ -70,7 +70,7 @@ bool SApp::_Test_BufferSharing ()
 	// write data to buffer
 	GpuMsg::WriteToGpuMemory	write_cmd{ data };
 	src_buffer->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL(data.Size()) );
+	CHECK_ERR( *write_cmd.wasWritten == data.Size() );
 
 
 	// build command buffer
@@ -89,7 +89,7 @@ bool SApp::_Test_BufferSharing ()
 
 
 	// submit and sync
-	sharedGpu.gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence2_ctor.result ));
+	sharedGpu.gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence2_ctor.result ));
 
 	sharedGpu.syncManager->Send( GpuMsg::ClientWaitFence{ *fence2_ctor.result });
 

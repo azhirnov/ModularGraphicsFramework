@@ -57,7 +57,6 @@ namespace Scene
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -100,7 +99,6 @@ namespace Scene
 
 
 
-	const TypeIdList	FreeVRCamera::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	FreeVRCamera::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 	
 /*
@@ -109,7 +107,7 @@ namespace Scene
 =================================================
 */
 	FreeVRCamera::FreeVRCamera (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Camera &ci) :
-		BaseSceneModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		BaseSceneModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_settings{ ci.settings }
 	{
 		SetDebugName( "Scene.FreeVRCamera" );
@@ -131,7 +129,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &FreeVRCamera::_OnManagerChanged );
 		_SubscribeOnMsg( this, &FreeVRCamera::_GetScenePrivateClasses );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( ci.scene, SceneModuleID, true );
 	}

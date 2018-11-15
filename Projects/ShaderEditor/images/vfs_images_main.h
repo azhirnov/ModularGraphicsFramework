@@ -2,7 +2,6 @@
 
 #include "Core/STL/Containers/StringRef.h"
 #include "Core/STL/Containers/Array.h"
-#include "Core/STL/Math/BinaryMath.h"
 
 namespace vfs_images
 {

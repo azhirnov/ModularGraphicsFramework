@@ -8,6 +8,7 @@
 #if defined( GRAPHICS_API_OPENGL ) and defined( PLATFORM_WINDOWS )
 
 #include "Engine/Platforms/Public/GPU/Context.h"
+#include "Engine/Platforms/Public/Tools/WindowHelper.h"
 
 namespace Engine
 {
@@ -48,7 +49,7 @@ namespace PlatformGL
 	public:
 		GLWinContext ();
 
-		bool Create (const HWND_t &wnd, INOUT GraphicsSettings &vs);
+		bool Create (const PlatformTools::WindowHelper::WinAPIWindow &, INOUT GraphicsSettings &vs);
 		void Destroy ();
 
 		void MakeCurrent ();

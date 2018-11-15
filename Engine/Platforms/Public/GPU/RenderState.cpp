@@ -91,10 +91,10 @@ DEBUG_ONLY(
 	String RenderState::DepthBufferState::ToString () const
 	{
 		return String( "DepthBufferState {\n" )
-			<< "	enabled:  " << enabled << '\n'
-			<< "	func:     " << ECompareFunc::ToString( func ) << '\n'
-			<< "	range:    (" << GXTypes::ToString( range ) << ")\n"
-			<< "	write:    " << write << "\n}";
+			<< "	test:   " << test << '\n'
+			<< "	func:   " << ECompareFunc::ToString( func ) << '\n'
+			<< "	range:  (" << GXTypes::ToString( range ) << ")\n"
+			<< "	write:  " << write << "\n}";
 	}
 )	// DEBUG_ONLY
 
@@ -105,8 +105,8 @@ DEBUG_ONLY(
 */
 	bool RenderState::DepthBufferState::operator == (const Self &right) const
 	{
-		return	enabled		== right.enabled	and
-				(not enabled ? true : (
+		return	test		== right.test	and
+				(not test ? true : (
 					write	== right.write	and
 					func	== right.func	and
 					range	== right.range

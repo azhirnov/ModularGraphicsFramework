@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/Platforms/Public/Common.h"
+#include "Engine/Platforms/Public/GPU/ShaderEnums.h"
 
 namespace Engine
 {
@@ -77,6 +78,8 @@ namespace Platforms
 
 		static constexpr bool	IsGraphics (type value);
 
+		static bits				From (EShader::bits shaderStages);
+
 		static StringCRef	ToString (type value);
 		static String		ToString (bits values);
 	};
@@ -146,6 +149,7 @@ namespace Platforms
 		static String     ToString (bits values);
 	};
 	
+
 	
 //-----------------------------------------------------------------------------//
 // EPipelineStage
@@ -154,6 +158,19 @@ namespace Platforms
 	{
 		return value >= TopOfPipe and value <= BottomOfPipe;
 	}
+	
+		
+	ND_ inline EPipelineStage::bits  EPipelineStage::From (EShader::bits shaderStages)
+	{
+		bits	result;
+		if ( shaderStages[EShader::Vertex] )			result |= VertexShader;
+		if ( shaderStages[EShader::TessControl] )		result |= TessControlShader;
+		if ( shaderStages[EShader::TessEvaluation] )	result |= TessEvaluationShader;
+		if ( shaderStages[EShader::Geometry] )			result |= GeometryShader;
+		if ( shaderStages[EShader::Fragment] )			result |= FragmentShader;
+		return result;
+	}
+
 
 }	// Platforms
 }	// Engine

@@ -53,6 +53,7 @@ namespace PipelineCompiler
 		String  ToString (StringCRef name, EPrimitive::bits value) const override;
 		String  ToString (StringCRef name, EShader::bits value) const override;
 		String	ToString (StringCRef name, const uint3 &value) const override;
+		String	ToString (StringCRef name, bool value) const override;
 
 		String  ToString (StringCRef value) const override;
 		String	ToString (EShaderVariable::type value) const override;
@@ -81,20 +82,9 @@ namespace PipelineCompiler
 		String	Include (StringCRef filename) const override;
 		String	Comment (StringCRef comment) const override;
 		
-		String	ShaderSrcGLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
-		String	ShaderBinGLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
-
-		String	ShaderBinSPIRV (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
-		String	ShaderSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
-		
-		String	ShaderBinCL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
-		String	ShaderSrcCL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
-		
+		String	ShaderToString (EShaderFormat::type fmt, StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
 		String	ShaderSrcCPP_Impl (StringCRef name, BinArrayCRef shaderSrc, StringCRef funcName) const override;
 		String	ShaderSrcCPP (StringCRef name, StringCRef funcName) const override;
-		
-		String	ShaderBinHLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
-		String	ShaderSrcHLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const override;
 
 		String	GetSourceFileExt () const override	{ return "cpp"; }
 		String	GetHeaderFileExt () const override	{ return "h"; }
@@ -127,8 +117,13 @@ namespace PipelineCompiler
 		static String  ToString (EPixelFormatClass::type value);
 		static String  ToString (EPixelFormat::type value);
 		static String  ToString (EShaderMemoryModel::type value);
+		static String  ToString (EShaderFormat::type value);
 		
 		static String  ExtractIndent (StringCRef str);
+		
+		String  _ShaderToString (EShaderFormat::type fmt, StringCRef name, StringCRef shaderSrc, bool inFile) const;
+		String  _ShaderToString (EShaderFormat::type fmt, StringCRef name, BinArrayCRef shaderSrc, bool inFile) const;
+		String  _ShaderToString (EShaderFormat::type fmt, StringCRef name, ArrayCRef<uint> shaderSrc, bool inFile) const;
 	};
 
 

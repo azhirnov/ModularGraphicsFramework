@@ -49,9 +49,7 @@ bool GApp::Initialize (GAPI::type api)
 		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ api }, OUT context ) );
 		ms->Send( ModuleMsg::AttachModule{ context });
 
-		GpuMsg::GetGraphicsModules	req_ids;
-		context->Send( req_ids );
-		gpuIDs = *req_ids.graphics;
+		gpuIDs = context->Request( GpuMsg::GetGraphicsModules{} ).graphics;
 	}
 
 	auto		thread	= ms->GlobalSystems()->parallelThread;
@@ -186,7 +184,7 @@ bool GApp::_Draw (const ModuleMsg::Update &)
 										EImageLayout::Undefined, EImageLayout::TransferDstOptimal,
 										EImageAspect::Color }) );
 
-		cmdBuilder->Send( GpuMsg::CmdClearColorImage{ texture, EImageLayout::TransferDstOptimal }.Clear( float4(0.5f) ));
+		cmdBuilder->Send( GpuMsg::CmdClearColorImage{ texture, EImageLayout::TransferDstOptimal }.Clear( float4(0.5f) ).AddRange({ EImageAspect::Color, 0_mipmap }) );
 
 		cmdBuilder->Send( GpuMsg::CmdPipelineBarrier{ EPipelineStage::Transfer, EPipelineStage::FragmentShader }
 							.AddImage({	texture,
@@ -236,10 +234,9 @@ bool GApp::_Draw (const ModuleMsg::Update &)
 		cmdBuilder->Send( GpuMsg::CmdEndRenderPass{} );
 	}
 
-	GpuMsg::CmdEnd	cmd_end = {};
-	cmdBuilder->Send( cmd_end );
+	ModulePtr cmd_buffer = cmdBuilder->Request( GpuMsg::CmdEnd{} );
 
-	gthread->Send( GpuMsg::ThreadEndFrame{ system_fb, *cmd_end.result, cmdFence[index] });
+	gthread->Send( GpuMsg::ThreadEndFrame{ cmd_buffer }.SetFence( cmdFence[index] ).SetFramebuffer( system_fb ));
 	return true;
 }
 
@@ -313,9 +310,7 @@ bool GApp::_CreatePipeline2 ()
 	create_gpp.gpuThread	= gthread;
 	create_gpp.moduleID		= gpuIDs.pipeline;
 	create_gpp.topology		= EPrimitive::TriangleList;
-	create_gpp.vertexInput.Add( "at_Position", &Vertex::at_Position )
-							.Add( "at_Texcoord", &Vertex::at_Texcoord )
-							.Bind( "", SizeOf<Vertex> );
+	create_gpp.vertexInput	= Vertex::GetAttribs<Vertex>();
 	
 	pipelineTemplate2->Send( create_gpp );
 	gpipeline2 = *create_gpp.result;

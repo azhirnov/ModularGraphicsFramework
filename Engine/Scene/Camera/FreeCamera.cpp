@@ -48,7 +48,6 @@ namespace Scene
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -99,7 +98,6 @@ namespace Scene
 
 
 
-	const TypeIdList	FreeCamera::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	FreeCamera::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 	
 /*
@@ -108,7 +106,7 @@ namespace Scene
 =================================================
 */
 	FreeCamera::FreeCamera (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Camera &ci) :
-		BaseSceneModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		BaseSceneModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_settings{ ci.settings },
 		_mousePressed{ false }
 	{
@@ -131,7 +129,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &FreeCamera::_OnManagerChanged );
 		_SubscribeOnMsg( this, &FreeCamera::_GetScenePrivateClasses );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( ci.scene, SceneModuleID, true );
 	}

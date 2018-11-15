@@ -2,7 +2,6 @@
 
 #include "vfs_images_main.h"
 #include "Core/STL/Containers/HashMap.h"
-#include "Core/STL/Math/BinaryMath.h"
 
 namespace vfs_images
 {

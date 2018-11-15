@@ -37,8 +37,8 @@ namespace ResPack
 		using ScriptEnginePtr		= GXScript::ScriptEnginePtr;
 		using ShaderModule			= _Ppln::ShaderModule;
 		using Shaders				= _GPpln::Shaders;
-		using EShaderSrcFormat		= PipelineCompiler::EShaderSrcFormat;
-		using EShaderDstFormat		= PipelineCompiler::EShaderDstFormat;
+		using EShaderFormat			= PipelineCompiler::EShaderFormat;
+		using EShaderFormatSet		= Set< EShaderFormat::type >;
 		using EPrimitive			= PipelineCompiler::EPrimitive;
 		using RenderState			= PipelineCompiler::RenderState;
 		using EPipelineDynamicState	= PipelineCompiler::EPipelineDynamicState;
@@ -79,7 +79,8 @@ namespace ResPack
 
 		static void _Bind_ColorBuffer (ScriptEnginePtr se);
 		static void _Bind_StencilFaceState (ScriptEnginePtr se);
-		static void _Bind_EShaderSrcFormat (ScriptEnginePtr se);
+		static void _Bind_EShaderFormat (ScriptEnginePtr se);
+		static void _Bind_EShaderFormatSet (ScriptEnginePtr se);
 		static void _Bind_EPrimitive (ScriptEnginePtr se);
 		static void _Bind_EPipelineDynamicState (ScriptEnginePtr se);
 		static void _Bind_EBlendFunc (ScriptEnginePtr se);
@@ -95,7 +96,6 @@ namespace ResPack
 		static void _Bind_EBlendFuncPair (ScriptEnginePtr se);
 		static void _Bind_EBlendEqPair (ScriptEnginePtr se);
 		static void _Bind_UNormClampedF (ScriptEnginePtr se);
-		static void _Bind_EShaderDstFormat (ScriptEnginePtr se);
 	};
 
 }	// ResPack
@@ -114,9 +114,8 @@ namespace GXScript
 	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::RenderState::InputAssemblyState,	"Pipeline_RenderState_InputAssemblyState" );
 	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::RenderState::RasterizationState,	"Pipeline_RenderState_RasterizationState" );
 	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::RenderState::MultisampleState,	"Pipeline_RenderState_MultisampleState" );
-	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::EShaderSrcFormat::type,			"EShaderSrcFormat" );
-	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::EShaderDstFormat::type,			"EShaderDstFormat" );
-	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::EShaderDstFormat::bits,			"EShaderDstFormatBits" );
+	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::EShaderFormat::type,				"EShaderFormat" );
+	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::EShaderFormatSet,					"EShaderFormatSet" );
 	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::EPrimitive::type,					"EPrimitive" );
 	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::EPrimitive::bits,					"EPrimitiveBits" );
 	GX_DECL_SCRIPT_TYPE( ResPack::ScriptPipeline::EPipelineDynamicState::type,		"EPipelineDynamicState" );

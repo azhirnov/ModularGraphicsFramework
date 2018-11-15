@@ -130,7 +130,10 @@ namespace ShaderEditor
 		uint							_frameCounter;
 		TimeProfilerD					_timer;
 		TimeD							_lastUpdateTime;
+
 		uint2							_surfaceSize;
+		uint2							_scaledSurfaceSize;
+		float							_sufaceScale	= 1.0f;
 
 		ShaderData						_ubData;
 
@@ -145,7 +148,7 @@ namespace ShaderEditor
 	public:
 		explicit Renderer (GlobalSystemsRef gs);
 
-		bool Inititalize ();
+		bool Inititalize (float surfaceScale);
 
 		bool Add (StringCRef name, const ShaderDescr &descr);
 

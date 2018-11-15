@@ -8,6 +8,33 @@ namespace Engine
 {
 namespace Graphics
 {
+
+	//
+	// Override Vertex Attribs
+	//
+	template <typename SrcVert, typename DstVert>
+	struct OverrideAttribs : SrcVert
+	{
+		ND_ static VertexInputState  GetAttribs ()
+		{
+			return DstVert::GetAttribs< SrcVert >();
+		}
+	};
+
+
+	//
+	// Vertex Attribs Remaping
+	//
+	template <typename SrcVert, typename DstVert>
+	struct AttribsRemaping : SrcVert
+	{
+		ND_ static VertexInputState  GetAttribs ()
+		{
+			return DstVert::GetAttribs< SrcVert >();
+		}
+	};
+
+
 namespace DefVertices
 {
 

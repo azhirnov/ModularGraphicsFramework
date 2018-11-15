@@ -158,7 +158,6 @@ namespace Impl
 		if ( Engine::PlatformSW::SWDeviceProperties.vulkanCompatibility )
 		{
 			CHECK( mipmap.layout == EImageLayout::General );
-			CHECK( mipmap.access[ EPipelineAccess::ShaderRead ] );
 		}
 
 		SrcColor	src;
@@ -189,7 +188,6 @@ namespace Impl
 		if ( Engine::PlatformSW::SWDeviceProperties.vulkanCompatibility )
 		{
 			CHECK( mipmap.layout == EImageLayout::General );
-			CHECK( mipmap.access[ EPipelineAccess::ShaderWrite ] );
 		}
 
 		SrcColor	src;

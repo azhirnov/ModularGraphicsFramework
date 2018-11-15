@@ -12,8 +12,9 @@ namespace Base
 
 	namespace _engbase_hidden_
 	{
-		template <typename T>	struct ExtractMsgResultType									{ using type = typename ExtractMsgResultType< decltype(T::result) >::type; };
-		template <typename T>	struct ExtractMsgResultType< Engine::ModuleMsg::Out<T> >	{ using type = T; };
+		template <typename T>	struct ExtractMsgResultType										{ using type = typename ExtractMsgResultType< decltype(T::result) >::type; };
+		template <typename T>	struct ExtractMsgResultType< Engine::ModuleMsg::Out<T> >		{ using type = T; };
+		template <typename T>	struct ExtractMsgResultType< Engine::ModuleMsg::Out_opt<T> >	{ using type = T; };
 
 
 		template <usize Index, typename Type, typename PrevFuncResult, typename Typelist>

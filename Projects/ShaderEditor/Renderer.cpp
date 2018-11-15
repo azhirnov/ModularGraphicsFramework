@@ -96,7 +96,7 @@ namespace ShaderEditor
 	{
 		auto&	pass = _perPass[ passIdx ];
 
-		builder->Send( GpuMsg::CmdClearColorImage{ pass.image, EImageLayout::General }.Clear( float4(0.0f) ));
+		//builder->Send( GpuMsg::CmdClearColorImage{ pass.image, EImageLayout::General }.Clear( float4(0.0f) ).AddRange({ EImageAspect::Color, 0_mipmap }) );
 		builder->Send( GpuMsg::CmdBindComputePipeline{ _pipeline });
 		builder->Send( GpuMsg::CmdBindComputeResourceTable{ pass.resourceTable });
 		builder->Send( GpuMsg::CmdDispatch{ uint3( pass.viewport.x, pass.viewport.y, 1 ) });
@@ -186,8 +186,10 @@ namespace ShaderEditor
 	Inititalize
 =================================================
 */
-	bool Renderer::Inititalize ()
+	bool Renderer::Inititalize (float surfaceScale)
 	{
+		_sufaceScale = surfaceScale;
+
 		// get graphics module ids
 		{
 			ModulePtr	gthread = PlatformTools::GPUThreadHelper::FindGraphicsThread( _gs );
@@ -195,8 +197,8 @@ namespace ShaderEditor
 			GpuMsg::GetGraphicsModules	req_ids;
 			CHECK( gthread->Send( req_ids ) );
 
-			_ids		= *req_ids.graphics;
-			_computeIDs	= *req_ids.compute;
+			_ids		= req_ids.result->graphics;
+			_computeIDs	= req_ids.result->compute;
 		}
 
 		CHECK_ERR( _CreateSamplers() );
@@ -256,8 +258,9 @@ namespace ShaderEditor
 */
 	void Renderer::Reset ()
 	{
-		_surfaceSize	= uint2();
-		_frameCounter	= 0;
+		_surfaceSize		= uint2();
+		_scaledSurfaceSize	= uint2();
+		_frameCounter		= 0;
 		
 		_shaders.Clear();
 		_ordered.Clear();
@@ -403,7 +406,8 @@ namespace ShaderEditor
 	{
 		// TODO: delete command buffers?
 
-		_surfaceSize = newSize;
+		_surfaceSize		= newSize;
+		_scaledSurfaceSize	= RoundToUInt( float2(newSize) * _sufaceScale );
 
 		Array< ShaderPtr >	sorted;
 
@@ -489,7 +493,7 @@ namespace ShaderEditor
 							pp_templ,
 							OUT shader->_pipelineTemplate ) );
 
-			GpuMsg::GetPipelineTemplateInfo	req_info;
+			GpuMsg::GetPipelineTemplateInfo		req_info;
 			shader->_pipelineTemplate->Send( req_info );
 
 			shader->_isCompute = req_info.result->shaders[ EShader::Compute ];
@@ -570,10 +574,8 @@ namespace ShaderEditor
 				create_gpp.topology		= EPrimitive::TriangleStrip;
 				create_gpp.renderPass	= shader->_perPass.Front().framebuffer->GetModuleByMsg< RenderPassMsgList_t >();
 	
-				shader->_pipelineTemplate->Send( create_gpp );
-				shader->_pipeline = *create_gpp.result;
+				shader->_pipeline = shader->_pipelineTemplate->Request( create_gpp );
 
-				CHECK_ERR( shader->_pipeline );
 				CHECK_ERR( ModuleUtils::Initialize({ shader->_pipeline }) );
 			}
 		}
@@ -611,8 +613,8 @@ namespace ShaderEditor
 
 			if ( shader->_isCompute )
 			{
-				ImageViewDescription		view_descr;
-				pass.resourceTable->Send( GpuMsg::PipelineAttachImage{ "un_DstImage", pass.image, view_descr });
+				ImageViewDescription	view_descr;
+				pass.resourceTable->Send( GpuMsg::PipelineAttachImage{ "un_DstImage", pass.image, view_descr, EImageLayout::General });
 			}
 
 			FOR( j, shader->_descr._channels )
@@ -785,7 +787,7 @@ namespace ShaderEditor
 
 		Date	date;	date.Now();
 
-		_ubData.iResolution			= _surfaceSize.To<float3>();
+		_ubData.iResolution			= _scaledSurfaceSize.To<float3>();
 		_ubData.iTime				= float(_timer.GetTimeDelta().Seconds());
 		_ubData.iTimeDelta			= float((_timer.GetCurrentTime() - _lastUpdateTime).Seconds());
 		_ubData.iFrame				= _frameCounter;

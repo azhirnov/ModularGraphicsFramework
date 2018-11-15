@@ -36,7 +36,7 @@ namespace PlatformGL
 											GpuMsg::PipelineAttachBuffer,
 											GpuMsg::PipelineAttachImage,
 											GpuMsg::PipelineAttachTexture
-										> >::Append< LayoutMsgList_t >;
+										> >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
 
@@ -75,8 +75,8 @@ namespace PlatformGL
 		
 		struct BufferAttachment
 		{
-			BytesUL		offset;
-			BytesUL		size;
+			BytesU		offset;
+			BytesU		size;
 		};
 
 		struct ImageAttachment
@@ -94,7 +94,6 @@ namespace PlatformGL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -131,7 +130,6 @@ namespace PlatformGL
 
 
 	
-	const TypeIdList	GL4PipelineResourceTable::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4PipelineResourceTable::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -140,7 +138,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4PipelineResourceTable::GL4PipelineResourceTable (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, UMax, true }, &_msgTypes, &_eventTypes )
+		GL4BaseModule( gs, ModuleConfig{ id, UMax, true }, &_eventTypes )
 	{
 		SetDebugName( "GL4PipelineResourceTable" );
 
@@ -161,6 +159,8 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_PipelineAttachBuffer );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_PipelineAttachTexture );
 		_SubscribeOnMsg( this, &GL4PipelineResourceTable::_GLPipelineResourceTableApply );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -292,7 +292,7 @@ namespace PlatformGL
 		_ApplyDescriptions_Func	func( msg.programs, msg.pushConstants );
 
 		FOR( i, _resources ) {
-			_resources[i].Apply( func );
+			_resources[i].Accept( func );
 		}
 		return true;
 	}
@@ -307,7 +307,7 @@ namespace PlatformGL
 		CHECK_ERR( msg.newModule );
 
 		// pipeline layout must be unique
-		bool	is_layout = msg.newModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >();
+		bool	is_layout = msg.newModule->SupportsAllMessages< LayoutMsgList_t >();
 
 		CHECK( _Attach( msg.name, msg.newModule ) );
 		CHECK( _SetState( EState::Initial ) );
@@ -353,10 +353,7 @@ namespace PlatformGL
 		
 		if ( not msg.descr.IsDefined() )
 		{
-			GpuMsg::GetImageDescription	req_descr;
-			CHECK( msg.newModule->Send( req_descr ) );
-
-			img.descr = ImageViewDescription{ *req_descr.result };
+			img.descr = ImageViewDescription{ msg.newModule->Request(GpuMsg::GetImageDescription{}) };
 		}
 		else
 			img.descr = *msg.descr;
@@ -402,7 +399,7 @@ namespace PlatformGL
 		{
 			CHECK( _SetState( EState::Initial ) );
 
-			if ( msg.oldModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >() )
+			if ( msg.oldModule->SupportsAllMessages< LayoutMsgList_t >() )
 				_DestroyResourceTable();
 		}
 		return true;
@@ -445,7 +442,7 @@ namespace PlatformGL
 
 			for (const auto& mod : self._GetAttachments())
 			{
-				if ( mod.second->GetSupportedMessages().HasAnyType< ResourceMsgList >() )
+				if ( mod.second->SupportsAnyMessage< ResourceMsgList >() )
 					moduleMap.Add( mod.first, mod.second );
 			}
 		}
@@ -481,7 +478,7 @@ namespace PlatformGL
 			
 			if ( moduleMap.Find( name, OUT iter ) )
 			{
-				CHECK_ERR( iter->second->GetSupportedMessages().HasAllTypes< MsgList >() );
+				CHECK_ERR( iter->second->SupportsAllMessages< MsgList >() );
 				result = iter->second;
 				
 				DEBUG_ONLY( moduleMap.EraseByIter( iter ) );
@@ -516,10 +513,7 @@ namespace PlatformGL
 
 			if ( self._attachmentInfo.Find( tex_mod.RawPtr(), OUT info ) )
 			{
-				GpuMsg::CreateGLImageView	req_imageview{ info->second.Get<ImageAttachment>().descr };
-				tex_mod->Send( req_imageview );
-
-				img_view = req_imageview.result.Get( 0 );
+				img_view = tex_mod->Request(GpuMsg::CreateGLImageView{ info->second.Get<ImageAttachment>().descr });
 			}
 			
 			// create descriptor
@@ -554,10 +548,7 @@ namespace PlatformGL
 
 			if ( self._attachmentInfo.Find( img_mod.RawPtr(), OUT info ) )
 			{
-				GpuMsg::CreateGLImageView	req_imageview{ info->second.Get<ImageAttachment>().descr };
-				img_mod->Send( req_imageview );
-
-				img_view = req_imageview.result.Get( 0 );
+				img_view = img_mod->Request(GpuMsg::CreateGLImageView{ info->second.Get<ImageAttachment>().descr });
 			}
 
 			// create descriptor
@@ -592,7 +583,7 @@ namespace PlatformGL
 			
 			// find attachment info
 			AttachmentInfoMap_t::iterator	info;
-			BytesUL							offset;
+			BytesU							offset;
 
 			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
 			{
@@ -600,11 +591,11 @@ namespace PlatformGL
 
 				offset = buf_info.offset;
 
-				CHECK_ERR( buf_info.size == BytesUL(buf.size) );
+				CHECK_ERR( buf_info.size == buf.size );
 			}
 			else
 			{
-				CHECK_ERR( buf_res.Get<1>().size >= BytesUL(buf.size) );
+				CHECK_ERR( buf_res.Get<1>().size >= buf.size );
 			}
 			
 			// create descriptor
@@ -636,8 +627,8 @@ namespace PlatformGL
 			
 			// find attachment info
 			AttachmentInfoMap_t::iterator	info;
-			BytesUL							offset;
-			BytesUL							size	= buf_res.Get<1>().size;
+			BytesU							offset;
+			BytesU							size	= buf_res.Get<1>().size;
 
 			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
 			{
@@ -703,11 +694,12 @@ namespace PlatformGL
 		GpuMsg::GetPipelineLayoutDescription	req_descr;
 		_layout->Send( req_descr );
 
+		const auto							uniforms = req_descr.result->GetUniforms();
 		_CreateResourceDescription_Func		func( OUT _resources, *this );
 
 		// initialize table
-		FOR( i, req_descr.result->GetUniforms() ) {
-			req_descr.result->GetUniforms()[i].Apply( func );
+		FOR( i, uniforms ) {
+			uniforms[i].Accept( func );
 		}
 
 		return true;

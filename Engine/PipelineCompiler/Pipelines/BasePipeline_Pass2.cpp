@@ -62,19 +62,19 @@ namespace PipelineCompiler
 	struct BasePipeline::_BindingsToString_Func
 	{
 	// variables
-		BasePipeline const *	_pp;
-		String	&				_str;
-		EShader::type			_shaderType;
-		EShaderType				_shaderApi;
-		bool					_useOriginTypes;
-		bool					_skipBufferLayouts;
+		BasePipeline const *		_pp;
+		String	&					_str;
+		EShader::type				_shaderType;
+		EShaderFormat::type		_shaderApi;
+		bool						_useOriginTypes;
+		bool						_skipBufferLayouts;
 
 
 	// methods
-		_BindingsToString_Func (BasePipeline const *pp, EShader::type shaderType, EShaderType shaderApi, bool useOriginTypes, OUT String &str) :
+		_BindingsToString_Func (BasePipeline const *pp, EShader::type shaderType, EShaderFormat::type shaderApi, bool useOriginTypes, OUT String &str) :
 			_pp(pp),							_str(str),
 			_shaderType(shaderType),			_shaderApi(shaderApi),				
-			_useOriginTypes(useOriginTypes),	_skipBufferLayouts(shaderApi == EShaderType::SPIRV)
+			_useOriginTypes(useOriginTypes),	_skipBufferLayouts(shaderApi == EShaderFormat::Vulkan)
 		{}
 
 
@@ -93,6 +93,15 @@ namespace PipelineCompiler
 				return;
 
 			_str << img.ToStringGLSL( _shaderApi );
+		}
+
+
+		void operator () (const SubpassInput &spi) const
+		{
+			if ( not spi.shaderUsage[ _shaderType ] )
+				return;
+
+			_str << spi.ToStringGLSL( _shaderApi );
 		}
 
 
@@ -124,7 +133,7 @@ namespace PipelineCompiler
 	_BindingsToString
 =================================================
 */
-	void BasePipeline::_BindingsToString (EShader::type shaderType, EShaderType shaderApi, bool useOriginTypes, OUT String &str) const
+	void BasePipeline::_BindingsToString (EShader::type shaderType, EShaderFormat::type shaderApi, bool useOriginTypes, OUT String &str) const
 	{
 		_BindingsToString_Func	func( this, shaderType, shaderApi, useOriginTypes, OUT str );
 
@@ -132,7 +141,7 @@ namespace PipelineCompiler
 		{
 			const auto&		un = bindings.uniforms[i];
 
-			un.Apply( func );
+			un.Accept( func );
 			str << '\n';
 		}
 	}
@@ -372,6 +381,11 @@ namespace PipelineCompiler
 			layout.AddImage( src.name, src.imageType, src.format, src.memoryModel, src.location.index, src.location.uniqueIndex, src.shaderUsage );
 		}
 
+		void operator () (const SubpassInput &src) const
+		{
+			layout.AddSubpass( src.name, src.attachmentIndex, src.isMultisample, src.location.index, src.location.uniqueIndex, src.shaderUsage );
+		}
+
 		void operator () (const UniformBuffer &src) const
 		{
 			layout.AddUniformBuffer( src.name, src.size, src.location.index, src.location.uniqueIndex, src.shaderUsage );
@@ -385,7 +399,6 @@ namespace PipelineCompiler
 		// TODO:
 		//	PipelineLayoutDescription::SamplerUniform
 		//	PipelineLayoutDescription::PushConstants
-		//	PipelineLayoutDescription::SubpassInput
 	};
 	
 /*
@@ -400,7 +413,7 @@ namespace PipelineCompiler
 		_BindingsToLayout_Func		func( OUT builder );
 
 		FOR( i, bindings.uniforms ) {
-			bindings.uniforms[i].Apply( func );
+			bindings.uniforms[i].Accept( func );
 		}
 
 		src << ser->ToString( name, builder.Finish() ) << '\n';
@@ -540,8 +553,6 @@ namespace PipelineCompiler
 /*
 =================================================
 	_AddPaddingToStructs
-----
-	pass 2
 =================================================
 */
 	bool BasePipeline::_AddPaddingToStructs (INOUT StructTypes &structTypes)
@@ -569,17 +580,13 @@ namespace PipelineCompiler
 /*
 =================================================
 	_CompileShader
-----
-	pass 2
 =================================================
 */
-	bool BasePipeline::_CompileShader (const ShaderModule &shader, const ConverterConfig &convCfg, OUT CompiledShader &compiled) const
+	bool BasePipeline::_CompileShader (const ShaderModule &shader, const ConverterConfig &convCfg, OUT CompiledShader_t &compiled) const
 	{
 		Array<StringCRef>		source;
-		String					log;
 		String					str;
-		const String			version	= _GetVersionGLSL();
-		EShaderSrcFormat::type	src_fmt	= shaderFormat;
+		const String			version	= _GetVersionGLSL( shaderFormat );
 
 		if ( convCfg.searchForSharedTypes and convCfg.addPaddingToStructs )
 		{
@@ -597,7 +604,7 @@ namespace PipelineCompiler
 			cfg.skipExternals	= true;
 			cfg.optimize		= false;
 			cfg.source			= shaderFormat;
-			cfg.target			= EShaderDstFormat::GLSL_Source;
+			cfg.target			= EShaderFormat::IntermediateSrc;
 			cfg.typeReplacer	= DelegateBuilder( this, &BasePipeline::_TypeReplacer );
 			
 			if ( shader.type == EShader::Compute ) {
@@ -606,13 +613,15 @@ namespace PipelineCompiler
 
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
+					<< _GetTypeRedefinitionGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< str;
 
 			FOR( i, shader._source ) {
 				source << StringCRef(shader._source[i]);
 			}
-
+			
+			String	log;
 			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, shader.entry, _path, cfg, OUT log, OUT glsl_source ) )
 			{
 				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
@@ -626,242 +635,117 @@ namespace PipelineCompiler
 		_VaryingsToString( shader._io, OUT varyings );
 
 
-		ShaderCompiler::Config	cfg;
-		cfg.optimize		= convCfg.optimizeSource;
-		cfg.skipExternals	= false;
+		const auto	TranslateToHL = LAMBDA(&) (const ShaderCompiler::Config &cfg, OUT BinaryArray &result) -> bool
+		{{
+			String	bindings;
+			_BindingsToString( shader.type, cfg.target, false, OUT bindings );
 
-		// compile (optimize) for OpenGL
-		if ( convCfg.target[ EShaderDstFormat::GLSL_Source ] or convCfg.target[ EShaderDstFormat::GLSL_Binary ] )
-		{
 			source.Clear();
-			str.Clear();
-
-			str << varyings << '\n';
-			_BindingsToString( shader.type, EShaderType::GLSL, false, OUT str );
-
 			source	<< version
 					<< _GetDefaultHeaderGLSL()
 					<< _GetPerShaderHeaderGLSL( shader.type )
 					<< glsl_types
-					<< str
+					<< varyings
+					<< bindings
 					<< StringCRef::From( glsl_source );
-				
-			cfg.source = src_fmt;
-			cfg.target = EShaderDstFormat::GLSL_Source;
 			
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.glsl ) )
+			String	log;
+			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT result ) )
 			{
 				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
 			}
+			return true;
+		}};
 
-
-			// compile to binary GLSL for OpenGL (machine dependent)
-			if ( convCfg.target[ EShaderDstFormat::GLSL_Binary ] )
+		const auto	CompileToBinary = LAMBDA(&) (ShaderCompiler::Config cfg, OUT BinaryArray &result) -> bool
+		{{
+			const EShaderFormat::type			hl_fmt  = EShaderFormat::GetApiVersion( cfg.target ) | EShaderFormat::HighLevel;
+			const EShaderFormat::type			asm_fmt = EShaderFormat::GetApiVersion( cfg.target ) | EShaderFormat::Assembler;
+			CompiledShader_t::const_iterator	iter;
+				
+			if ( compiled.Find( asm_fmt, OUT iter ) )
 			{
 				source.Clear();
-				source << StringCRef::From( compiled.glsl );
-				
-				ShaderCompiler::Config	cfg2;
-				cfg2.source	= EShaderSrcFormat::GLSL;
-				cfg2.target = EShaderDstFormat::GLSL_Binary;
-
-				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg2, OUT log, OUT compiled.glslBinary ) )
-				{
-					CHECK_ERR( _OnCompilationFailed( shader.type, cfg2.source, source, log ) );
-				}
+				source << StringCRef::From( iter->second );
+				cfg.source = asm_fmt;
 			}
-
-			if ( not convCfg.target[ EShaderDstFormat::GLSL_Source ] )
-				compiled.glsl.Clear();
-		}
-
-
-		// compile for Vulkan
-		if ( convCfg.target[ EShaderDstFormat::SPIRV_Binary ] )
-		{
-			source.Clear();
-			str.Clear();
-
-			str << varyings << '\n';
-			_BindingsToString( shader.type, EShaderType::SPIRV, false, OUT str );
-
-			source	<< version
-					<< _GetDefaultHeaderGLSL()
-					<< _GetPerShaderHeaderGLSL( shader.type )
-					<< glsl_types
-					<< str
-					<< StringCRef::From( glsl_source );
-				
-			cfg.source = src_fmt;
-			cfg.target = EShaderDstFormat::SPIRV_Binary;
-			
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.spirv ) )
-			{
-				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
-			}
-
-			// disassamble spirv
-			if ( convCfg.target[ EShaderDstFormat::SPIRV_Source ] )
-			{
-				cfg.target = EShaderDstFormat::SPIRV_Source;
-
-				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.spirvAsm ) )
-				{
-					CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
-				}
-			}
-		}
-
-
-		// compile for C++
-		if ( shader.type == EShader::Compute and convCfg.target[ EShaderDstFormat::CPP_Module ] )
-		{
-			source.Clear();
-			str.Clear();
-
-			str << varyings << '\n';
-			_BindingsToString( shader.type, EShaderType::Software, false, OUT str );
-			
-			source	<< version
-					<< _GetDefaultHeaderGLSL()
-					<< _GetPerShaderHeaderGLSL( shader.type )
-					<< glsl_types
-					<< str
-					<< StringCRef::From( glsl_source );
-			
-			cfg.source = src_fmt;
-			cfg.target = EShaderDstFormat::CPP_Module;
-			
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.cpp ) )
-			{
-				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
-			}
-		}
-
-
-		// compile for CL
-		if ( shader.type == EShader::Compute and
-			 (convCfg.target[ EShaderDstFormat::CL_Source ] or convCfg.target[ EShaderDstFormat::CL_Binary ]) )
-		{
-			source.Clear();
-			str.Clear();
-
-			str << varyings << '\n';
-			_BindingsToString( shader.type, EShaderType::CL, false, OUT str );
-			
-			source	<< version
-					<< _GetDefaultHeaderGLSL()
-					<< _GetPerShaderHeaderGLSL( shader.type )
-					<< glsl_types
-					<< str
-					<< StringCRef::From( glsl_source );
-			
-			cfg.source = src_fmt;
-			cfg.target = EShaderDstFormat::CL_Source;
-			
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.cl ) )
-			{
-				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
-			}
-
-
-			// compile CL source to binary
-			if ( convCfg.target[ EShaderDstFormat::CL_Binary ] )
+			else
+			if ( compiled.Find( hl_fmt, OUT iter ) )
 			{
 				source.Clear();
-				source << StringCRef::From( compiled.cl );
-				
-				ShaderCompiler::Config	cfg2;
-				cfg2.source	= EShaderSrcFormat::CL;
-				cfg2.target = EShaderDstFormat::CL_Binary;
-
-				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg2, OUT log, OUT compiled.clAsm ) )
-				{
-					CHECK_ERR( _OnCompilationFailed( shader.type, cfg2.source, source, log ) );
-				}
+				source << StringCRef::From( iter->second );
+				cfg.source = hl_fmt;
 			}
-
-			if ( not convCfg.target[ EShaderDstFormat::CL_Source ] )
-				compiled.cl.Clear();
-		}
-		
-
-		// compile for HLSL
-		if ( convCfg.target[ EShaderDstFormat::HLSL_Source ] or convCfg.target[ EShaderDstFormat::HLSL_Binary ] )
-		{
-			source.Clear();
-			str.Clear();
-
-			str << varyings << '\n';
-			_BindingsToString( shader.type, EShaderType::HLSL, false, OUT str );
-			
-			source	<< version
-					<< _GetDefaultHeaderGLSL()
-					<< _GetPerShaderHeaderGLSL( shader.type )
-					<< glsl_types
-					<< str
-					<< StringCRef::From( glsl_source );
-			
-			cfg.source = src_fmt;
-			cfg.target = EShaderDstFormat::HLSL_Source;
-			
-			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT compiled.hlsl ) )
+			else
+			{
+				// intermediate to binary
+				return TranslateToHL( cfg, OUT result );
+			}
+				
+			String	log;
+			if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg, OUT log, OUT result ) )
 			{
 				CHECK_ERR( _OnCompilationFailed( shader.type, cfg.source, source, log ) );
 			}
+			return true;
+		}};
 
 
-			// compile HLSL source to binary
-			if ( convCfg.target[ EShaderDstFormat::HLSL_Binary ] )
+		for (auto fmt : convCfg.targets)
+		{
+			if ( EShaderFormat::IsComputeApi( fmt ) and shader.type != EShader::Compute )
+				continue;
+
+			BinaryArray		bin;
+
+			ShaderCompiler::Config	cfg;
+			cfg.optimize		= convCfg.optimizeSource;
+			cfg.source			= EShaderFormat::IntermediateSrc;
+			cfg.target			= fmt;
+			cfg.skipExternals	= false;
+
+			if ( EShaderFormat::GetFormat( fmt ) == EShaderFormat::HighLevel or
+				 EShaderFormat::GetFormat( fmt ) == EShaderFormat::CPP_Invocable )
 			{
-				source.Clear();
-				source << StringCRef::From( compiled.hlsl );
-				
-				ShaderCompiler::Config	cfg2;
-				cfg2.source	= EShaderSrcFormat::HLSL;
-				cfg2.target = EShaderDstFormat::HLSL_Binary;
-
-				if ( not ShaderCompiler::Instance()->Translate( shader.type, source, "main", _path, cfg2, OUT log, OUT compiled.hlslBinary ) )
-				{
-					CHECK_ERR( _OnCompilationFailed( shader.type, cfg2.source, source, log ) );
-				}
+				CHECK_ERR( TranslateToHL( cfg, OUT bin ));
+			}
+			else
+			{
+				CHECK_ERR( CompileToBinary( cfg, OUT bin ) );
 			}
 
-			if ( not convCfg.target[ EShaderDstFormat::HLSL_Source ] )
-				compiled.hlsl.Clear();
+			compiled.Add( fmt, RVREF(bin) );
 		}
-		
+
 		return true;
 	}
 	
 /*
 =================================================
 	_ValidateShader
-----
-	pass 2
 =================================================
 */
-	bool BasePipeline::_ValidateShader (EShader::type shaderType, const CompiledShader &compiled)
+	bool BasePipeline::_ValidateShader (EShader::type shaderType, const CompiledShader_t &compiled)
 	{
-		if ( not compiled.glsl.Empty() ) {
-			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::GLSL_Source, shaderType, compiled.glsl ) );
+		/*if ( not compiled.glsl.Empty() ) {
+			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderFormat::GLSL_450, shaderType, compiled.glsl ) );
 		}
 		
 		if ( not compiled.glslBinary.Empty() ) {
-			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::GLSL_Binary, shaderType, compiled.glslBinary ) );
+			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderFormat::GLSL_450_Bin, shaderType, compiled.glslBinary ) );
 		}
 		
 		if ( not compiled.spirv.Empty() ) {
-			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::SPIRV_Binary, shaderType, compiled.spirv ) );
+			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderFormat::VK_100_SPIRV, shaderType, compiled.spirv ) );
 		}
 		
 		if ( not compiled.cl.Empty() ) {
-			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::CL_Source, shaderType, compiled.cl ) );
+			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderFormat::CL_120, shaderType, compiled.cl ) );
 		}
 
 		if ( not compiled.clAsm.Empty() ) {
-			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderDstFormat::CL_Binary, shaderType, compiled.clAsm ) );
-		}
+			CHECK_ERR( ShaderCompiler::Instance()->Validate( EShaderFormat::CL_120_Asm, shaderType, compiled.clAsm ) );
+		}*/
 		return true;
 	}
 

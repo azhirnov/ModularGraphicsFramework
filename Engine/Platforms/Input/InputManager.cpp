@@ -7,7 +7,6 @@ namespace Engine
 namespace Platforms
 {
 	
-	const TypeIdList	InputManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	InputManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -16,7 +15,7 @@ namespace Platforms
 =================================================
 */
 	InputManager::InputManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::InputManager &) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes )
 	{
 		SetDebugName( "InputManager" );
 
@@ -32,8 +31,6 @@ namespace Platforms
 		_SubscribeOnMsg( this, &InputManager::_Delete_Impl );
 		_SubscribeOnMsg( this, &InputManager::_AddToManager );
 		_SubscribeOnMsg( this, &InputManager::_RemoveFromManager );
-		
-		CHECK( _ValidateMsgSubscriptions() );
 	}
 	
 /*
@@ -43,7 +40,7 @@ namespace Platforms
 */
 	InputManager::~InputManager ()
 	{
-		LOG( "InputManager finalized", ELog::Debug );
+		//LOG( "InputManager finalized", ELog::Debug );
 
 		_threads.Clear();
 	}

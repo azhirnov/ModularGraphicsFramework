@@ -62,8 +62,8 @@ namespace PipelineCompiler
 			uint							descriptorSet		= UMax;
 			
 		// methods
-			String BindingToStringGLSL (EShaderType shaderApi) const;
-			String LocationToStringGLSL (EShaderType shaderApi) const;
+			String BindingToStringGLSL (EShaderFormat::type shaderApi) const;
+			String LocationToStringGLSL (EShaderFormat::type shaderApi) const;
 		};
 
 		struct TextureUniform
@@ -72,13 +72,13 @@ namespace PipelineCompiler
 			String							name;
 			EImage::type					imageType				= EImage::Tex2D;
 			EPixelFormatClass::type			format					= EPixelFormatClass::AnyFloat | EPixelFormatClass::AnyNorm | EPixelFormatClass::AnyColorChannels;
-			Optional<SamplerDescription>		defaultSampler;
+			Optional<SamplerDescription>	defaultSampler;
 			bool							samplerCanBeOverridden	= false;
 			EShader::bits					shaderUsage;
 			Location						location;
 			
 		// methods
-			String ToStringGLSL (EShaderType shaderApi) const;
+			String ToStringGLSL (EShaderFormat::type shaderApi) const;
 		};
 
 
@@ -93,7 +93,21 @@ namespace PipelineCompiler
 			Location						location;
 			
 		// methods
-			String ToStringGLSL (EShaderType shaderApi) const;
+			String ToStringGLSL (EShaderFormat::type shaderApi) const;
+		};
+
+
+		struct SubpassInput
+		{
+		// variables
+			String							name;
+			uint							attachmentIndex		= UMax;
+			bool							isMultisample		= false;
+			EShader::bits					shaderUsage;
+			Location						location;
+			
+		// methods
+			String ToStringGLSL (EShaderFormat::type shaderApi) const;
 		};
 
 
@@ -130,7 +144,7 @@ namespace PipelineCompiler
 			Location						location;
 			
 		// methods
-			String ToStringGLSL (StringCRef fields, EShaderType shaderApi) const;
+			String ToStringGLSL (StringCRef fields, EShaderFormat::type shaderApi) const;
 		};
 
 
@@ -147,14 +161,14 @@ namespace PipelineCompiler
 			Location						location;
 			
 		// methods
-			String ToStringGLSL (StringCRef fields, EShaderType shaderApi) const;
+			String ToStringGLSL (StringCRef fields, EShaderFormat::type shaderApi) const;
 		};
 
 
 		struct Bindings
 		{
 		// types
-			using _Uniform = Union< TextureUniform, ImageUniform, UniformBuffer, StorageBuffer >;
+			using _Uniform = Union< TextureUniform, ImageUniform, SubpassInput, UniformBuffer, StorageBuffer >;
 
 		// variables
 			Array<_Uniform>		uniforms;
@@ -168,27 +182,12 @@ namespace PipelineCompiler
 
 			Bindings&  Image (EImage::type imageType, StringCRef name, EPixelFormat::type format, EShader::bits shaderUsage,
 							  EShaderMemoryModel::type access = EShaderMemoryModel::Default);
+			
+			Bindings&  Subpass (StringCRef name, uint attachmentIndex, bool isMultisample, EShader::bits shaderUsage);
 
 			Bindings&  UniformBuffer (StringCRef name, StringCRef typeName, EShader::bits shaderUsage);
 			Bindings&  StorageBuffer (StringCRef name, StringCRef typeName, EShader::bits shaderUsage,
 									  EShaderMemoryModel::type access = EShaderMemoryModel::Default);
-
-			// helpers
-			/*template <typename T> Bindings&  Texture2D (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll());
-			template <typename T> Bindings&  Texture2DArray (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll());
-		
-			template <typename T> Bindings&  Image2D (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-													  EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
-			template <typename T> Bindings&  Image2DMS (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-														EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
-			template <typename T> Bindings&  Image2DArray (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-														   EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
-			template <typename T> Bindings&  Image2DMSArray (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-															 EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
-			template <typename T> Bindings&  ImageCube (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-														EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);
-			template <typename T> Bindings&  Image3D (StringCRef name, EShader::bits shaderUsage = EShader::bits().SetAll(),
-													  EShaderMemoryModel::type access = EShaderMemoryModel::Coherent);*/
 		};
 		
 		struct _VaryingField : CompileTime::FastCopyable
@@ -255,6 +254,7 @@ namespace PipelineCompiler
 			Array<_StructField>			structTypes;
 			Array<TextureUniform>		textures;
 			Array<ImageUniform>			images;
+			Array<SubpassInput>			subpasses;
 			Array<UniformBuffer>		uniformBuffers;
 			Array<StorageBuffer>		storageBuffers;
 
@@ -266,63 +266,47 @@ namespace PipelineCompiler
 
 		using ShaderDisasemblies = StaticArray< ShaderDisasembly, EShader::_Count >;
 
-
-		struct CompiledShader
-		{
-			BinaryArray		glsl;
-			BinaryArray		glslBinary;
-			
-			BinaryArray		spirv;
-			BinaryArray		spirvAsm;
-			
-			BinaryArray		cl;
-			BinaryArray		clAsm;
-
-			BinaryArray		cpp;
-
-			BinaryArray		hlsl;
-			BinaryArray		hlslBinary;
-		};
+		using CompiledShader_t = Map< EShaderFormat::type, BinaryArray >;
 
 
 	public:
 		struct ConverterConfig
 		{
 			// add custom includings.
-			Array<String>				includings;
+			Array<String>					includings;
 
 			// declare namespace for functions and types.
-			String						nameSpace;
+			String							nameSpace;
 
 			// set target mask.
-			EShaderDstFormat::bits		target;
+			Set<EShaderFormat::type>	targets;
 
 			// error will be generated if file that program trying to write is already created.
-			bool						errorIfFileExist		= false;
+			bool							errorIfFileExist		= false;
 
 			// you can recompile shaders without changing C++ code,
 			// error will be generated if new C++ code is different than current code.
-			//bool						updateShaders			= false;
+			//bool							updateShaders			= false;
 
 			// set 'false' for run-time shader editing.
-			bool						optimizeSource			= false;
+			bool							optimizeSource			= false;
 
 			// all same structs and blocks in shader will be saved to separate file.
-			bool						searchForSharedTypes	= true;
+			bool							searchForSharedTypes	= true;
 
 			// padding fields for same align between glsl and cpp
-			bool						addPaddingToStructs		= true;
+			bool							addPaddingToStructs		= true;
 
 			// search for same names and set same locations/binding indices for all shaders.
-			bool						optimizeBindings		= true;
-			bool						optimizeVertexInput		= false;
-			bool						optimizeFragmentOutput	= false;
+			bool							optimizeBindings		= true;
+			bool							optimizeVertexInput		= false;
+			bool							optimizeFragmentOutput	= false;
 
 			// validate comiled shader to check errors
-			bool						validation				= false;
+			bool							validation				= false;
 
 			// allow minimal rebuild based on file modification time.
-			bool						minimalRebuild			= true;
+			bool							minimalRebuild			= true;
 		};
 
 
@@ -330,6 +314,7 @@ namespace PipelineCompiler
 		struct _BindingsToString_Func;
 		struct _MergeTextures_Func;
 		struct _MergeImages_Func;
+		struct _MergeSubpasses_Func;
 		struct _MergeUniformBuffers_Func;
 		struct _MergeStorageBuffers_Func;
 		struct _BindingsToLayout_Func;
@@ -338,7 +323,7 @@ namespace PipelineCompiler
 		struct _UpdateBindingIndices_Func;
 		struct _UpdateDescriptorSets_Func;
 		struct _UpdateBufferSizes_Func;
-		
+
 
 	// variables
 	private:
@@ -352,11 +337,13 @@ namespace PipelineCompiler
 		
 		VertexAttribs			attribs;
 		FragmentOutputState		fragOutput;
+		bool					earlyFragmentTests	= true;
+
 		uint					patchControlPoints	= 0;
 		uint3					localGroupSize;
 
 		Bindings				bindings;
-		EShaderSrcFormat::type	shaderFormat;
+		EShaderFormat::type		shaderFormat;
 
 
 	// methods
@@ -392,12 +379,14 @@ namespace PipelineCompiler
 		
 		void _AddBindings (INOUT Array<TextureUniform> &textures);
 		void _AddBindings (INOUT Array<ImageUniform> &images);
+		void _AddBindings (INOUT Array<SubpassInput> &subpasses);
 		void _AddBindings (INOUT Array<UniformBuffer> &buffers);
 		void _AddBindings (INOUT Array<StorageBuffer> &buffers);
 
 		static bool _MergeStructTypes (const Array<_StructField> &newTypes, INOUT StructTypes &currTypes);
 		static bool _ExtractTextures (const DeserializedShader &shader, OUT Array<TextureUniform> &result);
 		static bool _ExtractImages (const DeserializedShader &shader, OUT Array<ImageUniform> &result);
+		static bool _ExtractSubpasses (const DeserializedShader &shader, OUT Array<SubpassInput> &result);
 		static bool _ExtractUniformBuffers (const DeserializedShader &shader, OUT Array<UniformBuffer> &result);
 		static bool _ExtractStorageBuffers (const DeserializedShader &shader, OUT Array<StorageBuffer> &result);
 		static bool _ExtractTypes (const DeserializedShader &shader, OUT Array<_StructField> &result);
@@ -421,9 +410,9 @@ namespace PipelineCompiler
 		//virtual bool Convert (OUT String &src, Ptr<ISerializer> ser, const ConverterConfig &cfg) const = 0;
 		
 		bool _ConvertLayout (StringCRef name, INOUT String &src, Ptr<ISerializer> ser) const;
-		bool _CompileShader (const ShaderModule &shader, const ConverterConfig &cfg, OUT CompiledShader &compiled) const;
-		void _BindingsToString (EShader::type shaderType, EShaderType shaderApi, bool useOriginTypes, OUT String &str) const;
+		void _BindingsToString (EShader::type shaderType, EShaderFormat::type shaderApi, bool useOriginTypes, OUT String &str) const;
 		bool _TypeReplacer (StringCRef typeName, INOUT ShaderCompiler::FieldTypeInfo &field) const;
+		bool _CompileShader (const ShaderModule &shader, const ConverterConfig &cfg, OUT CompiledShader_t &compiled) const;
 
 		ND_ static String _StructToString (const StructTypes &types, StringCRef typeName, bool skipLayouts);
 
@@ -433,64 +422,23 @@ namespace PipelineCompiler
 		static bool _SerializeStructs (const StructTypes &structTypes, Ptr<ISerializer> ser, OUT String &serialized);
 		static bool _MergeStructTypes (const StructTypes &newTypes, INOUT StructTypes &currTypes);
 
-		ND_ static bool _ValidateShader (EShader::type, const CompiledShader &);
+		ND_ static bool _ValidateShader (EShader::type, const CompiledShader_t &);
 
 
 	// Utils for Preparing and Converting Passes //
 	private:
-		bool _OnCompilationFailed (EShader::type shaderType, EShaderSrcFormat::type fmt, ArrayCRef<StringCRef> source, StringCRef log) const;
+		bool _OnCompilationFailed (EShader::type shaderType, EShaderFormat::type fmt, ArrayCRef<StringCRef> source, StringCRef log) const;
 		
 		static void _VaryingsToString (const Array<Varying> &varyings, OUT String &str);
 
 		static bool _AddStructType (const _StructField &structType, INOUT StructTypes &currTypes);
 
-		ND_ static String     _GetVersionGLSL ();
+		ND_ static String     _GetVersionGLSL (EShaderFormat::type fmt);
 		ND_ static StringCRef _GetDefaultHeaderGLSL ();
+		ND_ static StringCRef _GetTypeRedefinitionGLSL ();
 		ND_ static StringCRef _GetPerShaderHeaderGLSL (EShader::type type);
 		ND_ static String     _LocalGroupSizeToStringGLSL (const uint3 &value);
 	};
-
-
-/*
-	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Texture2D (StringCRef name, EShader::bits shaderUsage) {
-		return Texture( EImage::Tex2D, name, shaderUsage, EPixelFormatClass::From<T>() );
-	}
-
-	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Texture2DArray (StringCRef name, EShader::bits shaderUsage) {
-		return Texture( EImage::Tex2DArray, name, shaderUsage, EPixelFormatClass::From<T>() );
-	}
-		
-	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2D (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
-		return Image( EImage::Tex2D, name, EPixelFormat::From<T>(), shaderUsage, access );
-	}
-
-	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2DMS (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
-		return Image( EImage::Tex2DMS, name, EPixelFormat::From<T>(), shaderUsage, access );
-	}
-
-	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2DArray (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
-		return Image( EImage::Tex2DArray, name, EPixelFormat::From<T>(), shaderUsage, access );
-	}
-
-	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image2DMSArray (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
-		return Image( EImage::Tex2DMSArray, name, EPixelFormat::From<T>(), shaderUsage, access );
-	}
-
-	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::ImageCube (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
-		return Image( EImage::TexCube, name, EPixelFormat::From<T>(), shaderUsage, access );
-	}
-
-	template <typename T>
-	inline BasePipeline::Bindings&  BasePipeline::Bindings::Image3D (StringCRef name, EShader::bits shaderUsage, EShaderMemoryModel::type access) {
-		return Image( EImage::Tex3D, name, EPixelFormat::From<T>(), shaderUsage, access );
-	}*/
 
 
 }	// PipelineCompiler

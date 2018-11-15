@@ -20,7 +20,7 @@ namespace PlatformTools
 	{
 	// types
 	private:
-		using SubmitedCommand_t		= GpuMsg::SubmitGraphicsQueueCommands;
+		using SubmitedCommand_t		= GpuMsg::SubmitCommands;
 		using PendingCommands_t		= Array< SubmitedCommand_t >;
 		using SemaphoreSet_t		= Set< GpuSemaphoreId >;
 		using SubmitQueue_t			= Delegate< bool (const SubmitedCommand_t &cmd) >;
@@ -146,6 +146,9 @@ namespace PlatformTools
 
 		ASSERT( pendingCommands.Empty() );
 		//pendingCommands.Clear();
+
+		// may be 'breakOnFence' is not used before
+		CHECK_ERR( breakOnFence == GpuFenceId::Unknown );
 
 		return true;
 	}

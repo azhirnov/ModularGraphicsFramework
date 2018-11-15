@@ -5,9 +5,7 @@
 
 bool GApp::_Test_Texture2DBilinearFilter ()
 {
-	using Region		= GpuMsg::CmdCopyImage::Region;
-	using ImageLayers	= GpuMsg::CmdCopyImage::ImageLayers;
-	using Pixel			= ubyte4;
+	using Pixel		= ubyte4;
 	
 	const uint2		src_img_dim {128, 128};
 	const uint2		dst_img_dim = src_img_dim;
@@ -51,7 +49,7 @@ bool GApp::_Test_Texture2DBilinearFilter ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuImage{
 						ImageDescription{ EImage::Tex2D, uint4(src_img_dim), EPixelFormat::RGBA8_UNorm, EImageUsage::TransferDst | EImageUsage::Sampled },
-						EGpuMemory::LocalInGPU,
+						EGpuMemory::LocalInGPU | EGpuMemory::Dedicated,
 						EMemoryAccess::GpuReadWrite },
 					OUT src_image ) );
 	
@@ -61,7 +59,7 @@ bool GApp::_Test_Texture2DBilinearFilter ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuImage{
 						ImageDescription{ EImage::Tex2D, uint4(dst_img_dim), EPixelFormat::RGBA8_UNorm, EImageUsage::TransferDst | EImageUsage::TransferSrc | EImageUsage::Storage },
-						EGpuMemory::LocalInGPU,
+						EGpuMemory::LocalInGPU | EGpuMemory::Dedicated,
 						EMemoryAccess::GpuReadWrite },
 					OUT dst_image ) );
 
@@ -119,7 +117,7 @@ bool GApp::_Test_Texture2DBilinearFilter ()
 	// write data to staging image
 	GpuMsg::WriteToImageMemory	write_cmd{ image_data, uint3(), uint3(src_img_dim), req_src_layout.result->rowPitch };
 	staging_src_image->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL(image_data.Size()) );
+	CHECK_ERR( *write_cmd.wasWritten == image_data.Size() );
 
 
 	// build command buffer
@@ -145,8 +143,8 @@ bool GApp::_Test_Texture2DBilinearFilter ()
 	
 		cmdBuilder->Send( GpuMsg::CmdCopyImage{}.SetSource( staging_src_image, EImageLayout::TransferSrcOptimal )
 												.SetDestination( src_image, EImageLayout::TransferDstOptimal )
-												.AddRegion( ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 }, uint3(),
-															ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 }, uint3(),
+												.AddRegion( ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 }, uint3(),
+															ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 }, uint3(),
 															uint3(src_img_dim, 1) ));
 	}
 
@@ -193,8 +191,8 @@ bool GApp::_Test_Texture2DBilinearFilter ()
 
 		cmdBuilder->Send( GpuMsg::CmdCopyImage{}.SetSource( dst_image, EImageLayout::TransferSrcOptimal )
 												.SetDestination( staging_dst_image, EImageLayout::TransferDstOptimal )
-												.AddRegion( ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 }, uint3(),
-															ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 }, uint3(),
+												.AddRegion( ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 }, uint3(),
+															ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 }, uint3(),
 															uint3(dst_img_dim, 1) ));
 	}
 
@@ -203,7 +201,7 @@ bool GApp::_Test_Texture2DBilinearFilter ()
 
 
 	// submit and sync
-	gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
+	gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
 
 	syncManager->Send( GpuMsg::ClientWaitFence{ *fence_ctor.result });
 

@@ -17,6 +17,8 @@ namespace Platforms
 			CoherentWithCPU,
 			CachedInCPU,
 			//LazilyAllocated,
+			Dedicated,			// indicates that buffer/image have exlusive memory object
+			SupportAliasing,	// memory object may be binded to many buffers/images
 
 			_Count,
 			Unknown = ~0u

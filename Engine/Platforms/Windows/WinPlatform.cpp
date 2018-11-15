@@ -28,14 +28,14 @@ namespace PlatformWin
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											OSMsg::GetDisplays,
 											OSMsg::GetOSModules,
 											OSMsg::GetProccessorInfo,
 											OSMsg::GetMemoryInfo
-										> >;
+										>;
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Delete,
 											OSMsg::OnWinPlatformCreated
@@ -54,7 +54,6 @@ namespace PlatformWin
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -104,7 +103,6 @@ namespace PlatformWin
 
 
 
-	const TypeIdList	WinPlatform::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	WinPlatform::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -113,7 +111,7 @@ namespace PlatformWin
 =================================================
 */
 	WinPlatform::WinPlatform (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Platform &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_createInfo( ci ),
 		_instance( UninitializedT< HMODULE >() )
 	{
@@ -136,7 +134,7 @@ namespace PlatformWin
 		_SubscribeOnMsg( this, &WinPlatform::_GetProccessorInfo );
 		_SubscribeOnMsg( this, &WinPlatform::_GetMemoryInfo );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 	}
 	
 /*
@@ -146,7 +144,7 @@ namespace PlatformWin
 */
 	WinPlatform::~WinPlatform ()
 	{
-		LOG( "WinPlatform finalized", ELog::Debug );
+		//LOG( "WinPlatform finalized", ELog::Debug );
 
 		_windows.Clear();
 
@@ -193,15 +191,11 @@ namespace PlatformWin
 		for (auto& wnd : _windows)
 		{
 			CHECK( GlobalSystems()->taskModule->SendAsync( ModuleMsg::PushAsyncMessage{
-						AsyncMessage{ LAMBDA(
-							target = wnd,
-							msg = OSMsg::OnWinPlatformCreated{ _instance, _className } ) (GlobalSystemsRef)
-						{
+						wnd->GetThreadID(),
+						LAMBDA( target = wnd, msg = OSMsg::OnWinPlatformCreated{ _instance, _className } ) (GlobalSystemsRef) {
 							target->Send( msg );
-						}},
-						wnd->GetThreadID()
-					})
-			);
+						}}
+					));
 		}
 		return true;
 	}
@@ -214,7 +208,7 @@ namespace PlatformWin
 	bool WinPlatform::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
 		CHECK_ERR( msg.module );
-		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< WinWindowMsgList_t >() );
+		CHECK_ERR( msg.module->SupportsAllMessages< WinWindowMsgList_t >() );
 		ASSERT( not _windows.IsExist( msg.module ) );
 
 		_windows.Add( msg.module );
@@ -222,15 +216,11 @@ namespace PlatformWin
 		if ( _IsCreated() )
 		{
 			CHECK( GlobalSystems()->taskModule->SendAsync( ModuleMsg::PushAsyncMessage{
-						AsyncMessage{ LAMBDA(
-							target = msg.module,
-							msg = OSMsg::OnWinPlatformCreated{ _instance, _className } ) (GlobalSystemsRef)
-						{
+						msg.module->GetThreadID(),
+						LAMBDA( target = msg.module, msg = OSMsg::OnWinPlatformCreated{ _instance, _className } ) (GlobalSystemsRef) {
 							target->Send( msg );
-						}},
-						msg.module->GetThreadID()
-					})
-			);
+						}}
+					));
 		}
 		return true;
 	}
@@ -368,10 +358,10 @@ namespace PlatformWin
 		CHECK_ERR( ::GlobalMemoryStatusEx( OUT &status ) != FALSE );
 
 		OSMsg::GetMemoryInfo::Info	info;
-		info.total				= BytesUL::FromBytes( status.ullTotalPhys );
-		info.available			= BytesUL::FromBytes( status.ullAvailPhys );
-		info.totalVirtual		= BytesUL::FromBytes( status.ullTotalVirtual );
-		info.availableVirtual	= BytesUL::FromBytes( status.ullAvailVirtual );	// TODO: ullAvailExtendedVirtual ?
+		info.total				= BytesU::FromBytes( status.ullTotalPhys );
+		info.available			= BytesU::FromBytes( status.ullAvailPhys );
+		info.totalVirtual		= BytesU::FromBytes( status.ullTotalVirtual );
+		info.availableVirtual	= BytesU::FromBytes( status.ullAvailVirtual );	// TODO: ullAvailExtendedVirtual ?
 
 		msg.result.Set( info );
 		return true;

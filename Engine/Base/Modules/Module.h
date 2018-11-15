@@ -47,27 +47,12 @@ namespace Base
 	protected:
 		using UntypedID_t			= ModuleMsg::UntypedID_t;
 		using ModuleName_t			= ModuleMsg::ModuleName_t;
-		using AttachedModules_t		= Array<Pair< ModuleName_t, ModulePtr >>;
-		using ParentModules_t		= Set< ModulePtr >;	//FixedSizeSet< ModulePtr, 16 >;
+		using AttachedModules_t		= MixedSizeArray< Pair< ModuleName_t, ModulePtr >, 8 >;		//Array<Pair< ModuleName_t, ModulePtr >>;
+		using ParentModules_t		= MixedSizeSet< ModulePtr, 8 >;								//Set< ModulePtr >;
 		using EHandlerPriority		= MessageHandler::EPriority;
 
 		template <typename ...Types>
 		using MessageListFrom		= CompileTime::TypeListFrom< Types... >;
-
-		// this messages available to Send()
-		using SupportedMessages_t	= MessageListFrom< 
-											ModuleMsg::AttachModule,
-											ModuleMsg::DetachModule,
-											//ModuleMsg::ReplaceModule,
-											ModuleMsg::OnModuleAttached,
-											ModuleMsg::OnModuleDetached,
-											ModuleMsg::FindModule,
-											ModuleMsg::ModulesDeepSearch,
-											ModuleMsg::Link,
-											ModuleMsg::Compose,
-											ModuleMsg::Update,
-											ModuleMsg::Delete
-										>;
 
 		// this messages available to Subscribe()
 		using SupportedEvents_t		= MessageListFrom<
@@ -98,6 +83,8 @@ namespace Base
 	private:
 		class AttachModuleToManagerAsyncTask;
 		struct _SubscribeReceiver_Func;
+		struct _SupportsAllMessages_Func;
+		struct _SupportsAnyMessage_Func;
 
 
 	// variables
@@ -107,9 +94,8 @@ namespace Base
 		ParentModules_t			_parents;
 		AttachedModules_t		_attachments;
 		EState					_state;
-		const ThreadID			_ownThread;		// TODO: use Atomic<> ?
+		const ThreadID			_ownThread;
 		const ModuleConfig		_moduleCfg;
-		const TypeIdList&		_supportedMessages;
 		const TypeIdList&		_supportedEvents;
 
 
@@ -120,12 +106,9 @@ namespace Base
 		
 		template <typename MsgT>
 		bool SendAsync (const MsgT &msg) noexcept;
-
-		//template <typename MsgT>
-		//auto Request (MsgT &msg) noexcept;
 		
 		template <typename MsgT>
-		auto Request (MsgT &&msg) noexcept;
+		ND_ auto Request (MsgT &&msg) noexcept;
 
 		template <typename Class, typename Func>
 		bool Subscribe (const Class &obj, Func func, EHandlerPriority prior = EHandlerPriority::Auto);
@@ -153,6 +136,9 @@ namespace Base
 		ND_ ModulePtr  GetModuleByID (UntypedID_t id);	// TODO: remove
 		ND_ ModulePtr  GetModuleByName (StringCRef name);
 		
+		ND_ bool  SupportsAllMessages (ArrayCRef<TypeId> messages) const;
+		ND_ bool  SupportsAnyMessage (ArrayCRef<TypeId> messages) const;
+		
 		template <typename Typelist>				ND_ ModulePtr  GetModuleByMsg ();
 		template <typename Typelist>				ND_ ModulePtr  GetModuleByEvent ();
 		template <typename Msg, typename Events>	ND_ ModulePtr  GetModuleByMsgEvent ();
@@ -161,7 +147,9 @@ namespace Base
 		template <typename Typelist>				ND_ ModulePtr  GetParentByEvent ();
 		template <typename Msg, typename Events>	ND_ ModulePtr  GetParentByMsgEvent ();
 
-		ND_ TypeIdList const&	GetSupportedMessages ()		const	{ return _supportedMessages; }
+		template <typename Typelist>				ND_ bool  SupportsAllMessages () const;
+		template <typename Typelist>				ND_ bool  SupportsAnyMessage () const;
+
 		ND_ TypeIdList const&	GetSupportedEvents ()		const	{ return _supportedEvents; }
 		ND_ UntypedID_t			GetModuleID ()				const	{ return _moduleCfg.id; }
 		ND_ EState				GetState ()					const	{ return _state; }
@@ -172,7 +160,6 @@ namespace Base
 	protected:
 		Module (const GlobalSystemsRef gs,
 				const ModuleConfig &config,
-				const TypeIdList *msgTypes,
 				const TypeIdList *eventTypes);
 
 		~Module ();
@@ -194,17 +181,17 @@ namespace Base
 		void _SetManager (const ModulePtr &mngr);
 		bool _SetState (EState newState);
 
-		bool _ValidateMsgSubscriptions ();
-		bool _ValidateAllSubscriptions ();
+		template <typename MsgList>	ND_ bool _ValidateMsgSubscriptions () const;
+
+		ND_ bool _ValidateAllSubscriptions () const;
 
 		bool _DefCompose (bool immutable);
 
 		void _ClearMessageHandlers ();
 		
-		template <typename MsgList>		bool _CopySubscriptions (const ModulePtr &other, bool removeUnsupported = false);
-		template <typename MsgList>		bool _CopySubscriptions (const ModulePtr &other, bool removeUnsupported, EHandlerPriority priority);
+		template <typename MsgList>		bool _CopySubscriptions (const ModulePtr &other, bool warnIfNotExist = true);
+		template <typename MsgList>		bool _CopySubscriptions (const ModulePtr &other, bool warnIfNotExist, EHandlerPriority priority);
 
-		template <typename MsgT>		bool _SendMsg (const MsgT &msg);
 		template <typename MsgT>		bool _SendEvent (const MsgT &msg);
 		template <typename MsgT>		bool _SendUncheckedEvent (const MsgT &msg);
 		template <typename MsgT>		bool _SendForEachAttachments (const MsgT &msg);
@@ -230,7 +217,7 @@ namespace Base
 
 
 	private:
-		void _Release (RefCounter_t &) override final;
+		void _Release (INOUT RefCounter_t &) override final;
 		
 		bool _DetachSingle (const ModulePtr &unit);
 		bool _DetachMulti (const ModulePtr &unit);

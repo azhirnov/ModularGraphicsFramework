@@ -17,13 +17,11 @@ namespace Base
 */
 	Module::Module (const GlobalSystemsRef gs,
 					const ModuleConfig &config,
-					const TypeIdList *msgTypes,
 					const TypeIdList *eventTypes) :
 		BaseObject( gs ),
 		_state( EState::Initial ),
 		_ownThread( ThreadID::GetCurrent() ),
 		_moduleCfg( config ),
-		_supportedMessages( *msgTypes ),
 		_supportedEvents( *eventTypes )
 	{
 	}
@@ -47,19 +45,19 @@ namespace Base
 	_Release
 =================================================
 */
-	void Module::_Release (RefCounter_t &rc)
+	void Module::_Release (INOUT RefCounter_t &rc)
 	{
 		if ( GetState() != EState::Deleting )
 		{
 			// send deleting message (and event)
 			rc.Inc();
-			CHECK( _SendMsg( ModuleMsg::Delete{} ) );
-			rc.Dec();
+			CHECK( Send( ModuleMsg::Delete{} ) );
+			(void)rc.DecAndTest();
 		}
 		
 		if ( GetState() == EState::Deleting )
 		{
-			BaseObject::_Release( rc );
+			BaseObject::_Release( INOUT rc );
 		}
 		else
 		{
@@ -280,13 +278,12 @@ namespace Base
 		else
 		{
 			CHECK( GlobalSystems()->taskModule->SendAsync( ModuleMsg::PushAsyncMessage{
-						AsyncMessage{	LAMBDA( mngr = _manager, self = ModuleWPtr(this) ) (GlobalSystemsRef)
-										{
-											mngr->Send( ModuleMsg::RemoveFromManager{ self });
-										}},
-						_manager->GetThreadID()
-					})
-			);
+						_manager->GetThreadID(),
+						LAMBDA( mngr = _manager, self = ModuleWPtr(this) ) (GlobalSystemsRef)
+						{
+							mngr->Send( ModuleMsg::RemoveFromManager{ self });
+						}}
+			));
 		}
 
 		_SetManager( null );
@@ -364,7 +361,7 @@ namespace Base
 			CHECK( (_manager->GetModuleID() & mask) < (this->GetModuleID() & mask) );
 		}
 
-		CHECK( _SendMsg( msg ) );
+		CHECK( Send( msg ) );
 	}
 
 /*
@@ -426,22 +423,13 @@ namespace Base
 	
 /*
 =================================================
-	_ValidateMsgSubscriptions
-=================================================
-*/
-	bool Module::_ValidateMsgSubscriptions ()
-	{
-		return _msgHandler.Validate( GetSupportedMessages() );
-	}
-	
-/*
-=================================================
 	_ValidateAllSubscriptions
 =================================================
 */
-	bool Module::_ValidateAllSubscriptions ()
+	bool Module::_ValidateAllSubscriptions () const
 	{
-		return _msgHandler.Validate( GetSupportedMessages(), GetSupportedEvents() );
+		return true; // TODO
+		//return _msgHandler.Validate( GetSupportedMessages(), GetSupportedEvents() );
 	}
 	
 /*
@@ -484,7 +472,7 @@ namespace Base
 	{
 		for (auto& attachment : _attachments)
 		{
-			if ( attachment.second->GetSupportedMessages().HasAllTypes( messages ) and
+			if ( attachment.second->SupportsAllMessages( messages ) and
 				 attachment.second->GetSupportedEvents().HasAllTypes( events ) )
 			{
 				result = attachment.second;
@@ -503,7 +491,7 @@ namespace Base
 	{
 		for (auto& parent : _parents)
 		{
-			if ( parent->GetSupportedMessages().HasAllTypes( messages ) and
+			if ( parent->SupportsAllMessages( messages ) and
 				 parent->GetSupportedEvents().HasAllTypes( events ) )
 			{
 				result = parent;
@@ -603,6 +591,40 @@ namespace Base
 				return attachment.second;
 		}
 		return null;
+	}
+	
+/*
+=================================================
+	SupportsAllMessages
+=================================================
+*/
+	bool  Module::SupportsAllMessages (ArrayCRef<TypeId> messages) const
+	{
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+
+		for (auto& id : messages)
+		{
+			if ( not _msgHandler._handlers.CustomSearch().IsExist(MessageHandler::HandlerSearch{ id }) )
+				return false;
+		}
+		return true;
+	}
+	
+/*
+=================================================
+	SupportsAnyMessage
+=================================================
+*/
+	bool  Module::SupportsAnyMessage (ArrayCRef<TypeId> messages) const
+	{
+		CHECK_ERR( _ownThread == ThreadID::GetCurrent() );
+
+		for (auto& id : messages)
+		{
+			if ( _msgHandler._handlers.CustomSearch().IsExist(MessageHandler::HandlerSearch{ id }) )
+				return true;
+		}
+		return false;
 	}
 
 /*

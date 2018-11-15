@@ -36,18 +36,18 @@ namespace PlatformVK
 	Create
 =================================================
 */
-	bool VkWinSurface::Create (VkInstance instance, const HWND_t &windowHandle, OUT VkSurfaceKHR &surface)
+	bool VkWinSurface::Create (VkInstance instance, const PlatformTools::WindowHelper::WinAPIWindow &wnd, OUT VkSurfaceKHR &surface)
 	{
 		CHECK_ERR( instance != VK_NULL_HANDLE );
-		CHECK_ERR( windowHandle.IsNotNull<HWND>() );
+		CHECK_ERR( wnd.window.IsNotNull<HWND>() );
 		
 		CHECK_ERR( Vk1_PlatformInit( instance, null ) );
 
 		VkWin32SurfaceCreateInfoKHR		surface_info = {};
 
 		surface_info.sType		= VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-		surface_info.hinstance	= ::GetModuleHandle( LPCSTR(null) );
-		surface_info.hwnd		= windowHandle.Get<HWND>();
+		surface_info.hinstance	= wnd.instance.Get<HMODULE>();
+		surface_info.hwnd		= wnd.window.Get<HWND>();
 		
 		VK_CHECK( vkCreateWin32SurfaceKHR( instance, &surface_info, null, OUT &surface ) );
 		return true;

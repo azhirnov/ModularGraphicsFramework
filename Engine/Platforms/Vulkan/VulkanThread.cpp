@@ -9,9 +9,12 @@
 #include "Engine/Platforms/Public/GPU/Thread.h"
 #include "Engine/Platforms/Public/GPU/CommandBuffer.h"
 #include "Engine/Platforms/Public/GPU/Memory.h"
+
 #include "Engine/Platforms/Vulkan/VulkanObjectsConstructor.h"
 #include "Engine/Platforms/Vulkan/Windows/VkWinSurface.h"
 #include "Engine/Platforms/Vulkan/Android/VkAndSurface.h"
+#include "Engine/Platforms/Vulkan/Linux/VkLinuxSurface.h"
+
 #include "Engine/Platforms/Vulkan/110/Vk1Device.h"
 #include "Engine/Platforms/Vulkan/110/Vk1PipelineCache.h"
 #include "Engine/Platforms/Vulkan/110/Vk1PipelineLayout.h"
@@ -34,12 +37,11 @@ namespace Platforms
 	// types
 	private:
 		using QueueMsgList_t		= MessageListFrom<
-											GpuMsg::SubmitGraphicsQueueCommands,
-											GpuMsg::SubmitComputeQueueCommands
+											GpuMsg::SubmitCommands
 										>;
 		using QueueEventList_t		= MessageListFrom< GpuMsg::DeviceLost >;
 
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
@@ -54,7 +56,7 @@ namespace Platforms
 											GpuMsg::GetVkDeviceInfo,
 											GpuMsg::GetVkPrivateClasses,
 											GpuMsg::GetDeviceProperties
-										> >::Append< QueueMsgList_t >;
+										>;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::ThreadBeginFrame,
@@ -74,7 +76,6 @@ namespace Platforms
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		
@@ -85,7 +86,8 @@ namespace Platforms
 		ModulePtr				_window;
 		ModulePtr				_memManager;
 		ModulePtr				_syncManager;
-		ModulePtr				_cmdQueue;
+		ModulePtr				_cmdQueue0;
+		ModulePtr				_cmdQueue1;
 
 		Surface					_surface;
 		Device					_device;
@@ -146,7 +148,6 @@ namespace Platforms
 
 
 	
-	const TypeIdList	VulkanThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	VulkanThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -155,7 +156,7 @@ namespace Platforms
 =================================================
 */
 	VulkanThread::VulkanThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuThread &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_settings( ci.settings ),		_device( GlobalSystems() ),
 		_samplerCache( &_device ),		_pipelineCache( &_device ),
 		_layoutCache( &_device ),		_renderPassCache( &_device ),
@@ -188,6 +189,8 @@ namespace Platforms
 		_SubscribeOnMsg( this, &VulkanThread::_GetComputeSettings );
 		_SubscribeOnMsg( this, &VulkanThread::_GetDeviceProperties );
 		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
+		
 		CHECK( ci.shared.IsNull() );	// sharing is not supported yet
 
 		_AttachSelfToManager( ci.context, VkContextModuleID, false );
@@ -200,7 +203,7 @@ namespace Platforms
 */
 	VulkanThread::~VulkanThread ()
 	{
-		LOG( "VulkanThread finalized", ELog::Debug );
+		//LOG( "VulkanThread finalized", ELog::Debug );
 
 		ASSERT( _window.IsNull() );
 	}
@@ -247,22 +250,29 @@ namespace Platforms
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 											VkCommandQueueModuleID,
 											GlobalSystems(),
-											CreateInfo::GpuCommandQueue{ this, EQueueFamily::Default },
-											OUT _cmdQueue ) );
+											CreateInfo::GpuCommandQueue{ this, { EQueueFamily::Default, 1.0f }, 0 },
+											OUT _cmdQueue0 ) );
+			CHECK_ERR( _Attach( "queue0", _cmdQueue0 ) );
 			
-			CHECK_ERR( _Attach( "queue", _cmdQueue ) );
+			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
+											VkCommandQueueModuleID,
+											GlobalSystems(),
+											CreateInfo::GpuCommandQueue{ this, { EQueueFamily::Default, 1.0f }, 1 },
+											OUT _cmdQueue1 ) );
+			CHECK_ERR( _Attach( "queue1", _cmdQueue1 ) );
 
-			CHECK_ERR( _CopySubscriptions< QueueMsgList_t >( _cmdQueue ) );
-			CHECK_ERR( ReceiveEvents< QueueEventList_t >( _cmdQueue ) );
+			CHECK_ERR( _CopySubscriptions< QueueMsgList_t >( _cmdQueue0 ) );
+			CHECK_ERR( ReceiveEvents< QueueEventList_t >( _cmdQueue0 ) );
 		}
 
 		_syncManager->Send( msg );
-		_cmdQueue->Send( msg );
+		_cmdQueue0->Send( msg );
+		_cmdQueue1->Send( msg );
 		
 		// if window already created
 		if ( with_surface and _IsComposedState( _window->GetState() ) )
 		{
-			_SendMsg( OSMsg::WindowCreated{} );
+			Send( OSMsg::WindowCreated{} );
 		}
 		return true;
 	}
@@ -280,7 +290,7 @@ namespace Platforms
 		CHECK_ERR( GetState() == EState::Linked );
 		
 		if ( _window )
-			return false;
+			return false;	// wait for 'WindowCreated' event
 
 		CHECK_COMPOSING( _CreateDevice() );
 		return true;
@@ -344,8 +354,8 @@ namespace Platforms
 */	
 	bool VulkanThread::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg.compute.Set( VulkanObjectsConstructor::GetComputeModules() );
-		msg.graphics.Set( VulkanObjectsConstructor::GetGraphicsModules() );
+		msg.result.Set({ VulkanObjectsConstructor::GetComputeModules(),
+					   VulkanObjectsConstructor::GetGraphicsModules() });
 		return true;
 	}
 
@@ -358,12 +368,11 @@ namespace Platforms
 	{
 		CHECK_ERR( _IsComposedState( GetState() ) );
 
-		GpuMsg::GetVkSemaphore	req_sem{ _imageAvailable };
-		_syncManager->Send( req_sem );
+		vk::VkSemaphore  sem = _syncManager->Request( GpuMsg::GetVkSemaphore{ _imageAvailable });
 
-		CHECK_ERR( _device.BeginFrame( *req_sem.result ) );
+		CHECK_ERR( _device.BeginFrame( sem ) );
 
-		msg.result.Set({ _device.GetCurrentFramebuffer(), _device.GetImageIndex() });
+		msg.result.Set({ _device.GetCurrentFramebuffer(), _device.GetCurrentImage(), _device.GetImageIndex() });
 		return true;
 	}
 
@@ -383,22 +392,22 @@ namespace Platforms
 
 		if ( not msg.commands.Empty() )
 		{
-			GpuMsg::SubmitGraphicsQueueCommands		submit = msg._Cast<GpuMsg::SubmitGraphicsQueueCommands>();
+			GpuMsg::SubmitCommands		submit{ msg };
 
 			submit.waitSemaphores.PushBack({ _imageAvailable, EPipelineStage::ColorAttachmentOutput });
 			submit.signalSemaphores.PushBack( _renderFinished );
 
-			_cmdQueue->Send( submit );
+			_cmdQueue0->Send( submit );
 		}
 		else
 		{
 			CHECK_ERR( msg.fence == GpuFenceId::Unknown );
 		}
 		
-		GpuMsg::GetVkSemaphore	req_sem{ _renderFinished };
-		_syncManager->Send( req_sem );
+		vk::VkSemaphore		sem		= _syncManager->Request( GpuMsg::GetVkSemaphore{ _renderFinished });
+		vk::VkQueue			queue	= _cmdQueue0->Request( GpuMsg::GetVkQueueID{} );
 
-		CHECK_ERR( _device.EndFrame( *req_sem.result ) );
+		CHECK_ERR( _device.EndFrame( queue, sem ) );
 		return true;
 	}
 
@@ -459,7 +468,7 @@ namespace Platforms
 
 			CHECK_ERR( _device.CreateInstance( "", 0, vk_version, extensions, layers ) );
 
-			if ( is_debug )
+			if ( is_debug and _device.HasExtension( VK_EXT_DEBUG_REPORT_EXTENSION_NAME ) )
 				CHECK( _device.CreateDebugCallback( VkDebugReportFlagBitsEXT(debug_flags) ) );
 		}
 
@@ -476,7 +485,8 @@ namespace Platforms
 			for (auto& info : dev_info)
 			{
 																								// magic function:
-				const float		perf	= float(info.globalMemory.Mb()) / 1024.0f +						// 
+				const float		perf	= //float(info.globalMemory.Mb()) / 1024.0f +					// commented becouse of bug in Intel (incorrect heap size)
+										  float(info.computeSharedMem.Kb()) / 64.0f +					// big local cache is goode
 										  float(info.isGPU and not info.integratedGPU ? 4 : 1) +		// 
 										  float(info.maxInvocations) / 1024.0f +						// 
 										  float(info.supportsTesselation + info.supportsGeometryShader);
@@ -516,9 +526,9 @@ namespace Platforms
 			VkSurfaceKHR	surface	= VK_NULL_HANDLE;
 
 			CHECK_ERR( WindowHelper::GetWindowHandle( _window,
-							LAMBDA( this, &surface ) (const auto &data)
+							LAMBDA( this, &surface ) (const auto &wnd)
 							{
-								return _surface.Create( _device.GetInstance(), data.window, OUT surface );
+								return _surface.Create( _device.GetInstance(), wnd, OUT surface );
 							}) );
 
 			CHECK_ERR( _device.SetSurface( surface, _settings.colorFmt ) );
@@ -527,9 +537,12 @@ namespace Platforms
 		// create device
 		{
 			VkPhysicalDeviceFeatures	device_features	= {};
-			vkGetPhysicalDeviceFeatures( _device.GetPhyiscalDevice(), &device_features );
+			vkGetPhysicalDeviceFeatures( _device.GetPhyiscalDevice(), OUT &device_features );
 
-			EQueueFamily::bits	family = EQueueFamily::Default;
+			Array<const char*>			extensions = {	VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
+														VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME };
+
+			EQueueFamily::bits			family = EQueueFamily::Default;
 
 			if ( not _window )
 			{
@@ -537,7 +550,7 @@ namespace Platforms
 				_settings.flags.Reset( EContextFlags::NoSurface );
 			}
 
-			CHECK_ERR( _device.CreateDevice( device_features, family ) );
+			CHECK_ERR( _device.CreateDevice( device_features, family, extensions ) );
 		}
 
 		// create swapchain
@@ -551,14 +564,12 @@ namespace Platforms
 			CHECK_ERR( _device.CreateSwapchain( req_descr.result->surfaceSize, _settings.flags[ EFlags::VSync ] ) );
 		}
 
-		CHECK_ERR( _device.CreateQueue() );
-
 		_device.WritePhysicalDeviceInfo();
 		
 		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
 								VkMemoryManagerModuleID,
 								GlobalSystems(),
-								CreateInfo::GpuMemoryManager{ BytesUL(0), ~BytesUL(0), EGpuMemory::bits().SetAll(), EMemoryAccess::bits().SetAll() },
+								CreateInfo::GpuMemoryManager{ EGpuMemory::bits().SetAll(), EMemoryAccess::bits().SetAll() },
 								OUT _memManager ) );
 		
 		CHECK( _DefCompose( false ) );
@@ -599,10 +610,16 @@ namespace Platforms
 			_SendEvent( GpuMsg::DeviceBeforeDestroy{} );
 		}
 
-		if ( _cmdQueue )
+		if ( _cmdQueue0 )
 		{
-			_cmdQueue->Send( ModuleMsg::Delete{} );
-			_cmdQueue = null;
+			_cmdQueue0->Send( ModuleMsg::Delete{} );
+			_cmdQueue0 = null;
+		}
+
+		if ( _cmdQueue1 )
+		{
+			_cmdQueue1->Send( ModuleMsg::Delete{} );
+			_cmdQueue1 = null;
 		}
 
 		if ( _memManager )
@@ -624,7 +641,6 @@ namespace Platforms
 		_samplerCache.Destroy();
 		_layoutCache.Destroy();
 
-		_device.DestroyQueue();
 		_device.DestroySwapchain();
 		_device.DestroySurface();
 		_surface.Destroy();
@@ -644,16 +660,8 @@ namespace Platforms
 
 		_DestroySemaphores();
 
-		GpuMsg::CreateSemaphore		sem1_ctor;
-		GpuMsg::CreateSemaphore		sem2_ctor;
-
-		_syncManager->Send( sem1_ctor );
-		_syncManager->Send( sem2_ctor );
-
-		CHECK_ERR( sem1_ctor.result and sem2_ctor.result );
-
-		_imageAvailable	= *sem1_ctor.result;
-		_renderFinished	= *sem2_ctor.result;
+		_imageAvailable	= _syncManager->Request( GpuMsg::CreateSemaphore{} );
+		_renderFinished	= _syncManager->Request( GpuMsg::CreateSemaphore{} );
 
 		return true;
 	}
@@ -669,14 +677,14 @@ namespace Platforms
 		{
 			_syncManager->Send( GpuMsg::DestroySemaphore{ _imageAvailable });
 
-			_imageAvailable = GpuSemaphoreId::Unknown;
+			_imageAvailable = Uninitialized;
 		}
 		
 		if ( _syncManager and _renderFinished != GpuSemaphoreId::Unknown )
 		{
 			_syncManager->Send( GpuMsg::DestroySemaphore{ _renderFinished });
 
-			_renderFinished = GpuSemaphoreId::Unknown;
+			_renderFinished = Uninitialized;
 		}
 	}
 

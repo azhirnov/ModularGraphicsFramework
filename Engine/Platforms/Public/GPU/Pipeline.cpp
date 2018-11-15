@@ -1,6 +1,8 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Public/GPU/Pipeline.h"
+#include "Engine/Platforms/Public/GPU/Enums.ToString.h"
+#include "Core/STL/Algorithms/StringParser.h"
 
 namespace Engine
 {
@@ -13,21 +15,54 @@ namespace Platforms
 =================================================
 */
 	GraphicsPipelineDescription::GraphicsPipelineDescription (UninitializedType) :
-		patchControlPoints(0), subpass(0)
+		patchControlPoints{0}, subpass{0}, earlyFragmentTests{true}
 	{}
 	
-	GraphicsPipelineDescription::GraphicsPipelineDescription  (const VertexInputState &				vertexInput,
-																const RenderState &					renderState,
-																const PipelineLayoutDescription&	layout,
-																EPipelineDynamicState::bits			dynamicStates,
-																const FragmentOutputState &			fragOutput,
-																uint								patchControlPoints,
-																uint								subpass) :
-		vertexInput(vertexInput),		renderState(renderState),
-		dynamicStates(dynamicStates),	fragOutput(fragOutput),
-		layout(layout),					patchControlPoints(patchControlPoints),
-		subpass(subpass)
+	GraphicsPipelineDescription::GraphicsPipelineDescription  (const VertexInputState &		vertexInput,
+																const RenderState &			renderState,
+																EPipelineDynamicState::bits	dynamicStates,
+																const FragmentOutputState &	fragOutput,
+																bool						earlyFragmentTests,
+																uint						patchControlPoints,
+																uint						subpass) :
+		vertexInput(vertexInput),					renderState(renderState),
+		dynamicStates(dynamicStates),				fragOutput(fragOutput),
+		patchControlPoints(patchControlPoints),		subpass(subpass),
+		earlyFragmentTests{earlyFragmentTests}
 	{}
+	
+/*
+=================================================
+	ToString
+=================================================
+*/
+	DEBUG_ONLY(
+	String GraphicsPipelineDescription::ToString () const
+	{
+		String	str;
+		String	temp;
+		
+		temp = vertexInput.ToString();
+		StringParser::IncreaceIndent( INOUT temp, "\t\t\t" );
+
+		str << "GraphicsPipeline {"
+			<< "\n	vertexInput:\n"<< temp;
+		
+		temp = renderState.ToString();
+		StringParser::IncreaceIndent( INOUT temp, "\t\t\t" );
+
+		str	<< "\n	renderState:\n" << temp;
+		
+		temp = fragOutput.ToString();
+		StringParser::IncreaceIndent( INOUT temp, "\t\t\t" );
+
+		str << "\n	fragOutput:\n" << temp;
+
+		str	<< "\n	dynamicStates:  " << EPipelineDynamicState::ToString( dynamicStates )
+			<< ""
+			<< "\n}";
+		return str;
+	})
 //-----------------------------------------------------------------------------
 	
 
@@ -40,9 +75,8 @@ namespace Platforms
 	ComputePipelineDescription::ComputePipelineDescription (UninitializedType)
 	{}
 
-	ComputePipelineDescription::ComputePipelineDescription (const PipelineLayoutDescription &layout,
-														  const uint3 &localGroupSize) :
-		layout(layout), localGroupSize(localGroupSize)
+	ComputePipelineDescription::ComputePipelineDescription (const uint3 &localGroupSize) :
+		localGroupSize(localGroupSize)
 	{}
 //-----------------------------------------------------------------------------
 	
@@ -57,108 +91,108 @@ namespace Platforms
 		patchControlPoints(0), subpass(0)
 	{
 	}
-		
+	
 /*
 =================================================
-	StringGLSL
+	AddSource
 =================================================
 */
-	void PipelineTemplateDescription::ShaderSource::StringGLSL (StringCRef data)
+	void PipelineTemplateDescription::ShaderSource::AddSource (EShaderLangFormat::type fmt, String &&src)
 	{
-		src[ ESource::GLSL ].Create2( String(data) );
+		ASSERT( EShaderLangFormat::GetStorage( fmt ) == EShaderLangFormat::Source );
+		ASSERT( not _sources.IsExist( fmt ) );
+
+		_sources.Add( fmt, Data_t{RVREF( src )} );
 	}
 	
 /*
 =================================================
-	FileGLSL
+	AddBinary
 =================================================
 */
-	bool PipelineTemplateDescription::ShaderSource::FileGLSL (const RFilePtr &file)
+	void PipelineTemplateDescription::ShaderSource::AddBinary (EShaderLangFormat::type fmt, BinArrayCRef bin)
 	{
-		CHECK_ERR( file );
+		ASSERT( EShaderLangFormat::GetStorage( fmt ) == EShaderLangFormat::Binary );
+		ASSERT( not _sources.IsExist( fmt ) );
 
-		const usize	len		= usize(file->RemainingSize());
-		String		str;	str.Resize( len );
-
-		CHECK_ERR( file->Read( str.ptr(), str.LengthInBytes() ) );
-
-		StringGLSL( str );
-		return true;
-	}
-
-/*
-=================================================
-	StringCL
-=================================================
-*/
-	void PipelineTemplateDescription::ShaderSource::StringCL (StringCRef data)
-	{
-		src[ ESource::OpenCL ].Create2( String(data) );
+		_sources.Add( fmt, Data_t{BinaryArray( bin )} );
 	}
 	
 /*
 =================================================
-	FileCL
+	AddSpirv
 =================================================
 */
-	bool PipelineTemplateDescription::ShaderSource::FileCL (const RFilePtr &file)
+	void PipelineTemplateDescription::ShaderSource::AddSpirv (EShaderLangFormat::type fmt, ArrayCRef<uint> bin)
 	{
-		CHECK_ERR( file );
-		
-		const usize	len		= usize(file->RemainingSize());
-		String		str;	str.Resize( len );
+		ASSERT( EShaderLangFormat::GetStorage( fmt ) == EShaderLangFormat::Binary );
+		ASSERT( not _sources.IsExist( fmt ) );
 
-		CHECK_ERR( file->Read( str.ptr(), str.LengthInBytes() ) );
-
-		StringCL( str );
-		return true;
+		_sources.Add( fmt, Data_t{Array<uint>( bin )} );
 	}
 	
 /*
 =================================================
-	StringCLAsm
+	AddInvocable
 =================================================
 */
-	void PipelineTemplateDescription::ShaderSource::StringCLAsm (StringCRef data)
+	void PipelineTemplateDescription::ShaderSource::AddInvocable (EShaderLangFormat::type fmt, SWInvoke_t ptr)
 	{
-		src[ ESource::OpenCL_Asm ].Create2( String(data) );
+		ASSERT( EShaderLangFormat::GetStorage( fmt ) == EShaderLangFormat::Executable );
+		ASSERT( not _sources.IsExist( fmt ) );
+
+		_sources.Add( fmt, Data_t{ ptr });
 	}
 	
 /*
 =================================================
-	FileCLAsm
+	AddSource
 =================================================
 */
-	bool PipelineTemplateDescription::ShaderSource::FileCLAsm (const RFilePtr &file)
+	bool PipelineTemplateDescription::ShaderSource::AddSource (EShaderLangFormat::type fmt, const RFilePtr &file)
 	{
+		ASSERT( EShaderLangFormat::GetStorage( fmt ) == EShaderLangFormat::Source );
+		ASSERT( not _sources.IsExist( fmt ) );
 		CHECK_ERR( file );
 		
 		const usize	len		= usize(file->RemainingSize());
 		String		str;	str.Resize( len );
 
 		CHECK_ERR( file->Read( str.ptr(), str.LengthInBytes() ) );
-
-		StringCLAsm( str );
+		
+		_sources.Add( fmt, Data_t{RVREF( str )} );
 		return true;
 	}
-
+	
 /*
 =================================================
-	ArraySPIRV
+	AddBinary
 =================================================
 */
-	void PipelineTemplateDescription::ShaderSource::ArraySPIRV (ArrayCRef<uint> data)
+	bool PipelineTemplateDescription::ShaderSource::AddBinary (EShaderLangFormat::type fmt, const RFilePtr &file)
 	{
-		src[ ESource::SPIRV ].Create2( Array<uint>(data) );
+		ASSERT( EShaderLangFormat::GetStorage( fmt ) == EShaderLangFormat::Binary );
+		ASSERT( not _sources.IsExist( fmt ) );
+		CHECK_ERR( file );
+
+		usize		len		= usize(file->RemainingSize());
+		BinaryArray	arr;	arr.Resize( len );
+
+		CHECK_ERR( file->Read(BinArrayRef( arr )) );
+
+		_sources.Add( fmt, Data_t{RVREF( arr )} );
+		return true;
 	}
-
+	
 /*
 =================================================
-	FileSPIRV
+	AddSpirv
 =================================================
 */
-	bool PipelineTemplateDescription::ShaderSource::FileSPIRV (const RFilePtr &file)
+	bool PipelineTemplateDescription::ShaderSource::AddSpirv (EShaderLangFormat::type fmt, const RFilePtr &file)
 	{
+		ASSERT( EShaderLangFormat::GetStorage( fmt ) == EShaderLangFormat::Binary );
+		ASSERT( not _sources.IsExist( fmt ) );
 		CHECK_ERR( file );
 
 		usize		len		= usize(file->RemainingSize());
@@ -166,178 +200,89 @@ namespace Platforms
 
 		CHECK_ERR( file->Read(ArrayRef<uint>( arr )) );
 
-		ArraySPIRV( arr );
+		_sources.Add( fmt, Data_t{RVREF( arr )} );
 		return true;
 	}
-	
-/*
-=================================================
-	StringSpirvAsm
-=================================================
-*/
-	void PipelineTemplateDescription::ShaderSource::StringSpirvAsm (StringCRef data)
-	{
-		src[ ESource::SPIRV_Asm ].Create2( String(data) );
-	}
 
 /*
 =================================================
-	FuncSW
+	GetString
 =================================================
 */
-	void PipelineTemplateDescription::ShaderSource::FuncSW (const SWInvoke &func)
+	StringCRef  PipelineTemplateDescription::ShaderSource::GetString (EShaderLangFormat::type fmt) const
 	{
-		src[ ESource::SoftRenderer ].Create( func );
+		Sources_t::const_iterator	iter;
+		if ( not _sources.Find( fmt, OUT iter ) )
+			return {};
+
+		if ( not iter->second.Is<String>() )
+			return {};
+
+		return iter->second.Get<String>();
 	}
 	
 /*
 =================================================
-	StringHLSL
+	GetBinary
 =================================================
 */
-	void PipelineTemplateDescription::ShaderSource::StringHLSL (StringCRef data)
+	BinArrayCRef  PipelineTemplateDescription::ShaderSource::GetBinary (EShaderLangFormat::type fmt) const
 	{
-		src[ ESource::HLSL ].Create( String(data) );
+		Sources_t::const_iterator	iter;
+		if ( not _sources.Find( fmt, OUT iter ) )
+			return {};
+
+		if ( not iter->second.Is<BinaryArray>() )
+			return {};
+
+		return iter->second.Get<BinaryArray>();
 	}
 	
 /*
 =================================================
-	StringBinHLSL
+	GetSpirv
 =================================================
 */
-	void PipelineTemplateDescription::ShaderSource::StringBinHLSL (BinArrayCRef data)
+	ArrayCRef<uint>  PipelineTemplateDescription::ShaderSource::GetSpirv (EShaderLangFormat::type fmt) const
 	{
-		src[ ESource::HLSL_Bin ].Create( BinaryArray(data) );
-	}
+		Sources_t::const_iterator	iter;
+		if ( not _sources.Find( fmt, OUT iter ) )
+			return {};
 
-/*
-=================================================
-	GetGLSL
-=================================================
-*/
-	StringCRef  PipelineTemplateDescription::ShaderSource::GetGLSL () const
-	{
-		const auto&		data = src[ ESource::GLSL ];
+		if ( not iter->second.Is<Array<uint>>() )
+			return {};
 
-		if ( data.Is< String >() )
-			return data.Get< String >();
-
-		//RETURN_ERR( "GLSL source doesn't exists!" );
-		return Uninitialized;
+		return iter->second.Get<Array<uint>>();
 	}
 	
 /*
 =================================================
-	GetSPIRV
+	GetInvocable
 =================================================
 */
-	ArrayCRef<uint>  PipelineTemplateDescription::ShaderSource::GetSPIRV () const
+	PipelineTemplateDescription::ShaderSource::SWInvoke_t
+		PipelineTemplateDescription::ShaderSource::GetInvocable (EShaderLangFormat::type fmt) const
 	{
-		const auto&		data = src[ ESource::SPIRV ];
+		Sources_t::const_iterator	iter;
+		if ( not _sources.Find( fmt, OUT iter ) )
+			return null;
 
-		if ( data.Is< Array<uint> >() )
-			return data.Get< Array<uint> >();
+		if ( not iter->second.Is<SWInvoke_t>() )
+			return null;
 
-		//RETURN_ERR( "SPIR-V binary doesn't exists!" );
-		return Uninitialized;
-	}
-		
-/*
-=================================================
-	GetSpirvAsm
-=================================================
-*/
-	StringCRef	PipelineTemplateDescription::ShaderSource::GetSpirvAsm () const
-	{
-		const auto&		data = src[ ESource::SPIRV_Asm ];
-
-		if ( data.Is< String >() )
-			return data.Get< String >();
-
-		//RETURN_ERR( "SPIR-V assembly doesn't exists!" );
-		return Uninitialized;
-	}
-
-/*
-=================================================
-	GetCL
-=================================================
-*/
-	StringCRef  PipelineTemplateDescription::ShaderSource::GetCL () const
-	{
-		const auto&		data = src[ ESource::OpenCL ];
-
-		if ( data.Is< String >() )
-			return data.Get< String >();
-
-		//RETURN_ERR( "CL source doesn't exists!" );
-		return Uninitialized;
+		return iter->second.Get<SWInvoke_t>();
 	}
 	
 /*
 =================================================
-	GetCLAsm
+	IsExists
 =================================================
 */
-	StringCRef PipelineTemplateDescription::ShaderSource::GetCLAsm () const
+	bool PipelineTemplateDescription::ShaderSource::IsExists (EShaderLangFormat::type fmt) const
 	{
-		const auto&		data = src[ ESource::OpenCL_Asm ];
-
-		if ( data.Is< String >() )
-			return data.Get< String >();
-
-		//RETURN_ERR( "CL assembly doesn't exists!" );
-		return Uninitialized;
+		return _sources.IsExist( fmt );
 	}
-	
-/*
-=================================================
-	GetSW
-=================================================
-*/
-	PipelineTemplateDescription::ShaderSource::SWInvoke
-		PipelineTemplateDescription::ShaderSource::GetSW () const
-	{
-		const auto&		data = src[ ESource::SoftRenderer ];
 
-		if ( data.Is< SWInvoke >() )
-			return data.Get< SWInvoke >();
-
-		//RETURN_ERR( "SW function doesn't exists!" );
-		return Uninitialized;
-	}
-	
-/*
-=================================================
-	GetHLSL
-=================================================
-*/
-	StringCRef  PipelineTemplateDescription::ShaderSource::GetHLSL () const
-	{
-		const auto&		data = src[ ESource::HLSL ];
-
-		if ( data.Is< String >() )
-			return data.Get< String >();
-
-		//RETURN_ERR( "HLSL source doesn't exists!" );
-		return Uninitialized;
-	}
-	
-/*
-=================================================
-	GetHLSLBin
-=================================================
-*/
-	BinArrayCRef  PipelineTemplateDescription::ShaderSource::GetHLSLBin () const
-	{
-		const auto&		data = src[ ESource::HLSL_Bin ];
-
-		if ( data.Is< BinaryArray >() )
-			return data.Get< BinaryArray >();
-
-		//RETURN_ERR( "HLSL binary doesn't exists!" );
-		return Uninitialized;
-	}
 
 }	// Platforms
 }	// Engine

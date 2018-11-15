@@ -66,7 +66,7 @@ bool CApp::_Test_CopyImage2D ()
 	// write data to image
 	GpuMsg::WriteToImageMemory		write_cmd{ image_data, uint3(), uint3(img_dim), req_src_layout.result->rowPitch };
 	src_image->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL(image_data.Size()) );
+	CHECK_ERR( *write_cmd.wasWritten == image_data.Size() );
 
 
 	// build command buffer
@@ -88,35 +88,34 @@ bool CApp::_Test_CopyImage2D ()
 									EImageLayout::TransferDstOptimal,
 									EImageAspect::Color }) );
 
-	using Region = GpuMsg::CmdCopyImage::Region;
-	using ImageLayers = GpuMsg::CmdCopyImage::ImageLayers;
-
-	GpuMsg::CmdCopyImage	copy_cmd;
-	copy_cmd.srcImage	= src_image;
-	copy_cmd.srcLayout	= EImageLayout::TransferSrcOptimal;
-	copy_cmd.dstImage	= dst_image;
-	copy_cmd.dstLayout	= EImageLayout::TransferDstOptimal;
-	copy_cmd.regions	= ArrayCRef<Region>{
-							Region{ ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 },
+	cmdBuilder->Send( GpuMsg::CmdCopyImage{}
+						.SetSource( src_image, EImageLayout::TransferSrcOptimal )
+						.SetDestination( dst_image, EImageLayout::TransferDstOptimal )
+						.AddRegion( ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 },
 									src_off1,
-									ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 },
+									ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 },
 									dst_off1,
-									size1 },
-							Region{ ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 },
+									size1 )
+						.AddRegion( ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 },
 									src_off2,
-									ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 },
+									ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 },
 									dst_off2,
-									size2 },
-							};
-
-	cmdBuilder->Send( copy_cmd );
+									size2 ));
+	
+	cmdBuilder->Send( GpuMsg::CmdPipelineBarrier{ EPipelineStage::Transfer, EPipelineStage::Host }
+						.AddImage({	dst_image,
+									EPipelineAccess::TransferWrite,
+									EPipelineAccess::HostRead,
+									EImageLayout::TransferDstOptimal,
+									EImageLayout::General,
+									EImageAspect::Color }) );
 	
 	GpuMsg::CmdEnd	cmd_end;
 	cmdBuilder->Send( cmd_end );
 
 
 	// submit and sync
-	gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
+	gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
 
 	syncManager->Send( GpuMsg::ClientWaitFence{ *fence_ctor.result });
 

@@ -20,7 +20,7 @@ namespace ShaderEditor
 			CHECK( renderer.Add( "main", sh_main ) );
 		});*/
 
-		_samples.PushBack( LAMBDA() (Renderer &renderer)
+		/*_samples.PushBack( LAMBDA() (Renderer &renderer)
 		{
 			Renderer::ShaderDescr	sh_main;
 			sh_main.Pipeline( Pipelines::Create_voronnoirecursion );
@@ -41,13 +41,13 @@ namespace ShaderEditor
 			CHECK( renderer.Add( "main", sh_main ) );
 		});*/
 		
-		_samples.PushBack( LAMBDA() (Renderer &renderer)
+		/*_samples.PushBack( LAMBDA() (Renderer &renderer)
 		{
 			Renderer::ShaderDescr	sh_main;
 			sh_main.Pipeline( Pipelines::Create_glowballs );
 			sh_main.InChannel( "main", 0 );
 			CHECK( renderer.Add( "main", sh_main ) );
-		});
+		});*/
 
 		_samples.PushBack( LAMBDA() (Renderer &renderer)
 		{

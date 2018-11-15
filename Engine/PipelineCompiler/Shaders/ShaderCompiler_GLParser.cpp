@@ -11,10 +11,12 @@ namespace PipelineCompiler
 	DeserializeGLSL
 =================================================
 */
-	bool ShaderCompiler::Deserialize (EShaderSrcFormat::type shaderFmt, EShader::type shaderType, ArrayCRef<StringCRef> source,
+	bool ShaderCompiler::Deserialize (EShaderFormat::type shaderFmt, EShader::type shaderType, ArrayCRef<StringCRef> source,
 									  StringCRef entryPoint, StringCRef baseFolder,
 									  OUT String &log, OUT DeserializedShader &result)
 	{
+		CHECK_ERR( EShaderFormat::IsValid( shaderFmt ) );
+
 		result = DeserializedShader();
 		
 		Config			cfg;
@@ -22,13 +24,11 @@ namespace PipelineCompiler
 		_ShaderData		shader_data;
 
 		cfg.source	= shaderFmt;
-		cfg.target	= EShaderSrcFormat::IsVulkan( shaderFmt ) ? EShaderDstFormat::SPIRV_Source : EShaderDstFormat::GLSL_Source;
+		cfg.target	= EShaderFormat::IntermediateSrc;
 
 		shader_data.entry	= entryPoint;
 		shader_data.type	= shaderType;
 		shader_data.src		<< source;
-
-		const int		substitution_level	= 1;
 		
 		if ( not _GLSLangParse( cfg, shader_data, baseFolder, OUT log, OUT glslang_data ) )
 			return false;
@@ -307,38 +307,38 @@ namespace PipelineCompiler
 =================================================
 */
 	bool ShaderCompiler::_DeserializeVariable (TIntermNode* node, glslang::TType const &type, glslang::TSourceLoc const &loc,
-												const DeserializedShader::_Variable *parent, OUT DeserializedShader::_Variable &arg)
+												const DeserializedShader::_Variable *parent, OUT DeserializedShader::_Variable &result)
 	{
-		arg.line	= loc.line;
-		arg.column	= loc.column;
+		result.line		= loc.line;
+		result.column	= loc.column;
 		
 		// copy name
 		if ( &type.getFieldName() != null )
 		{
-			arg.name = type.getFieldName().c_str();
+			result.name = type.getFieldName().c_str();
 		}
 		else
 		if ( node and node->getAsSymbolNode() )
 		{
-			arg.name = node->getAsSymbolNode()->getName().c_str();
+			result.name = node->getAsSymbolNode()->getName().c_str();
 
-			if ( arg.name.StartsWithIC( "anon@" ) )
-				arg.name.Clear();
+			if ( result.name.StartsWithIC( "anon@" ) )
+				result.name.Clear();
 		}
 
 		// copy typename
 		if ( &type.getTypeName() != null )
 		{
-			arg.typeName = type.getTypeName().c_str();
+			result.typeName = type.getTypeName().c_str();
 		}
 
 		// arrays
 		if ( type.isArray() )
 		{
 			if ( type.isExplicitlySizedArray() )
-				arg.arraySize.MakeStatic( type.getOuterArraySize() );
+				result.arraySize.MakeStatic( type.getOuterArraySize() );
 			else
-				arg.arraySize.MakeDynamic();
+				result.arraySize.MakeDynamic();
 		}
 
 		// buffer
@@ -396,13 +396,13 @@ namespace PipelineCompiler
 			// sampler
 			if ( samp.isCombined() )
 			{
-				arg.type = EShaderVariable::ToSampler( samp_type, ConvertBasicType( samp.type, samp.vectorSize ) );
+				result.type = EShaderVariable::ToSampler( samp_type, ConvertBasicType( samp.type, samp.vectorSize ) );
 			}
 			else
 			// image
 			if ( samp.isImage() )
 			{
-				arg.type = EShaderVariable::ToImage( samp_type, ConvertBasicType( samp.type, samp.vectorSize ) );
+				result.type = EShaderVariable::ToImage( samp_type, ConvertBasicType( samp.type, samp.vectorSize ) );
 			}
 			else
 				RETURN_ERR( "unsupported sampler type!" );
@@ -411,7 +411,7 @@ namespace PipelineCompiler
 		// subpass
 		if ( type.isSubpass() )
 		{
-			// TODO
+			result.type = EShaderVariable::SubpassInput;
 		}
 		else
 		// for scalar, vector and matrix types only
@@ -430,7 +430,7 @@ namespace PipelineCompiler
 			#endif
 			)
 		{
-			arg.type = ConvertBasicType( type.getBasicType(), type.getVectorSize(), type.getMatrixCols(), type.getMatrixRows() );
+			result.type = ConvertBasicType( type.getBasicType(), type.getVectorSize(), type.getMatrixCols(), type.getMatrixRows() );
 		}
 
 		// qualifiers
@@ -438,85 +438,85 @@ namespace PipelineCompiler
 			auto const&	q = type.getQualifier();
 			
 			if ( type.isBuiltIn()					or
-				 arg.typeName.StartsWith("gl_")		or
-				 arg.name.StartsWith("gl_")			or
+				 result.typeName.StartsWith("gl_")	or
+				 result.name.StartsWith("gl_")		or
 				 (parent and parent->qualifier[ EVariableQualifier::BuiltIn ]) )
 			{
-				arg.qualifier |= EVariableQualifier::BuiltIn;
+				result.qualifier |= EVariableQualifier::BuiltIn;
 			}
 
 			if ( q.invariant )
-				arg.qualifier |= EVariableQualifier::Invariant;
+				result.qualifier |= EVariableQualifier::Invariant;
 
 			if ( q.noContraction )
-				arg.qualifier |= EVariableQualifier::Precise;
+				result.qualifier |= EVariableQualifier::Precise;
 
 			if ( q.centroid )
-				arg.qualifier |= EVariableQualifier::Centroid;
+				result.qualifier |= EVariableQualifier::Centroid;
 
 			if ( q.smooth )
-				arg.qualifier |= EVariableQualifier::Smooth;
+				result.qualifier |= EVariableQualifier::Smooth;
 
 			if ( q.flat )
-				arg.qualifier |= EVariableQualifier::Flat;
+				result.qualifier |= EVariableQualifier::Flat;
 
 			if ( q.nopersp )
-				arg.qualifier |= EVariableQualifier::NoPerspective;
+				result.qualifier |= EVariableQualifier::NoPerspective;
 
 			if ( q.patch )
-				arg.qualifier |= EVariableQualifier::Patch;
+				result.qualifier |= EVariableQualifier::Patch;
 
 			if ( q.sample )
-				arg.qualifier |= EVariableQualifier::Sample;
+				result.qualifier |= EVariableQualifier::Sample;
 			
 			if ( q.specConstant or q.hasSpecConstantId() ) {
-				arg.qualifier  |= EVariableQualifier::Specialization;
-				arg.specConstID = q.layoutSpecConstantId;
+				result.qualifier  |= EVariableQualifier::Specialization;
+				result.specConstID = q.layoutSpecConstantId;
 			}
 
 			CHECK_ERR( (q.coherent + q.volatil + q.restrict + q.readonly + q.writeonly) <= 1 );
 
 			if ( q.coherent )
-				arg.memoryModel = EShaderMemoryModel::Coherent;
+				result.memoryModel = EShaderMemoryModel::Coherent;
 
 			if ( q.volatil )
-				arg.memoryModel = EShaderMemoryModel::Volatile;
+				result.memoryModel = EShaderMemoryModel::Volatile;
 
 			if ( q.restrict )
-				arg.memoryModel = EShaderMemoryModel::Restrict;
+				result.memoryModel = EShaderMemoryModel::Restrict;
 
 			if ( q.readonly )
-				arg.memoryModel = EShaderMemoryModel::ReadOnly;
+				result.memoryModel = EShaderMemoryModel::ReadOnly;
 
 			if ( q.writeonly )
-				arg.memoryModel = EShaderMemoryModel::WriteOnly;
+				result.memoryModel = EShaderMemoryModel::WriteOnly;
 
 			switch ( q.storage )
 			{
-				//case glslang::TStorageQualifier::EvqTemporary :		arg.qualifier |= EVariableQualifier::Local;		break;	// not needed here
+				//case glslang::TStorageQualifier::EvqTemporary :		result.qualifier |= EVariableQualifier::Local;		break;	// not needed here
 				//case glslang::TStorageQualifier::EvqGlobal :			break;
-				case glslang::TStorageQualifier::EvqConst :				arg.qualifier |= EVariableQualifier::Constant;	break;
-				case glslang::TStorageQualifier::EvqVaryingIn :			arg.qualifier |= EVariableQualifier::In;		break;
-				case glslang::TStorageQualifier::EvqVaryingOut :		arg.qualifier |= EVariableQualifier::Out;		break;
-				case glslang::TStorageQualifier::EvqUniform :			arg.qualifier |= EVariableQualifier::Uniform;	break;
+				case glslang::TStorageQualifier::EvqConst :				result.qualifier |= EVariableQualifier::Constant;	break;
+				case glslang::TStorageQualifier::EvqVaryingIn :			result.qualifier |= EVariableQualifier::In;			break;
+				case glslang::TStorageQualifier::EvqVaryingOut :		result.qualifier |= EVariableQualifier::Out;		break;
+				case glslang::TStorageQualifier::EvqUniform :			result.qualifier |= EVariableQualifier::Uniform;	break;
 				//case glslang::TStorageQualifier::EvqBuffer :			break;
-				case glslang::TStorageQualifier::EvqShared :			arg.qualifier |= EVariableQualifier::Shared;	break;
+				case glslang::TStorageQualifier::EvqShared :			result.qualifier |= EVariableQualifier::Shared;		break;
 
 				// function arguments
-				case glslang::TStorageQualifier::EvqIn :				arg.qualifier |= EVariableQualifier::InArg;		break;
-				case glslang::TStorageQualifier::EvqOut :				arg.qualifier |= EVariableQualifier::OutArg;	break;
-				case glslang::TStorageQualifier::EvqInOut :				arg.qualifier |= EVariableQualifier::InArg;
-																		arg.qualifier |= EVariableQualifier::OutArg;	break;
-				case glslang::TStorageQualifier::EvqConstReadOnly :		arg.qualifier |= EVariableQualifier::InArg;
-																		arg.qualifier |= EVariableQualifier::Constant;	break;
+				case glslang::TStorageQualifier::EvqIn :				result.qualifier |= EVariableQualifier::InArg;		break;
+				case glslang::TStorageQualifier::EvqOut :				result.qualifier |= EVariableQualifier::OutArg;		break;
+				case glslang::TStorageQualifier::EvqInOut :				result.qualifier |= EVariableQualifier::InArg;
+																		result.qualifier |= EVariableQualifier::OutArg;		break;
+				case glslang::TStorageQualifier::EvqConstReadOnly :		result.qualifier |= EVariableQualifier::InArg;
+																		result.qualifier |= EVariableQualifier::Constant;	break;
 			}
 
 			switch ( q.precision )
 			{
-				case glslang::TPrecisionQualifier::EpqNone :			arg.precision = EPrecision::Default;	break;
-				case glslang::TPrecisionQualifier::EpqLow :				arg.precision = EPrecision::Low;		break;
-				case glslang::TPrecisionQualifier::EpqMedium :			arg.precision = EPrecision::Medium;		break;
-				case glslang::TPrecisionQualifier::EpqHigh :			arg.precision = EPrecision::High;		break;
+				case glslang::TPrecisionQualifier::EpqNone :			result.precision = EPrecision::Default;		break;
+				case glslang::TPrecisionQualifier::EpqLow :				result.precision = EPrecision::Low;			break;
+				case glslang::TPrecisionQualifier::EpqMedium :			result.precision = EPrecision::Medium;		break;
+				case glslang::TPrecisionQualifier::EpqHigh :			result.precision = EPrecision::High;		break;
 				default :												RETURN_ERR( "unknown precision type!" );
 			}
 		}
@@ -524,20 +524,20 @@ namespace PipelineCompiler
 		// copy from parent
 		if ( parent )
 		{
-			arg.qualifier.Or( EVariableQualifier::In, parent->qualifier[EVariableQualifier::In] );
-			arg.qualifier.Or( EVariableQualifier::Out, parent->qualifier[EVariableQualifier::Out] );
-			arg.qualifier.Or( EVariableQualifier::InArg, parent->qualifier[EVariableQualifier::InArg] );
-			arg.qualifier.Or( EVariableQualifier::OutArg, parent->qualifier[EVariableQualifier::OutArg] );
-			arg.qualifier.Or( EVariableQualifier::Shared, parent->qualifier[EVariableQualifier::Shared] );
-			arg.qualifier.Or( EVariableQualifier::BuiltIn, parent->qualifier[EVariableQualifier::BuiltIn] );
+			result.qualifier.Or( EVariableQualifier::In, parent->qualifier[EVariableQualifier::In] );
+			result.qualifier.Or( EVariableQualifier::Out, parent->qualifier[EVariableQualifier::Out] );
+			result.qualifier.Or( EVariableQualifier::InArg, parent->qualifier[EVariableQualifier::InArg] );
+			result.qualifier.Or( EVariableQualifier::OutArg, parent->qualifier[EVariableQualifier::OutArg] );
+			result.qualifier.Or( EVariableQualifier::Shared, parent->qualifier[EVariableQualifier::Shared] );
+			result.qualifier.Or( EVariableQualifier::BuiltIn, parent->qualifier[EVariableQualifier::BuiltIn] );
 			
 			CHECK_ERR( not parent->qualifier[EVariableQualifier::Specialization] );
 
-			//if ( arg.memoryModel == EShaderMemoryModel::Default )
-			//	arg.memoryModel = parent->memoryModel;
+			//if ( result.memoryModel == EShaderMemoryModel::Default )
+			//	result.memoryModel = parent->memoryModel;
 
-			if ( arg.precision == EPrecision::Default )
-				arg.precision = parent->precision;
+			if ( result.precision == EPrecision::Default )
+				result.precision = parent->precision;
 		}
 
 		return true;
@@ -740,7 +740,20 @@ namespace PipelineCompiler
 				return true;
 			}
 
-			// TODO: subpass
+			// subpass
+			if ( type.getSampler().isSubpass() )
+			{
+				DeserializedShader::SubpassInput	subpass;
+				subpass.line			= var.line;
+				subpass.column			= var.column;
+				subpass.name			= var.name;
+				subpass.unit			= qual.hasBinding() ? uint(qual.layoutBinding) : UMax;
+				subpass.descriptorSet	= qual.hasSet() ? uint(qual.layoutSet) : UMax;
+				subpass.attachmentIndex	= qual.hasAttachment() ? uint(qual.layoutAttachment) : UMax;
+				subpass.isMultisample	= false;	// TODO
+
+				result._subpassInputs.PushBack( RVREF(subpass) );
+			}
 		}
 
 		// push constants
@@ -972,11 +985,11 @@ namespace PipelineCompiler
 
 			case EShader::Fragment :
 			{
-				result._fragment.flags |= (intermediate->getOriginUpperLeft() ? EFragmentShaderParams::OriginUpperLeft : EFragmentShaderParams::None);
-				result._fragment.flags |= (intermediate->getPixelCenterInteger() ? EFragmentShaderParams::PixelCenterInteger : EFragmentShaderParams::None);
-				result._fragment.flags |= (intermediate->getEarlyFragmentTests() ? EFragmentShaderParams::EarlyFragmentTests : EFragmentShaderParams::None);
-				result._fragment.flags |= (intermediate->getPostDepthCoverage() ? EFragmentShaderParams::PostDepthCoverage : EFragmentShaderParams::None);
-				result._fragment.flags |= (intermediate->isDepthReplacing() ? EFragmentShaderParams::DepthExport : EFragmentShaderParams::None);
+				result._fragment.flags |= (intermediate->getOriginUpperLeft()		? EFragmentShaderParams::OriginUpperLeft	: EFragmentShaderParams::None);
+				result._fragment.flags |= (intermediate->getPixelCenterInteger()	? EFragmentShaderParams::PixelCenterInteger	: EFragmentShaderParams::None);
+				result._fragment.flags |= (intermediate->getEarlyFragmentTests()	? EFragmentShaderParams::EarlyFragmentTests	: EFragmentShaderParams::None);
+				result._fragment.flags |= (intermediate->getPostDepthCoverage()		? EFragmentShaderParams::PostDepthCoverage	: EFragmentShaderParams::None);
+				result._fragment.flags |= (intermediate->isDepthReplacing()			? EFragmentShaderParams::DepthExport		: EFragmentShaderParams::None);
 				// getBlendEquations
 				
 				switch ( intermediate->getDepth() )

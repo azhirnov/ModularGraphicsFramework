@@ -18,16 +18,9 @@ namespace Scene
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Compose,
-											ModuleMsg::Update
-										> >
-										::Append< MessageListFrom<
-											ModuleMsg::AddToManager,
-											ModuleMsg::RemoveFromManager,
-											ModuleMsg::OnManagerChanged,
+		using SupportedMessages_t	= MessageListFrom<
 											SceneMsg::GetScenePrivateClasses
-										> >;
+										>;
 		
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::DeviceCreated,
@@ -43,7 +36,6 @@ namespace Scene
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -75,7 +67,6 @@ namespace Scene
 
 
 	
-	const TypeIdList	SceneRendererMainThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SceneRendererMainThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -84,7 +75,7 @@ namespace Scene
 =================================================
 */
 	SceneRendererMainThread::SceneRendererMainThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::SceneRenderer &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes )
 	{
 		SetDebugName( "SceneRendererMainThread" );
 		
@@ -102,7 +93,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_OnManagerChanged_Empty );
 		_SubscribeOnMsg( this, &SceneRendererMainThread::_GetScenePrivateClasses );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( null, SceneManagerModuleID, false );
 	}
@@ -159,7 +150,7 @@ namespace Scene
 		// if gpu device already created
 		if ( _IsComposedState( gthread->GetState() ) )
 		{
-			_SendMsg( GpuMsg::DeviceCreated{} );
+			Send( GpuMsg::DeviceCreated{} );
 		}
 		return true;
 	}
@@ -196,7 +187,7 @@ namespace Scene
 	{
 		// TODO: destroy resources and wait for new device creation
 
-		_SendMsg( ModuleMsg::Delete{} );
+		Send( ModuleMsg::Delete{} );
 		return true;
 	}
 

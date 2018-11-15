@@ -31,7 +31,8 @@ namespace PlatformVK
 		{
 			vk::VkPhysicalDevice	id						= VK_NULL_HANDLE;
 			String					device;
-			BytesUL					globalMemory;
+			BytesU					globalMemory;
+			BytesU					computeSharedMem;
 			uint					version					= 0;
 			uint					maxInvocations			= 0;		// for compute shader
 			bool					isGPU					= false;	// may be discrete or integrated GPU
@@ -53,7 +54,8 @@ namespace PlatformVK
 			vk::VkImageView		view	= VK_NULL_HANDLE;
 		};
 
-		static const uint	MAX_SWAPCHAIN_SIZE = 8;
+		static constexpr uint	MAX_SWAPCHAIN_SIZE		= 8;
+		static constexpr float	DEFAULT_QUEUE_PRIORITY	= 1.0f;	// high priority
 		
 		using SwapChainBuffers_t	= FixedSizeArray< SwapChainBuffer, MAX_SWAPCHAIN_SIZE >;
 		using Framebuffers_t		= FixedSizeArray< ModulePtr, MAX_SWAPCHAIN_SIZE >;
@@ -62,6 +64,7 @@ namespace PlatformVK
 
 		using ExtensionNames_t		= _ConstCharPtrBuffer_t;
 		using ValidationLayers_t	= _ConstCharPtrBuffer_t;
+		using ExtensionSet_t		= HashSet< StaticString<VK_MAX_EXTENSION_NAME_SIZE> >;
 
 
 	// variables
@@ -72,13 +75,14 @@ namespace PlatformVK
 		
 		DeviceProperties_t				_properties;
 
-		vk::VkPhysicalDeviceProperties				_deviceProperties;
-		vk::VkPhysicalDeviceFeatures				_deviceFeatures;
-		vk::VkPhysicalDeviceMemoryProperties		_deviceMemoryProperties;
+		vk::VkPhysicalDeviceProperties			_deviceProperties;
+		vk::VkPhysicalDeviceFeatures			_deviceFeatures;
+		vk::VkPhysicalDeviceMemoryProperties	_deviceMemoryProperties;
 		
-		mutable Array< vk::VkLayerProperties >		_instanceLayers;
-		mutable Array< vk::VkExtensionProperties >	_instanceExtensions;
-		mutable Array< vk::VkExtensionProperties >	_deviceExtensions;
+		mutable Array< vk::VkLayerProperties >	_instanceLayers;
+
+		mutable ExtensionSet_t			_instanceExtensions;
+		mutable ExtensionSet_t			_deviceExtensions;
 
 		vk::VkSurfaceKHR				_surface;
 		vk::VkSwapchainKHR				_swapchain;
@@ -97,8 +101,7 @@ namespace PlatformVK
 		vk::VkColorSpaceKHR				_colorSpace;
 		vk::VkFormat					_depthStencilFormat;
 
-		vk::VkQueue						_queue;
-		vk::uint32_t					_queueIndex;
+		vk::uint32_t					_queueFamilyIndex;
 		EQueueFamily::bits				_queueFamily;
 
 		ModulePtr						_renderPass;
@@ -134,8 +137,6 @@ namespace PlatformVK
 		bool DestroyDebugCallback ();
 
 		bool GetPhysicalDeviceInfo (OUT AppendableAdaptor<DeviceInfo> deviceInfo) const;
-
-		bool ChoosePhysicalDevice (StringCRef name = StringCRef());
 		bool CreatePhysicalDevice (vk::VkPhysicalDevice id);
 		void WritePhysicalDeviceInfo () const;
 
@@ -145,7 +146,9 @@ namespace PlatformVK
 		void DeviceWaitIdle ();
 
 		bool CreateSwapchain (const uint2 &size, bool vsync, vk::uint32_t imageArrayLayers = 1,
-							  EPixelFormat::type depthStencilFormat = Uninitialized, MultiSamples samples = Uninitialized);
+							  EPixelFormat::type depthStencilFormat = Uninitialized, MultiSamples samples = Uninitialized,
+							  EImageUsage::bits colorImageUsage = EImageUsage::ColorAttachment | EImageUsage::Transfer | EImageUsage::Storage,
+							  EImageUsage::bits depthStencilImageUsage = EImageUsage::DepthStencilAttachment | EImageUsage::Transfer | EImageUsage::Storage);
 		bool RecreateSwapchain (const uint2 &size);
 		bool RecreateSwapchain ();
 		bool DestroySwapchain ();
@@ -153,11 +156,8 @@ namespace PlatformVK
 		bool SetSurface (vk::VkSurfaceKHR surface, EPixelFormat::type colorFormat);
 		bool DestroySurface ();
 
-		bool CreateQueue ();
-		void DestroyQueue ();
-
 		bool BeginFrame (vk::VkSemaphore imageAvailable);
-		bool EndFrame (vk::VkSemaphore renderFinished);
+		bool EndFrame (vk::VkQueue queue, vk::VkSemaphore renderFinished);
 		bool IsFrameStarted () const;
 		
 		bool GetMemoryTypeIndex (vk::uint32_t memoryTypeBits, vk::VkMemoryPropertyFlags flags, OUT vk::uint32_t &index) const;
@@ -171,7 +171,6 @@ namespace PlatformVK
 		bool IsSurfaceCreated ()		const						{ return _surface		 != VK_NULL_HANDLE; }
 		bool IsSwapchainCreated ()		const						{ return _swapchain		 != VK_NULL_HANDLE; }
 		bool IsDebugCallbackCreated ()	const						{ return _debugCallback	 != VK_NULL_HANDLE; }
-		bool IsQueueCreated ()			const						{ return _queue			 != VK_NULL_HANDLE; }
 
 		vk::VkInstance			GetInstance ()				const	{ ASSERT( IsInstanceCreated() );  return _instance; }
 		vk::VkPhysicalDevice	GetPhyiscalDevice ()		const	{ ASSERT( HasPhyiscalDevice() );  return _physicalDevice; }
@@ -184,13 +183,13 @@ namespace PlatformVK
 
 		ModulePtr				GetDefaultRenderPass ()		const	{ return _renderPass; }
 		ModulePtr				GetCurrentFramebuffer ()	const	{ return _framebuffers[ _currentImageIndex ]; }
+		ModulePtr				GetCurrentImage ()			const	{ return _imageBuffers[ _currentImageIndex ].module; }
 		uint					GetImageIndex ()			const	{ return _currentImageIndex; }
 		uint					GetSwapchainLength ()		const	{ return uint(_framebuffers.Count()); }
 
 		uint2 const&			GetSurfaceSize ()			const	{ return _surfaceSize; }
 
-		vk::VkQueue				GetQueue ()					const	{ ASSERT( IsQueueCreated() );  return _queue; }
-		vk::uint32_t			GetQueueIndex ()			const	{ return _queueIndex; }
+		vk::uint32_t			GetQueueFamilyIndex ()		const	{ return _queueFamilyIndex; }
 		EQueueFamily::bits		GetQueueFamily ()			const	{ return _queueFamily; }
 		
 		DeviceProperties_t const&	GetProperties ()		const	{ return _properties; }
@@ -209,10 +208,12 @@ namespace PlatformVK
 		bool _LoadInstanceExtensions () const;
 
 		// Swapchain
-		void _GetImageUsage (OUT vk::VkImageUsageFlags &imageUsage) const;
+		bool _GetImageUsage (OUT vk::VkImageUsageFlags &imageUsage, vk::VkPresentModeKHR presentMode,
+							 EImageUsage::bits requiredUsage, const vk::VkSurfaceCapabilitiesKHR &surfaceCaps) const;
+		bool _GetCompositeAlpha (OUT vk::VkCompositeAlphaFlagBitsKHR &compositeAlpha, const vk::VkSurfaceCapabilitiesKHR &surfaceCaps) const;
 		void _GetSharingMode (OUT vk::VkSharingMode &sharingMode) const;
-		void _GetPresentMode (OUT vk::VkPresentModeKHR &presentMode, bool vsync, const vk::VkSurfaceCapabilitiesKHR &surfaceCaps) const;
-		void _GetSwapChainExtent (OUT vk::VkExtent2D &extent, const vk::VkSurfaceCapabilitiesKHR &surfaceCaps) const;
+		void _GetPresentMode (OUT vk::VkPresentModeKHR &presentMode, bool vsync) const;
+		void _GetSwapChainExtent (INOUT vk::VkExtent2D &extent, const vk::VkSurfaceCapabilitiesKHR &surfaceCaps) const;
 		void _GetSurfaceTransform (OUT vk::VkSurfaceTransformFlagBitsKHR &transform, const vk::VkSurfaceCapabilitiesKHR &surfaceCaps) const;
 		void _GetSurfaceImageCount (OUT vk::uint32_t &minImageCount, const vk::VkSurfaceCapabilitiesKHR &surfaceCaps) const;
 		void _DeleteSwapchain (INOUT vk::VkSwapchainKHR &swapchain);
@@ -220,8 +221,8 @@ namespace PlatformVK
 		bool _CreateRenderPass ();
 		void _DeleteRenderPass ();
 
-		bool _CreateColorAttachment (MultiSamples samples);
-		bool _CreateDepthStencilAttachment (EPixelFormat::type depthStencilFormat);
+		bool _CreateColorAttachment (MultiSamples samples, EImageUsage::bits usage);
+		bool _CreateDepthStencilAttachment (EPixelFormat::type depthStencilFormat, EImageUsage::bits usage);
 		void _DeleteDepthStencilAttachment ();
 
 		bool _CreateFramebuffers ();
@@ -239,9 +240,8 @@ namespace PlatformVK
 		// Queue
 		bool _ChooseQueueIndex (INOUT EQueueFamily::bits &family, OUT vk::uint32_t &index) const;
 		bool _GetQueueFamilyProperties (OUT Array<vk::VkQueueFamilyProperties> &prop) const;
-		bool _GetQueueCreateInfos (OUT Array<vk::VkDeviceQueueCreateInfo> &queueCreateInfos,
-								   INOUT EQueueFamily::bits &family,
-								   OUT vk::uint32_t &queueIndex) const;
+		bool _GetQueueCreateInfo (OUT vk::VkDeviceQueueCreateInfo &queueCreateInfo,
+								   EQueueFamily::bits family) const;
 
 		// DebugReport
 		static VKAPI_ATTR vk::VkBool32 VKAPI_CALL _DebugReportCallback (vk::VkDebugReportFlagsEXT flags,
@@ -256,8 +256,10 @@ namespace PlatformVK
 		static ELog::type _DebugReportFlagsToLogType (vk::VkDebugReportFlagBitsEXT flags);
 		static StringCRef _DebugReportFlagsToString (vk::VkDebugReportFlagBitsEXT flags);
 		static StringCRef _DebugReportObjectTypeToString (vk::VkDebugReportObjectTypeEXT objType);
-
+		
+		// Utils
 		static StringCRef _DeviceTypeToString (vk::VkPhysicalDeviceType value);
+		static BytesU _CalcTotalMemory (vk::VkPhysicalDeviceMemoryProperties memProps);
 	};
 
 	

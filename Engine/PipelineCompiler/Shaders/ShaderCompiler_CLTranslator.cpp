@@ -126,11 +126,11 @@ namespace PipelineCompiler
 */
 	bool ShaderCompiler::_TranslateGXSLtoCL (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const
 	{
-		CHECK_ERR(	cfg.source == EShaderSrcFormat::GXSL or
-					cfg.source == EShaderSrcFormat::GLSL or
-					cfg.source == EShaderSrcFormat::GXSL_Vulkan or
-					cfg.source == EShaderSrcFormat::GLSL_Vulkan );
-		CHECK_ERR(	cfg.target == EShaderDstFormat::CL_Source );
+		/*CHECK_ERR(	cfg.source == EShaderFormat::GXSL or
+					cfg.source == EShaderFormat::GLSL or
+					cfg.source == EShaderFormat::GXSL_Vulkan or
+					cfg.source == EShaderFormat::GLSL_Vulkan );
+		CHECK_ERR(	cfg.target == EShaderFormat::CL_120 );*/
 	
 		// not supported here
 		ASSERT( not cfg.optimize );
@@ -166,7 +166,7 @@ namespace PipelineCompiler
 */
 	CL_DstLanguage::CL_DstLanguage (Translator &translator) :
 		_translator{translator},
-		_nameValidator{EShaderDstFormat::CL_Source, /*overloading*/false}
+		_nameValidator{EShaderFormat::OpenCL, /*overloading*/false}
 	{
 		//_builtinMap.Add( "gl_LocalInvocationIndex",	"((uint)(get_local_linear_id()))" );
 		_builtinMap.Add( "gl_LocalInvocationIndex",	"((uint)((get_local_id(2) * get_local_size(1) * get_local_size(0)) + (get_local_id(1) * get_local_size(0)) + get_local_id(0)))" );
@@ -509,6 +509,12 @@ namespace PipelineCompiler
 		else
 		if ( EShaderVariable::IsImage( info.type ) ) {
 			_externals.PushBack( info );
+		}
+		else
+		if ( info.type == EShaderVariable::SubpassInput ) {
+			Symbol	image = info;
+			image.type = EShaderVariable::Image2D;
+			_externals.PushBack( image );
 		}
 		else
 		if ( EShaderVariable::IsTexture( info.type ) ) {
@@ -1706,7 +1712,7 @@ namespace PipelineCompiler
 					CU_ToArray_Func	func{ this };
 					
 					src << (j ? ", " : "");
-					values.Front().Apply( func );
+					values.Front().Accept( func );
 
 					CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												  field, func.GetStrings(), func.GetTypes(), INOUT src ) );
@@ -1742,7 +1748,7 @@ namespace PipelineCompiler
 				CU_ToArray_Func	func{ this };
 
 				str << (i ? ", " : "");
-				values[i].Apply( func );
+				values[i].Accept( func );
 
 				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												scalar_info, func.GetStrings(), func.GetTypes(), INOUT str ) );
@@ -1770,7 +1776,7 @@ namespace PipelineCompiler
 				CU_ToArray_Func	func{ this };
 
 				str << (i ? ", " : "");
-				values[i].Apply( func );
+				values[i].Accept( func );
 				
 				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												info, func.GetStrings(), func.GetTypes(), INOUT str ) );

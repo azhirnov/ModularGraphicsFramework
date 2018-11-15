@@ -18,13 +18,12 @@ namespace Platforms
 	struct BufferDescription : CompileTime::PODStruct
 	{
 	// variables
-		BytesUL				size;
+		BytesU				size;
 		EBufferUsage::bits	usage;
 
 	// methods
 		BufferDescription (GX_DEFCTOR) {}
-		BufferDescription (Bytes<uint> size, EBufferUsage::bits usage) : size(size), usage(usage) {}
-		BufferDescription (Bytes<ulong> size, EBufferUsage::bits usage) : size(size), usage(usage) {}
+		BufferDescription (BytesU size, EBufferUsage::bits usage) : size(size), usage(usage) {}
 	};
 
 }	// Platforms
@@ -72,12 +71,12 @@ namespace GpuMsg
 	//
 	// Get Buffer Description
 	//
-	struct GetBufferDescription : _MessageBase_
+	struct GetBufferDescription : _MsgBase_
 	{
 		Out< Platforms::BufferDescription >	result;
 	};
 
-	struct SetBufferDescription : _MessageBase_
+	struct SetBufferDescription : _MsgBase_
 	{
 	// variables
 		Platforms::BufferDescription			descr;

@@ -272,6 +272,12 @@ namespace Platforms
 							 EPipelineStage::bits		dstStage,
 							 EPipelineAccess::bits		dstAccess,
 							 ESubpassDependency::bits	dependency);
+		
+		ND_ ArrayCRef< ColorAttachment_t >		ColorAttachments ()			const	{ return _state._colorAttachmens; }
+		ND_ ArrayCRef< Subpass_t >				Subpasses ()				const	{ return _state._subpasses; }
+		ND_ ArrayCRef< SubpassDependency_t >	Dependencies ()				const	{ return _state._dependencies; }
+		ND_ DepthStencilAttachment_t const&		DepthStencilAttachment ()	const	{ return _state._depthStencilAttachment; }
+
 
 		// validate, calculate hash and return
 		ND_ RenderPassDescription const& Finish ();
@@ -362,7 +368,7 @@ namespace GpuMsg
 	//
 	// Get Render Pass Description
 	//
-	struct GetRenderPassDescription : _MessageBase_
+	struct GetRenderPassDescription : _MsgBase_
 	{
 		Out< Platforms::RenderPassDescription >	result;
 	};

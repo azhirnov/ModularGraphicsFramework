@@ -8,7 +8,6 @@ namespace Engine
 namespace Base
 {
 	
-	const TypeIdList	MainSystem::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	MainSystem::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 	
 /*
@@ -34,7 +33,7 @@ namespace Base
 =================================================
 */
 	MainSystem::MainSystem (GlobalSystemsRef gs) :
-		Module( gs, ModuleConfig{ MainSystemModuleID, 0 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ MainSystemModuleID, 0 }, &_eventTypes ),
 		_factory( GlobalSystems() )
 	{
 		SetDebugName( "MainSystem" );
@@ -71,7 +70,6 @@ namespace Base
 	{
 		Logger::GetInstance()->Close();
 
-		// compare with 1 becouse MainSystem is referenced object too
 		DEBUG_ONLY( DbgRefCountedObject::s_ChenckNotReleasedObjects() );
 		DEBUG_ONLY( RefCounter2::s_CheckAllocations() );
 	}
@@ -97,14 +95,14 @@ namespace Base
 		_SubscribeOnMsg( this, &MainSystem::_Compose_Impl );
 		_SubscribeOnMsg( this, &MainSystem::_Delete );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		TaskManager::Register( GlobalSystems() );
 		ThreadManager::Register( GlobalSystems() );
 		DataProviderObjectsConstructor::Register( GlobalSystems() );
 
-		_SendMsg( ModuleMsg::AttachModule{ _taskMngr });
-		_SendMsg( ModuleMsg::AttachModule{ _threadMngr });
+		Send( ModuleMsg::AttachModule{ _taskMngr });
+		Send( ModuleMsg::AttachModule{ _threadMngr });
 		
 		GlobalSystems()->parallelThread->AddModule( StringCRef(), TaskModuleModuleID, CreateInfo::TaskModule{ _taskMngr } );
 	}

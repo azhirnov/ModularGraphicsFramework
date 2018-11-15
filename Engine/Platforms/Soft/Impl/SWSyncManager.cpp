@@ -42,8 +42,7 @@ namespace PlatformSW
 										> >::Append< ForwardToQueueMsg_t >;
 
 		using QueueMsgList_t		= MessageListFrom<
-											GpuMsg::SubmitGraphicsQueueCommands,
-											GpuMsg::SubmitComputeQueueCommands,
+											GpuMsg::SubmitCommands,
 											GpuMsg::SWPresent
 										>::Append< ForwardToQueueMsg_t >;
 
@@ -55,7 +54,6 @@ namespace PlatformSW
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -92,7 +90,6 @@ namespace PlatformSW
 //-----------------------------------------------------------------------------
 
 	
-	const TypeIdList	SWSyncManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SWSyncManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 	
 /*
@@ -101,7 +98,7 @@ namespace PlatformSW
 =================================================
 */
 	SWSyncManager::SWSyncManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci) :
-		SWBaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		SWBaseModule( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_counter{ 0 }
 	{
 		SetDebugName( "SWSyncManager" );
@@ -208,7 +205,7 @@ namespace PlatformSW
 			if ( not _syncs.IsExist( _counter ) )
 				break;
 		}
-		_syncs.Add( _counter, SyncUnion_t{SWFencePtr{ new SWFence() }} );
+		_syncs.Add( _counter, SyncUnion_t{SWFencePtr{ new SWFence( msg.name ) }} );
 
 		msg.result.Set( GpuFenceId(_counter) );
 		return true;
@@ -262,7 +259,7 @@ namespace PlatformSW
 			if ( not _syncs.IsExist( _counter ) )
 				break;
 		}
-		_syncs.Add( _counter, SyncUnion_t{SWEventPtr{ new SWEvent() }} );
+		_syncs.Add( _counter, SyncUnion_t{SWEventPtr{ new SWEvent( msg.name ) }} );
 
 		msg.result.Set( GpuEventId(_counter) );
 		return true;
@@ -338,7 +335,7 @@ namespace PlatformSW
 			if ( not _syncs.IsExist( _counter ) )
 				break;
 		}
-		_syncs.Add( _counter, SyncUnion_t{SWSemaphorePtr{ new SWSemaphore() }} );
+		_syncs.Add( _counter, SyncUnion_t{SWSemaphorePtr{ new SWSemaphore( msg.name ) }} );
 
 		msg.result.Set( GpuSemaphoreId(_counter) );
 		return true;

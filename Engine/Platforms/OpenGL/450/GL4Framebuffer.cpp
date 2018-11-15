@@ -58,7 +58,6 @@ namespace PlatformGL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -103,7 +102,6 @@ namespace PlatformGL
 
 
 	
-	const TypeIdList	GL4Framebuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4Framebuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -112,7 +110,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Framebuffer::GL4Framebuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_framebufferId( 0 ),
 		_descr( ci.size, ci.layers )
 	{
@@ -135,7 +133,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4Framebuffer::_GetGLPrivateClasses );
 		_SubscribeOnMsg( this, &GL4Framebuffer::_FramebufferAttachImage );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
@@ -202,8 +200,8 @@ namespace PlatformGL
 		CHECK_ERR( msg.newModule );
 
 		// render pass must be unique
-		bool	is_render_pass	= msg.newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
-		bool	is_image		= msg.newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+		bool	is_render_pass	= msg.newModule->SupportsAllMessages< RenderPassMsgList_t >();
+		bool	is_image		= msg.newModule->SupportsAllMessages< ImageMsgList_t >();
 
 		if ( _Attach( msg.name, msg.newModule ) and (is_image or is_render_pass) )
 		{
@@ -269,8 +267,8 @@ namespace PlatformGL
 	{
 		CHECK_ERR( msg.oldModule );
 
-		bool	is_render_pass	= msg.oldModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
-		bool	is_image		= msg.oldModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+		bool	is_render_pass	= msg.oldModule->SupportsAllMessages< RenderPassMsgList_t >();
+		bool	is_image		= msg.oldModule->SupportsAllMessages< ImageMsgList_t >();
 
 		if ( _Detach( msg.oldModule ) and (is_image or is_render_pass) )
 		{
@@ -336,11 +334,8 @@ namespace PlatformGL
 
 			if ( mod )
 			{
-				GpuMsg::GetRenderPassDescription	req_descr;
-				mod->Send( req_descr );
-
 				render_pass			= mod;
-				render_pass_descr	= *req_descr.result;
+				render_pass_descr	= mod->Request(GpuMsg::GetRenderPassDescription{});
 			}
 		}
 
@@ -384,7 +379,7 @@ namespace PlatformGL
 		
 		
 		// create framebuffer
-		GL_CALL( glGenFramebuffers( 1, &_framebufferId ) );
+		GL_CALL( glGenFramebuffers( 1, OUT &_framebufferId ) );
 		CHECK_ERR( _framebufferId != 0 );
 		GL_CALL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, _framebufferId ) );
 		
@@ -452,7 +447,7 @@ namespace PlatformGL
 		{
 			index = UMax; // not needed for depth stencil
 
-			if ( EPixelFormat::HasDepth( info.descr.format ) and EPixelFormat::HasStencil( info.descr.format ) ) {
+			if ( EPixelFormat::IsDepthStencil( info.descr.format ) ) {
 				target = GL_DEPTH_STENCIL_ATTACHMENT;
 				return true;
 			}
@@ -515,10 +510,7 @@ namespace PlatformGL
 
 		CHECK_ERR( _Attach( "renderpass", render_pass ) );
 
-		GpuMsg::GetRenderPassDescription	req_descr;
-		render_pass->Send( req_descr );
-		
-		rpDescr = RVREF(*req_descr.result);
+		rpDescr = render_pass->Request( GpuMsg::GetRenderPassDescription{} );
 		return true;
 	}
 

@@ -25,16 +25,12 @@ namespace PlatformWin
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Compose
-										> >
-										::Append< MessageListFrom<
-											ModuleMsg::OnManagerChanged,
+		using SupportedMessages_t	= MessageListFrom<
 											OSMsg::WindowDescriptionChanged,
 											OSMsg::WindowCreated,
 											OSMsg::WindowBeforeDestroy,
 											OSMsg::OnWinWindowRawMessage
-										> >;
+										>;
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											ModuleMsg::InputMotion
 										> >;
@@ -45,7 +41,6 @@ namespace PlatformWin
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		
@@ -82,7 +77,6 @@ namespace PlatformWin
 
 
 	
-	const TypeIdList	WinMouseInput::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	WinMouseInput::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -91,7 +85,7 @@ namespace PlatformWin
 =================================================
 */
 	WinMouseInput::WinMouseInput (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RawInputHandler &) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_lbPressed{ false }
 	{
 		SetDebugName( "WinMouseInput" );
@@ -111,7 +105,7 @@ namespace PlatformWin
 		_SubscribeOnMsg( this, &WinMouseInput::_WindowBeforeDestroy );
 		_SubscribeOnMsg( this, &WinMouseInput::_OnWinWindowRawMessage );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( null, InputThreadModuleID, false );
 	}
@@ -123,7 +117,7 @@ namespace PlatformWin
 */
 	WinMouseInput::~WinMouseInput ()
 	{
-		LOG( "WinMouseInput finalized", ELog::Debug );
+		//LOG( "WinMouseInput finalized", ELog::Debug );
 	}
 
 /*
@@ -170,7 +164,7 @@ namespace PlatformWin
 	{
 		_Destroy();
 
-		_SendMsg( ModuleMsg::Delete{} );
+		Send( ModuleMsg::Delete{} );
 		return true;
 	}
 	
@@ -250,7 +244,7 @@ namespace PlatformWin
 
 			if ( _IsComposedState( _window->GetState() ) )
 			{
-				_SendMsg( OSMsg::WindowCreated{} );
+				Send( OSMsg::WindowCreated{} );
 			}
 
 			_window->Subscribe( this, &WinMouseInput::_WindowDescriptionChanged );

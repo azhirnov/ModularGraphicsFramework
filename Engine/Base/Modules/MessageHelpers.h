@@ -12,35 +12,37 @@ namespace _BaseMessages_
 	//
 	// Message Output
 	//
-	template <typename T>
-	struct Out
+	template <typename T, bool IsOptional>
+	struct _Out
 	{
 	// variables
 	protected:
-		mutable Optional<T>		_value;
+		mutable Optional<T>			_value;
+		DEBUG_ONLY( mutable bool	_wasUsed = false );
 
 
 	// methods
 	protected:
-		explicit Out (const T& val) : _value(val) {}
-		explicit Out (T &&val) : _value( FW<T>(val) ) {}
+		explicit _Out (const T& val) : _value(val) {}
+		explicit _Out (T &&val) : _value( FW<T>(val) ) {}
 
 	public:
-		Out (GX_DEFCTOR) : _value() {}
-		Out (Out &&) = default;
-		Out (const Out &) = default;
+		_Out () {}
+		_Out (_Out &&) = default;
+		_Out (const _Out &) = default;
 
-		void Set (const T &val)		const		{ _value = val; }
-		void Set (T &&val)			const		{ _value = FW<T>(val); }
+		~_Out ()								{ if_constexpr( not IsOptional ) { ASSERT( not _value.IsDefined() or _wasUsed ); }}
+
+		void Set (const T &val)		const		{ DEBUG_ONLY( _wasUsed = false );  _value = val; }
+		void Set (T &&val)			const		{ DEBUG_ONLY( _wasUsed = false );  _value = FW<T>(val); }
 
 		// available only for sender
 		ND_ bool			IsDefined ()		{ return _value.IsDefined(); }
-		ND_ Optional<T> &	GetOptional ()		{ return _value; }
-		//ND_ T &			Get ()				{ return _value.Get(); }
-		ND_ T				Get (const T& def)	{ return _value.Get( def ); }
+		ND_ Optional<T> &	GetOptional ()		{ DEBUG_ONLY( _wasUsed = true );  return _value; }
+		ND_ T				Get (const T& def)	{ DEBUG_ONLY( _wasUsed = true );  return _value.Get( def ); }
 
-		ND_ T *				operator -> ()		{ return _value.GetPtr(); }
-		ND_ T &				operator * ()		{ return _value.Get(); }
+		ND_ T *				operator -> ()		{ DEBUG_ONLY( _wasUsed = true );  return _value.GetPtr(); }
+		ND_ T &				operator * ()		{ DEBUG_ONLY( _wasUsed = true );  return _value.Get(); }
 
 		ND_ explicit operator bool ()			{ return IsDefined(); }
 
@@ -67,6 +69,13 @@ namespace _BaseMessages_
 			return false;
 		}
 	};
+
+	template <typename T>
+	using Out		= _Out< T, false >;
+
+	template <typename T>
+	using Out_opt	= _Out< T, true >;
+
 
 
 	//

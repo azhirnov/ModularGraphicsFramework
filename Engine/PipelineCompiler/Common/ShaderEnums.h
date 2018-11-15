@@ -7,76 +7,87 @@
 namespace PipelineCompiler
 {
 
-	enum class EShaderType : uint
+	struct EShaderFormat final : EShaderLangFormat
 	{
-		None,
-		GLSL,
-		GLSL_ES_2,
-		GLSL_ES_3,
-		HLSL,
-		CL,
-		SPIRV,
-		Metal,
-		Software,
-		Unknown = ~0u,
-	};
+		// api
+		static constexpr type	GX_API			= (9 << _ApiOffset);
+
+		// api + version
+		static constexpr type	GX_100			= (100 << _VersionOffset) | GX_API;	// == OpenGL 450	// TODO
+		//static constexpr type	GX_110			= (110 << _VersionOffset) | GX_API;	// == OpenGL 450
 
 
-	struct EShaderSrcFormat
-	{
-		enum type : uint
-		{
-			GXSL,			// extended GLSL
-			GXSL_Vulkan,	// extended GLSL for Vulkan
-			GLSL,
-			GLSL_Vulkan,	// GLSL for Vulkan
+		// api + version + format
+		static constexpr type	GXSL_100		= GX_100 | HighLevel;
+		//static constexpr type	GXSL_110		= GX_110 | HighLevel;
+		
+		static constexpr type	VKSL_100		= Vulkan_100 | HighLevel;
+		static constexpr type	VKSL_110		= Vulkan_110 | HighLevel;
+		static constexpr type	VK_100_SPIRV	= Vulkan_100 | SPIRV;
+		static constexpr type	VK_110_SPIRV	= Vulkan_110 | SPIRV;
+		static constexpr type	VK_100_Asm		= Vulkan_100 | Assembler;	// for SPIRV
+		static constexpr type	VK_110_Asm		= Vulkan_110 | Assembler;	// for SPIRV
 
-			GLSL_ES_2,
-			GLSL_ES_3,
+		static constexpr type	GLSL_450		= OpenGL_450 | HighLevel;
+		static constexpr type	GLSL_460		= OpenGL_460 | HighLevel;
+		static constexpr type	GL_450_SPIRV	= OpenGL_450 | SPIRV;
+		static constexpr type	GL_460_SPIRV	= OpenGL_460 | SPIRV;
+		static constexpr type	GL_450_Asm		= OpenGL_450 | Assembler;	// for SPIRV
+		static constexpr type	GL_460_Asm		= OpenGL_460 | Assembler;	// for SPIRV
+		static constexpr type	GLSL_450_Bin	= OpenGL_450 | GL_Binary;	// vendor specific binary format
+		
+		static constexpr type	ESSL_200		= OpenGLES_200 | HighLevel;
+		static constexpr type	ESSL_300		= OpenGLES_300 | HighLevel;
+		static constexpr type	ESSL_310		= OpenGLES_310 | HighLevel;
+		static constexpr type	ESSL_320		= OpenGLES_320 | HighLevel;
+		static constexpr type	ESSL_320_SPIRV	= OpenGLES_320 | SPIRV;
 
-			CL,				// only for compiling to binary
-			HLSL,			// only for compiling to binary
+		static constexpr type	CL_120			= OpenCL_120 | HighLevel;
+		static constexpr type	CL_210			= OpenCL_210 | HighLevel;
+		static constexpr type	CL_120_Asm		= OpenCL_120 | Assembler;
+		static constexpr type	CL_210_Asm		= OpenCL_210 | Assembler;
+		
+		static constexpr type	HLSL_11			= DirectX_11 | HighLevel;
+		static constexpr type	HLSL_12			= DirectX_12 | HighLevel;
+		static constexpr type	HLSL_11_BC		= DirectX_11 | DXBC;
+		static constexpr type	HLSL_12_IL		= DirectX_12 | DXIL;
 
-			_Count,
-			Unknown		= ~0u,
-		};
+		//static constexpr type	Soft_100_Src	= Software_100 | HighLevel;			// intermediate C++ source
+		static constexpr type	Soft_100_Exe	= Software_100 | CPP_Invocable;		// builtin program in EXE/DLL
 
-		static constexpr bool IsVulkan (type value);
-	};
+		static constexpr type	IntermediateSrc	= VKSL_110;
+		static constexpr type	DefaultSrc		= GLSL_450;
+		
 
+		// API + Format
+		static constexpr type	CL_Src			= HighLevel | OpenCL;
+		static constexpr type	CL_Asm			= Assembler | OpenCL;
 
-	struct EShaderDstFormat
-	{
-		enum type : uint
-		{
-			GLSL_Source,		// crossplatform
-			GLSL_VulkanSource,	// crossplatform
-			GLSL_Binary,		// system and hardware dependent
-			
-			GLSL_ES_Source,		// crossplatform
-			GLSL_ES_Binary,		// system and hardware dependent
+		static constexpr type	VK_SPIRV		= SPIRV | Vulkan;
+		static constexpr type	GL_SPIRV		= SPIRV | OpenGL;
+		static constexpr type	ES_SPIRV		= SPIRV | OpenGLES;
+		static constexpr type	CL_SPIRV		= SPIRV | OpenCL;
 
-			CL_Source,			// crossplatform
-			CL_Binary,			// crossplatform
+		static constexpr type	VK_SPIRV_Asm	= Assembler | Vulkan;
+		static constexpr type	GL_SPIRV_Asm	= Assembler | OpenGL;
+		static constexpr type	ES_SPIRV_Asm	= Assembler | OpenGLES;
 
-			HLSL_Source,		// crossplatform
-			HLSL_Binary,		// crossplatform
+		static constexpr type	HLSL			= HighLevel | DirectX;
+		static constexpr type	HLSL_BC			= DXBC | DirectX;
+		static constexpr type	HLSL_IL			= DXIL | DirectX;
 
-			SPIRV_Source,		// dissasebled binary for debugging
-			SPIRV_Binary,		// crossplatform
+		static constexpr type	VKSL			= HighLevel | Vulkan;
+		static constexpr type	GXSL			= HighLevel | GX_API;
 
-			Metal_Source,
-			Metal_Binary,
+		static constexpr type	GLSL			= HighLevel | OpenGL;
+		static constexpr type	GLSL_Bin		= GL_Binary | OpenGL;
+		
+		static constexpr type	ESSL			= HighLevel | OpenGLES;
+		static constexpr type	ESSL_Bin		= GL_Binary | OpenGLES;
 
-			CPP_Module,			// for software renderer
-
-			_Count,
-			Unknown		= ~0u,
-		};
-
-		using bits	= EnumBitfield< EShaderDstFormat >;
-
-		friend bits operator | (type left, type right)		{ return bits().Set( left ).Set( right ); }
+		// methods
+		static constexpr bool	IsValid (type value);
+		static String			ToString (type value);
 	};
 
 
@@ -450,13 +461,14 @@ namespace PipelineCompiler
 			UIntImageBuffer				= _vtypeinfo::_UINT | ImageBuffer,
 
 			_EXT2_OFF					= _vtypeinfo::_MAX,
-			_EXT2_MASK					= 0x7 << _EXT2_OFF,
+			_EXT2_MASK					= 0x8 << _EXT2_OFF,
 			Struct						= 1 << _EXT2_OFF,
 			VaryingsBlock				= 2 << _EXT2_OFF,	// shader in/out block
 			UniformBlock				= 3 << _EXT2_OFF,
 			StorageBlock				= 4 << _EXT2_OFF,
 			VertexAttribs				= 5 << _EXT2_OFF,
 			Union						= 6 << _EXT2_OFF,
+			SubpassInput				= 7 << _EXT2_OFF,
 			
 			_MAX						= CompileTime::IntLog2< uint, _EXT2_MASK > + 1,
 				
@@ -510,18 +522,54 @@ namespace PipelineCompiler
 	};
 
 
-
 	
 //-----------------------------------------------------------------------------//
-// EShaderSrcFormat
-
-	ND_ inline constexpr bool EShaderSrcFormat::IsVulkan (type value)
+// EShaderFormat
+	
+	ND_ inline constexpr bool  EShaderFormat::IsValid (type value)
 	{
-		return value == GXSL_Vulkan or value == GLSL_Vulkan;
+		return	!!( value & _ApiMask )		and
+				!!( value & _VersionMask )	and
+				!!( value & _StorageMask )	and
+				!!( value & _FormatMask );
 	}
 
 
+	ND_ inline String  EShaderFormat::ToString (type value)
+	{
+		String	str;
 
+		switch ( GetAPI( value ) )
+		{
+			case OpenGL :		str << "OpenGL";	break;
+			case OpenGLES :		str << "OpenGLES";	break;
+			case DirectX :		str << "DirectX";	break;
+			case OpenCL :		str << "OpenCL";	break;
+			case Vulkan :		str << "Vulkan";	break;
+			case Metal :		str << "Metal";		break;
+			case CUDA :			str << "CUDA";		break;
+			case Software :		str << "Software";	break;
+			case GX_API :		str << "GX_API";	break;
+			default :			RETURN_ERR( "unknown api" );
+		}
+
+		str << '_' << GetVersion( value ) << '_';
+
+		switch ( GetFormat( value ) )
+		{
+			case HighLevel :		str << "HighLevel";		break;
+			case SPIRV :			str << "SPIRV";			break;
+			case GL_Binary :		str << "GLBinary";		break;
+			case DXBC :				str << "DXBC";			break;
+			case DXIL :				str << "DXIL";			break;
+			case Assembler :		str << "Asm";			break;
+			case CPP_Invocable :	str << "CPPInvocable";	break;
+			default :				RETURN_ERR( "unknown format" );
+		}
+		return str;
+	}
+
+	
 //-----------------------------------------------------------------------------//
 // ETessellationSpacing
 	

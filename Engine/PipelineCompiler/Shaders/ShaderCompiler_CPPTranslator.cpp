@@ -41,7 +41,7 @@ namespace PipelineCompiler
 	// methods
 	public:
 		explicit CPP_DstLanguage (EShader::type shaderType) :
-			_nameValidator{EShaderDstFormat::CPP_Module}, _shaderType{shaderType}
+			_nameValidator{EShaderFormat::Soft_100_Exe}, _shaderType{shaderType}
 		{}
 
 		~CPP_DstLanguage ()
@@ -114,11 +114,10 @@ namespace PipelineCompiler
 
 	bool ShaderCompiler::_TranslateGXSLtoCPP (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const
 	{
-		CHECK_ERR(	cfg.source == EShaderSrcFormat::GXSL or
-					cfg.source == EShaderSrcFormat::GLSL or
-					cfg.source == EShaderSrcFormat::GXSL_Vulkan or
-					cfg.source == EShaderSrcFormat::GLSL_Vulkan );
-		CHECK_ERR(	cfg.target == EShaderDstFormat::CPP_Module );
+		CHECK_ERR(	EShaderFormat::GetApiFormat( cfg.source ) == EShaderFormat::GXSL or
+					EShaderFormat::GetApiFormat( cfg.source ) == EShaderFormat::GLSL or
+					EShaderFormat::GetApiFormat( cfg.source ) == EShaderFormat::VKSL );
+		CHECK_ERR(	cfg.target == EShaderFormat::Soft_100_Exe );
 	
 		// not supported here
 		ASSERT( not cfg.optimize );
@@ -1530,7 +1529,7 @@ namespace PipelineCompiler
 					CU_ToArray_Func	func{ this };
 					
 					src << (j ? ", " : "");
-					values.Front().Apply( func );
+					values.Front().Accept( func );
 
 					CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												  field, func.GetStrings(), func.GetTypes(), INOUT src ) );
@@ -1566,7 +1565,7 @@ namespace PipelineCompiler
 				CU_ToArray_Func	func{ this };
 
 				str << (i ? ", " : "");
-				values[i].Apply( func );
+				values[i].Accept( func );
 
 				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												scalar_info, func.GetStrings(), func.GetTypes(), INOUT str ) );
@@ -1594,7 +1593,7 @@ namespace PipelineCompiler
 				CU_ToArray_Func	func{ this };
 
 				str << (i ? ", " : "");
-				values[i].Apply( func );
+				values[i].Accept( func );
 				
 				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												info, func.GetStrings(), func.GetTypes(), INOUT str ) );
@@ -1727,7 +1726,8 @@ namespace PipelineCompiler
 			{ "gl_LocalInvocationIndex",	{"\tauto& gl_LocalInvocationIndex = _helper_.GetComputeShaderState().inLocalInvocationIndex;\n", EShader::Compute} },
 			{ "gl_NumWorkGroups",			{"\tauto& gl_NumWorkGroups = _helper_.GetComputeShaderState().inNumWorkGroups;\n", EShader::Compute} },
 			{ "gl_WorkGroupID",				{"\tauto& gl_WorkGroupID = _helper_.GetComputeShaderState().inWorkGroupID;\n", EShader::Compute} },
-			{ "gl_WorkGroupSize",			{"\tauto& gl_WorkGroupSize = _helper_.GetComputeShaderState().constWorkGroupSize;\n", EShader::Compute} }
+			{ "gl_WorkGroupSize",			{"\tauto& gl_WorkGroupSize = _helper_.GetComputeShaderState().constWorkGroupSize;\n", EShader::Compute} },
+			{ "gl_VertexID",				{"\tauto& gl_VertexID = _helper_.GetVertexShaderState().constVertexID;\n", EShader::Vertex} }
 		};
 		return mapping;
 	}

@@ -15,9 +15,8 @@ namespace Graphics
 */
 	GraphicsBaseModule::GraphicsBaseModule (const GlobalSystemsRef gs,
 											const ModuleConfig &config,
-											const TypeIdList *msgTypes,
 											const TypeIdList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes )
+		Module( gs, config, eventTypes )
 	{}
 	
 /*
@@ -43,7 +42,7 @@ namespace Graphics
 */
 	bool GraphicsBaseModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg( ModuleMsg::Delete{} );
+		Send( ModuleMsg::Delete{} );
 		return true;
 	}
 	

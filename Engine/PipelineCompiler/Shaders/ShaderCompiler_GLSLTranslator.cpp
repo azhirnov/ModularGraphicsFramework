@@ -26,7 +26,7 @@ namespace PipelineCompiler
 
 	// methods
 	public:
-		GLSL_DstLanguage () : _nameValidator{EShaderDstFormat::GLSL_Source}
+		GLSL_DstLanguage () : _nameValidator{EShaderFormat::GLSL_450}
 		{}
 
 		~GLSL_DstLanguage ()
@@ -71,6 +71,7 @@ namespace PipelineCompiler
 		bool _TranslateConst (glslang::TIntermTyped* typed, Symbol const& info, OUT String &str);
 		bool _TranslateGlobal (glslang::TIntermTyped* typed, Symbol const& info, OUT String &str);
 		bool _TranslateShared (Symbol const& info, OUT String &str);
+		bool _TranslateSubpassInput (glslang::TType const& type, Symbol const& info, OUT String &str);
 		
 		bool _TranslateOperator0 (glslang::TOperator op, const TypeInfo &resultType, INOUT String &src);
 		bool _TranslateOperator1 (glslang::TOperator op, const TypeInfo &resultType, ArrayCRef<String> args, ArrayCRef<TypeInfo const*> argTypes, StringCRef allArgs, INOUT String &src);
@@ -91,11 +92,13 @@ namespace PipelineCompiler
 
 	bool ShaderCompiler::_TranslateGXSLtoGLSL (const Config &cfg, const _GLSLangResult &glslangData, OUT String &log, OUT BinaryArray &result) const
 	{
-		CHECK_ERR(	cfg.source == EShaderSrcFormat::GXSL or
-					cfg.source == EShaderSrcFormat::GLSL or
-					cfg.source == EShaderSrcFormat::GXSL_Vulkan or
-					cfg.source == EShaderSrcFormat::GLSL_Vulkan );
-		CHECK_ERR(	cfg.target == EShaderDstFormat::GLSL_Source );
+		CHECK_ERR(	EShaderFormat::GetApiFormat( cfg.source ) == EShaderFormat::GXSL or
+					EShaderFormat::GetApiFormat( cfg.source ) == EShaderFormat::GLSL or
+					EShaderFormat::GetApiFormat( cfg.source ) == EShaderFormat::VKSL );
+
+		CHECK_ERR(	EShaderFormat::GetApiFormat( cfg.target ) == EShaderFormat::GXSL or
+					EShaderFormat::GetApiFormat( cfg.target ) == EShaderFormat::GLSL or
+					EShaderFormat::GetApiFormat( cfg.target ) == EShaderFormat::VKSL );
 	
 		// not supported here
 		ASSERT( not cfg.optimize );
@@ -175,22 +178,23 @@ namespace PipelineCompiler
 				// depth coverage
 				if ( intermediate->getPostDepthCoverage() )
 				{
-					switch ( intermediate->getDepth() )
-					{
-						case glslang::TLayoutDepth::EldAny :		src << "layout (depth_any) out float gl_FragDepth;";		break;
-						case glslang::TLayoutDepth::EldGreater :	src << "layout (depth_greater) out float gl_FragDepth;";	break;
-						case glslang::TLayoutDepth::EldLess :		src << "layout (depth_less) out float gl_FragDepth;";		break;
-						case glslang::TLayoutDepth::EldUnchanged :	src << "layout (depth_unchanged) out float gl_FragDepth;";	break;
-						default :									WARNING( "unknown depth layout" );
-					}
+					// see https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_post_depth_coverage.txt
+					src << "layout(post_depth_coverage) in;\n";
 				}
 
 				// depth export
 				if ( intermediate->isDepthReplacing() )
 				{
-					TODO( "" );
+					// see https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_conservative_depth.txt
+					switch ( intermediate->getDepth() )
+					{
+						case glslang::TLayoutDepth::EldAny :		src << "layout (depth_any) out float gl_FragDepth;\n";			break;
+						case glslang::TLayoutDepth::EldGreater :	src << "layout (depth_greater) out float gl_FragDepth;\n";		break;
+						case glslang::TLayoutDepth::EldLess :		src << "layout (depth_less) out float gl_FragDepth;\n";			break;
+						case glslang::TLayoutDepth::EldUnchanged :	src << "layout (depth_unchanged) out float gl_FragDepth;\n";	break;
+						default :									src << "out float gl_FragDepth;\n";
+					}
 				}
-
 				break;
 			}
 			/*
@@ -439,10 +443,8 @@ namespace PipelineCompiler
 */
 	bool GLSL_DstLanguage::TranslateExternal (glslang::TIntermTyped* typed, const Symbol &info, INOUT String &str)
 	{
-		glslang::TType const&	type	= typed->getType();
-		
 		if ( EShaderVariable::IsBuffer( info.type ) ) {
-			CHECK_ERR( _TranslateBuffer( type, info, INOUT str ) );
+			CHECK_ERR( _TranslateBuffer( typed->getType(), info, INOUT str ) );
 		}
 		else
 		if ( EShaderVariable::IsImage( info.type ) or EShaderVariable::IsTexture( info.type ) ) {
@@ -461,8 +463,12 @@ namespace PipelineCompiler
 			CHECK_ERR( _TranslateConst( typed, info, INOUT str ) );
 		}
 		else
-		if ( type.getQualifier().storage == glslang::TStorageQualifier::EvqGlobal ) {
+		if ( typed->getQualifier().storage == glslang::TStorageQualifier::EvqGlobal ) {
 			CHECK_ERR( _TranslateGlobal( typed, info, INOUT str ) );
+		}
+		else
+		if ( info.type == EShaderVariable::SubpassInput ) {
+			CHECK_ERR( _TranslateSubpassInput( typed->getType(), info, INOUT str ) );
 		}
 		else {
 			RETURN_ERR( "unknown type" );
@@ -675,6 +681,10 @@ namespace PipelineCompiler
 			case glslang::TOperator::EOpTextureQuerySize :		src << "textureSize" << all_args;				break;
 			case glslang::TOperator::EOpTextureQueryLevels :	src << "textureQueryLevels" << all_args;		break;
 			case glslang::TOperator::EOpTextureQuerySamples :	src << "textureSamples" << all_args;			break;
+				
+			case glslang::TOperator::EOpSubpassLoad :			src << "subpassLoad" << all_args;				break;
+			//case glslang::TOperator::EOpSubpassLoadMS :		src << "subpassLoadMs" << all_args;				break;
+
 			default :											RETURN_ERR( "unknown operator!" );
 		}
 		return true;
@@ -1197,6 +1207,23 @@ namespace PipelineCompiler
 		str << ";\n";
 		return true;
 	}
+	
+/*
+=================================================
+	_TranslateSubpassInput
+=================================================
+*/
+	bool GLSL_DstLanguage::_TranslateSubpassInput (glslang::TType const& type, Symbol const& info, OUT String &str)
+	{
+		if ( type.getQualifier().hasAttachment() )
+			str << "layout(input_attachment_index=" << type.getQualifier().layoutAttachment << ") ";
+		
+		if ( info.binding != UMax )
+			str << "layout(binding=" << info.binding << ") ";
+
+		str << "uniform subpassInput " << info.name << ";\n";
+		return true;
+	}
 
 /*
 =================================================
@@ -1273,7 +1300,7 @@ namespace PipelineCompiler
 					CU_ToArray_Func	func{ this };
 					
 					src << (j ? ", " : "");
-					values.Front().Apply( func );
+					values.Front().Accept( func );
 
 					CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												  field, func.GetStrings(), func.GetTypes(), INOUT src ) );
@@ -1309,7 +1336,7 @@ namespace PipelineCompiler
 				CU_ToArray_Func	func{ this };
 
 				str << (i ? ", " : "");
-				values[i].Apply( func );
+				values[i].Accept( func );
 
 				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												scalar_info, func.GetStrings(), func.GetTypes(), INOUT str ) );
@@ -1337,7 +1364,7 @@ namespace PipelineCompiler
 				CU_ToArray_Func	func{ this };
 
 				str << (i ? ", " : "");
-				values[i].Apply( func );
+				values[i].Accept( func );
 				
 				CHECK_ERR( TranslateOperator( glslang::TOperator::EOpConstructGuardStart,
 												info, func.GetStrings(), func.GetTypes(), INOUT str ) );

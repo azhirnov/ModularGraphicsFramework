@@ -9,7 +9,7 @@ namespace Engine
 namespace SceneMsg
 {
 
-	struct GetScenePrivateClasses : _MessageBase_
+	struct GetScenePrivateClasses : _MsgBase_
 	{
 		struct Classes {
 		};
@@ -30,14 +30,11 @@ namespace Scene
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >
-										::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::OnManagerChanged,
 											//GpuMsg::DeviceBeforeDestroy,
 											SceneMsg::GetScenePrivateClasses
-										> >;
+										>;
 
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Compose,
@@ -56,7 +53,6 @@ namespace Scene
 	public:
 		BaseSceneModule (const GlobalSystemsRef gs,
 						 const ModuleConfig &config,
-						 const TypeIdList *msgTypes,
 						 const TypeIdList *eventTypes);
 		
 

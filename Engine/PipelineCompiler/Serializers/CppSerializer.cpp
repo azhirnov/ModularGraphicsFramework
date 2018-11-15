@@ -418,9 +418,9 @@ namespace PipelineCompiler
 
 		String	str;
 		str << ExtractIndent( name ) << "// DepthBufferState\n"
-			<< name << ".enabled = " << state.enabled << ";\n";
+			<< name << ".test = " << state.test << ";\n";
 
-		if ( state.enabled )
+		if ( state.test )
 		{
 			str << name << ".write   = " << state.write << ";\n"
 				<< name << ".func    = " << ToString( state.func ) << ";\n";
@@ -683,7 +683,7 @@ namespace PipelineCompiler
 		void operator () (const UniformBuffer &ub) const
 		{
 			ASSERT( ub.binding != UMax and ub.uniqueIndex != UMax );
-			ASSERT( ub.size > BytesU(0) );
+			ASSERT( ub.size > 0_b );
 
 			str << '\n' << indent << "\t\t.AddUniformBuffer( \"" << ub.name << "\", " << usize(ub.size) << "_b, "
 				<< ub.binding << "u, " << ub.uniqueIndex << "u, " << ToString( ub.stageFlags ) << " )";
@@ -693,7 +693,7 @@ namespace PipelineCompiler
 		void operator () (const StorageBuffer &sb) const
 		{
 			ASSERT( sb.binding != UMax and sb.uniqueIndex != UMax );
-			ASSERT( sb.staticSize > BytesUL(0) or sb.arrayStride > BytesUL(0) );
+			ASSERT( sb.staticSize > 0_b or sb.arrayStride > 0_b );
 
 			str << '\n' << indent << "\t\t.AddStorageBuffer( \"" << sb.name << "\", " << usize(sb.staticSize) << "_b, "
 				<< usize(sb.arrayStride) << "_b, " << ToString( sb.access ) << ", " << sb.binding << "u, "
@@ -710,9 +710,14 @@ namespace PipelineCompiler
 		}
 
 
-		void operator () (const SubpassInput &) const
+		void operator () (const SubpassInput &spi) const
 		{
-			TODO( "SubpassInput" );
+			ASSERT( spi.binding != UMax and spi.uniqueIndex != UMax );
+			ASSERT( spi.attachmentIndex != UMax );
+
+			str << '\n' << indent << "\t\t.AddSubpass( \"" << spi.name << "\", " << spi.attachmentIndex << ", "
+				<< spi.isMultisample << ", " << spi.binding << "u, " << spi.uniqueIndex << "u, "
+				<< ToString( spi.stageFlags ) << " )";
 		}
 	};
 	
@@ -728,7 +733,7 @@ namespace PipelineCompiler
 		PipelineLayoutToStringFunc	func( INOUT str, ExtractIndent( name ) );
 
 		FOR( i, value.GetUniforms() ) {
-			value.GetUniforms()[i].Apply( func );
+			value.GetUniforms()[i].Accept( func );
 		}
 
 		str << '\n' << ExtractIndent( name ) << "\t\t.Finish();\n";
@@ -780,6 +785,16 @@ namespace PipelineCompiler
 	String	CppSerializer::ToString (StringCRef name, const uint3 &value) const
 	{
 		return String(name) << " = uint3(" << value.x << ", " << value.y << ", " << value.z << ");\n";
+	}
+	
+/*
+=================================================
+	ToString (bool)
+=================================================
+*/
+	String  CppSerializer::ToString (StringCRef name, bool value) const
+	{
+		return String(name) << " = " << value << ";\n";
 	}
 
 /*
@@ -952,6 +967,48 @@ namespace PipelineCompiler
 		}
 		RETURN_ERR( "not supported" );
 	}
+	
+/*
+=================================================
+	ToString (EShaderFormat)
+=================================================
+*/
+	String  CppSerializer::ToString (EShaderFormat::type value)
+	{
+		String	str;
+
+		switch ( EShaderFormat::GetApiVersion( value ) )
+		{
+			case EShaderFormat::OpenGL_450 :		str << "EShaderLangFormat::OpenGL_450";		break;
+			case EShaderFormat::OpenGL_460 :		str << "EShaderLangFormat::OpenGL_460";		break;
+			case EShaderFormat::OpenGLES_200 :		str << "EShaderLangFormat::OpenGLES_200";	break;
+			case EShaderFormat::OpenGLES_300 :		str << "EShaderLangFormat::OpenGLES_300";	break;
+			case EShaderFormat::DirectX_11 :		str << "EShaderLangFormat::DirectX_11";		break;
+			case EShaderFormat::DirectX_12 :		str << "EShaderLangFormat::DirectX_12";		break;
+			case EShaderFormat::OpenCL_120 :		str << "EShaderLangFormat::OpenCL_120";		break;
+			case EShaderFormat::OpenCL_210 :		str << "EShaderLangFormat::OpenCL_210";		break;
+			case EShaderFormat::Vulkan_100 :		str << "EShaderLangFormat::Vulkan_100";		break;
+			case EShaderFormat::Vulkan_110 :		str << "EShaderLangFormat::Vulkan_110";		break;
+			case EShaderFormat::Software_100 :		str << "EShaderLangFormat::Software_100";	break;
+			default :								RETURN_ERR( "unknown API/Version" );
+		}
+
+		str << " | ";
+
+		switch ( EShaderFormat::GetFormat( value ) )
+		{
+			case EShaderFormat::HighLevel :			str << "EShaderLangFormat::HighLevel";		break;
+			case EShaderFormat::SPIRV :				str << "EShaderLangFormat::SPIRV";			break;
+			case EShaderFormat::GL_Binary :			str << "EShaderLangFormat::GL_Binary";		break;
+			case EShaderFormat::DXBC :				str << "EShaderLangFormat::DXBC";			break;
+			case EShaderFormat::DXIL :				str << "EShaderLangFormat::DXIL";			break;
+			case EShaderFormat::Assembler :			str << "EShaderLangFormat::Assembler";		break;
+			case EShaderFormat::CPP_Invocable :		str << "EShaderLangFormat::CPP_Invocable";	break;
+			default :								RETURN_ERR( "unknown Storage/Format" );
+		}
+
+		return str;
+	}
 
 /*
 =================================================
@@ -975,10 +1032,37 @@ namespace PipelineCompiler
 	
 /*
 =================================================
-	ShaderSrcGLSL
+	ShaderToString
 =================================================
 */
-	String	CppSerializer::ShaderSrcGLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
+	String	CppSerializer::ShaderToString (EShaderFormat::type fmt, StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
+	{
+		switch ( EShaderFormat::GetFormat( fmt ) )
+		{
+			case EShaderFormat::HighLevel :
+			case EShaderFormat::Assembler :
+				return _ShaderToString( fmt, name, StringCRef::From( shaderSrc ), inFile );
+
+			case EShaderFormat::SPIRV :
+				return _ShaderToString( fmt, name, ArrayCRef<uint>::From( shaderSrc ), inFile );
+
+			case EShaderFormat::GL_Binary :
+			case EShaderFormat::DXBC :
+			case EShaderFormat::DXIL :
+				return _ShaderToString( fmt, name, shaderSrc, inFile );
+
+			case EShaderFormat::CPP_Invocable :
+			default :
+				RETURN_ERR( "not supported" );
+		}
+	}
+	
+/*
+=================================================
+	_ShaderToString
+=================================================
+*/
+	String  CppSerializer::_ShaderToString (EShaderFormat::type fmt, StringCRef name, StringCRef shaderSrc, bool inFile) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
@@ -986,17 +1070,17 @@ namespace PipelineCompiler
 			if ( inFile )
 				RETURN_ERR( "not supported" )
 			else
-				str << name << ".StringGLSL( \n" << ToString(StringCRef::From( shaderSrc )) << " );\n";
+				str << name << ".AddSource( " << ToString( fmt ) << ", \n" << ToString( shaderSrc ) << " );\n\n";
 		}
 		return str;
 	}
 	
 /*
 =================================================
-	ShaderBinGLSL
+	_ShaderToString
 =================================================
 */
-	String	CppSerializer::ShaderBinGLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
+	String  CppSerializer::_ShaderToString (EShaderFormat::type fmt, StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
@@ -1004,18 +1088,17 @@ namespace PipelineCompiler
 			if ( inFile )
 				RETURN_ERR( "not supported" )
 			else
-				str << name << ".ArrayGLSLBin({ " << ToString(StringCRef::From( shaderSrc )) << " });\n";
-				//str << name << ".ArrayGLSLBin({ " << ToString(ArrayCRef<ubyte>::From( shaderSrc )) << " });\n";
+				str << name << ".AddBinary( " << ToString( fmt ) << ", { " << ToString( shaderSrc ) << " });\n\n";
 		}
 		return str;
 	}
 	
 /*
 =================================================
-	ShaderBinSPIRV
+	_ShaderToString
 =================================================
 */
-	String	CppSerializer::ShaderBinSPIRV (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
+	String  CppSerializer::_ShaderToString (EShaderFormat::type fmt, StringCRef name, ArrayCRef<uint> shaderSrc, bool inFile) const
 	{
 		String	str;
 		if ( not shaderSrc.Empty() )
@@ -1023,65 +1106,11 @@ namespace PipelineCompiler
 			if ( inFile )
 				RETURN_ERR( "not supported" )
 			else
-				str << name << ".ArraySPIRV({ " << ToString(ArrayCRef<uint>::From( shaderSrc )) << " });\n";
-		}
-		return str;
-	}
-	
-/*
-=================================================
-	ShaderSrcSPIRV
-=================================================
-*/
-	String	CppSerializer::ShaderSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
-	{
-		String	str;
-		if ( not shaderSrc.Empty() )
-		{
-			if ( inFile )
-				RETURN_ERR( "not supported" )
-			else
-				str << name << ".StringSpirvAsm( \n" << ToString(StringCRef::From( shaderSrc )) << " );\n";
+				str << name << ".AddSpirv( " << ToString( fmt ) << ", { " << ToString(ArrayCRef<uint>::From( shaderSrc )) << " });\n\n";
 		}
 		return str;
 	}
 
-/*
-=================================================
-	ShaderBinCL
-=================================================
-*/
-	String  CppSerializer::ShaderBinCL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
-	{
-		String	str;
-		if ( not shaderSrc.Empty() )
-		{
-			if ( inFile )
-				RETURN_ERR( "not supported" )
-			else
-				str << name << ".StringCLAsm( \n" << ToString(StringCRef::From( shaderSrc )) << " );\n";
-		}
-		return str;
-	}
-	
-/*
-=================================================
-	ShaderSrcCL
-=================================================
-*/
-	String  CppSerializer::ShaderSrcCL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
-	{
-		String	str;
-		if ( not shaderSrc.Empty() )
-		{
-			if ( inFile )
-				RETURN_ERR( "not supported" )
-			else
-				str << name << ".StringCL( \n" << ToString(StringCRef::From( shaderSrc )) << " );\n";
-		}
-		return str;
-	}
-	
 /*
 =================================================
 	ShaderSrcCPP
@@ -1093,11 +1122,11 @@ namespace PipelineCompiler
 
 		String	str;
 		str << "#ifdef GRAPHICS_API_SOFT\n"
-			<< name << ".FuncSW( &SWShaderLang::" << funcName << " );\n"
-			<< "#endif\n";
+			<< name << ".AddInvocable( EShaderLangFormat::Software_100 | EShaderLangFormat::CPP_Invocable, &SWShaderLang::" << funcName << " );\n"
+			<< "#endif\n\n";
 		return str;
 	}
-	
+
 /*
 =================================================
 	ShaderSrcCPP_Impl
@@ -1114,42 +1143,6 @@ namespace PipelineCompiler
 			str << StringCRef::From( shaderSrc );
 
 			str.FindAndChange( "##main##", funcName, OUT pos, start );
-		}
-		return str;
-	}
-	
-/*
-=================================================
-	ShaderBinHLSL
-=================================================
-*/
-	String  CppSerializer::ShaderBinHLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
-	{
-		String	str;
-		if ( not shaderSrc.Empty() )
-		{
-			if ( inFile )
-				RETURN_ERR( "not supported" )
-			else
-				str << name << ".StringBinHLSL({ " << ToString( shaderSrc ) << " });\n";
-		}
-		return str;
-	}
-	
-/*
-=================================================
-	ShaderSrcHLSL
-=================================================
-*/
-	String  CppSerializer::ShaderSrcHLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile) const
-	{
-		String	str;
-		if ( not shaderSrc.Empty() )
-		{
-			if ( inFile )
-				RETURN_ERR( "not supported" )
-			else
-				str << name << ".StringHLSL( \n" << ToString(StringCRef::From( shaderSrc )) << " );\n";
 		}
 		return str;
 	}
@@ -1374,7 +1367,7 @@ namespace PipelineCompiler
 		
 			curr_st.fieldInitialized << (curr_st.fieldInitialized.Empty() ? "" : ", ") << name << '{' << name << '}';
 
-			curr_st.vertexAttribs << "\t\t.Add( \"" << name << "\", &" << _structStack.Get().typeName << "::" << name << ", CompileTime::IsFloat<decltype(Self::" << name << ")> )\n";
+			curr_st.vertexAttribs << "\t\t.Add( \"" << name << "\", &" << "Self::" << name << ", CompileTime::IsFloat<decltype(Vertex::" << name << ")> != CompileTime::IsFloat<decltype(Self::" << name << ")> )\n";
 		}
 
 		field_str << ";    // offset: " << offset << ", align: " << align << "\n";
@@ -1422,7 +1415,7 @@ namespace PipelineCompiler
 			<< indent << "template <typename Vertex>\n"
 			<< indent << "ND_ static VertexInputState  GetAttribs ()\n"
 			<< indent << "{\n"
-			<< indent << "	using Self = NativeVertex_renderdots;\n"
+			<< indent << "	using Self = " << _structStack.Get().typeName << ";\n"
 			<< indent << "	return VertexInputState()\n"
 			<< _structStack.Get().vertexAttribs
 			<< indent << "		.Bind( \"\", SizeOf<Vertex> );\n"
@@ -1516,7 +1509,7 @@ namespace PipelineCompiler
 */
 	String  CppSerializer::ToString (EPixelFormatClass::type value)
 	{
-		if ( EnumEq( value, EPixelFormatClass::Any ) )
+		if ( value == EPixelFormatClass::Any )
 			return "EPixelFormatClass::Any";
 
 		FixedSizeArray<EPixelFormatClass::type, 64>		formats;

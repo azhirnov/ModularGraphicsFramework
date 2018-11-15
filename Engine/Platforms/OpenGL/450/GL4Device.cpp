@@ -157,7 +157,7 @@ namespace PlatformGL
 			case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR	: str << "Deprecated";			break;
 			case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR	: str << "Undefined_Behavior";	break;
 			case GL_DEBUG_TYPE_PORTABILITY 			: str << "Portability";			break;
-			case GL_DEBUG_TYPE_PERFORMANCE 			: str << "Perfomance";			break;
+			case GL_DEBUG_TYPE_PERFORMANCE 			: str << "Performance";			break;
 			case GL_DEBUG_TYPE_MARKER 				: str << "Marker";				break;
 			case GL_DEBUG_TYPE_PUSH_GROUP 			: str << "Push_Group";			break;
 			case GL_DEBUG_TYPE_POP_GROUP 			: str << "Pop_Group";			break;

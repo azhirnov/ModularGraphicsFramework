@@ -28,8 +28,8 @@ namespace PlatformVK
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
 											DSMsg::GetDataSourceDescription,
-											DSMsg::ReadRegion,
-											DSMsg::WriteRegion,
+											DSMsg::ReadMemRange,
+											DSMsg::WriteMemRange,
 											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
@@ -46,9 +46,8 @@ namespace PlatformVK
 											GpuMsg::SetImageDescription,
 											GpuMsg::GetVkImageID,
 											GpuMsg::CreateVkImageView,
-											GpuMsg::GpuMemoryRegionChanged,
 											GpuMsg::GetImageMemoryLayout
-										> >::Append< ForwardToMem_t >;
+										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::SetImageDescription
@@ -64,7 +63,6 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -102,7 +100,6 @@ namespace PlatformVK
 		bool _CreateVkImageView (const GpuMsg::CreateVkImageView &);
 		bool _GetImageDescription (const GpuMsg::GetImageDescription &);
 		bool _SetImageDescription (const GpuMsg::SetImageDescription &);
-		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
 		bool _GetImageMemoryLayout (const GpuMsg::GetImageMemoryLayout &);
 		
 	// event handlers
@@ -121,12 +118,14 @@ namespace PlatformVK
 		bool _CanHaveImageView () const;
 
 		static VkImageType  _GetImageType (EImage::type type);
+
+		static void _ValidateMemFlags (INOUT EGpuMemory::bits &flags);
+		static void _ValidateDescription (INOUT ImageDescription &descr);
 	};
 //-----------------------------------------------------------------------------
 
 
 	
-	const TypeIdList	Vk1Image::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1Image::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -135,7 +134,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Image::Vk1Image (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuImage &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),					_memManager( ci.memManager ),
 		_imageId( VK_NULL_HANDLE ),			_imageView( VK_NULL_HANDLE ),
 		_layout( EImageLayout::Unknown ),	_memFlags( ci.memFlags ),
@@ -161,14 +160,14 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Image::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Image::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Image::_GetVkPrivateClasses );
-		_SubscribeOnMsg( this, &Vk1Image::_GpuMemoryRegionChanged );
 		_SubscribeOnMsg( this, &Vk1Image::_GetImageMemoryLayout );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 		
-		// descriptor may be invalid for sharing or for delayed initialization
-		if ( Utils::IsValidDescription( _descr ) )
-			Utils::ValidateDescription( INOUT _descr );
+		_ValidateMemFlags( INOUT _memFlags );
+		_ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -279,7 +278,7 @@ namespace PlatformVK
 
 		if ( msg.oldModule == _memObj )
 		{
-			_SendMsg( ModuleMsg::Delete{} );
+			Send( ModuleMsg::Delete{} );
 		}
 		return true;
 	}
@@ -306,7 +305,7 @@ namespace PlatformVK
 		VkImageCreateInfo	info = {};
 		info.sType			= VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		info.pNext			= null;
-		info.flags			= 0; //VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
+		info.flags			= 0;
 		info.imageType		= _GetImageType( _descr.imageType );
 		info.format			= Vk1Enum( _descr.format );
 		info.extent.width	= _descr.dimension.x;
@@ -323,6 +322,13 @@ namespace PlatformVK
 
 		if ( _descr.imageType == EImage::TexCube or _descr.imageType == EImage::TexCubeArray )
 			info.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+
+		if ( EImage::IsArray( _descr.imageType ) )
+			info.flags |= VK_IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT;
+
+		// TODO: VK_IMAGE_CREATE_BLOCK_TEXEL_VIEW_COMPATIBLE_BIT
+		// TODO: VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
+		// TODO: VK_IMAGE_CREATE_ALIAS_BIT
 
 		VK_CHECK( vkCreateImage( GetVkDevice(), &info, null, OUT &_imageId ) );
 		
@@ -558,21 +564,21 @@ namespace PlatformVK
 		vkGetImageSubresourceLayout( GetVkDevice(), _imageId, &sub_resource, OUT &sub_res_layout );
 
 		GpuMsg::GetImageMemoryLayout::MemLayout	result;
-		result.offset		= BytesUL(sub_res_layout.offset);
-		result.size			= BytesUL(sub_res_layout.size);
-		result.rowPitch		= BytesUL(sub_res_layout.rowPitch);
+		result.offset		= BytesU(sub_res_layout.offset);
+		result.size			= BytesU(sub_res_layout.size);
+		result.rowPitch		= BytesU(sub_res_layout.rowPitch);
 		result.dimension	= lvl_dim.xyz();
 		
 		if ( _descr.imageType == EImage::Tex3D ) {
 			ASSERT( sub_res_layout.arrayPitch == sub_res_layout.depthPitch );
-			result.slicePitch = BytesUL(sub_res_layout.depthPitch);
+			result.slicePitch = BytesU(sub_res_layout.depthPitch);
 		} else {
 			ASSERT( sub_res_layout.depthPitch == sub_res_layout.arrayPitch );
-			result.slicePitch = BytesUL(sub_res_layout.arrayPitch);
+			result.slicePitch = BytesU(sub_res_layout.arrayPitch);
 		}
 		
 		if ( result.rowPitch == 0 )
-			result.rowPitch = BytesUL(result.dimension.x * EPixelFormat::BitPerPixel( _descr.format ));
+			result.rowPitch = BytesU(result.dimension.x * EPixelFormat::BitPerPixel( _descr.format ));
 
 		if ( result.slicePitch == 0 )
 			result.slicePitch = result.dimension.y * result.rowPitch;
@@ -593,33 +599,21 @@ namespace PlatformVK
 		switch ( type )
 		{
 			case EImage::Tex1D :
-			case EImage::Tex1DArray :
 				return VK_IMAGE_TYPE_1D;
 
 			case EImage::Tex2D :
-			case EImage::Tex2DArray :
 			case EImage::Tex2DMS :
-			case EImage::Tex2DMSArray :
 			case EImage::TexCube :
-			case EImage::TexCubeArray :
 				return VK_IMAGE_TYPE_2D;
 
+			case EImage::Tex1DArray :
+			case EImage::Tex2DArray :
+			case EImage::Tex2DMSArray :
+			case EImage::TexCubeArray :
 			case EImage::Tex3D :
 				return VK_IMAGE_TYPE_3D;
 		}
 		RETURN_ERR( "not supported", VK_IMAGE_TYPE_MAX_ENUM );
-	}
-
-/*
-=================================================
-	_GpuMemoryRegionChanged
-=================================================
-*/
-	bool Vk1Image::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
-	{
-		// request image memory barrier
-		TODO( "" );
-		return false;
 	}
 	
 /*
@@ -630,6 +624,33 @@ namespace PlatformVK
 	bool Vk1Image::_CanHaveImageView () const
 	{
 		return _descr.usage != (_descr.usage & (EImageUsage::TransferSrc | EImageUsage::TransferDst));
+	}
+	
+/*
+=================================================
+	_ValidateMemFlags
+=================================================
+*/
+	void Vk1Image::_ValidateMemFlags (INOUT EGpuMemory::bits &flags)
+	{
+		if ( flags[EGpuMemory::Dedicated] and flags[EGpuMemory::SupportAliasing] )
+		{
+			WARNING( "not supported" );
+
+			flags[EGpuMemory::Dedicated] = false;
+		}
+	}
+	
+/*
+=================================================
+	_ValidateDescription
+=================================================
+*/
+	void Vk1Image::_ValidateDescription (INOUT ImageDescription &descr)
+	{
+		// description may be invalid for sharing or for delayed initialization
+		if ( Utils::IsValidDescription( descr ) )
+			Utils::ValidateDescription( INOUT descr );
 	}
 
 }	// PlatformVK

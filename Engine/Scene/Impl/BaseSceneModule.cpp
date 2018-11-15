@@ -14,9 +14,8 @@ namespace Scene
 */
 	BaseSceneModule::BaseSceneModule (const GlobalSystemsRef gs,
 									  const ModuleConfig &config,
-									  const TypeIdList *msgTypes,
 									  const TypeIdList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes )
+		Module( gs, config, eventTypes )
 	{
 	}
 	
@@ -33,8 +32,8 @@ namespace Scene
 		{
 			//msg.newManager->Subscribe( this, &BaseSceneModule::_DeviceBeforeDestroy );
 
-			SceneMsg::GetScenePrivateClasses	req_dev;
-			msg.newManager->Send( req_dev );
+			//SceneMsg::GetScenePrivateClasses	req_dev;
+			//msg.newManager->Send( req_dev );
 
 			//_vkDevice = req_dev->result->device;
 		}
@@ -52,7 +51,7 @@ namespace Scene
 *
 	bool BaseSceneModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg( ModuleMsg::Delete{} );
+		Send( ModuleMsg::Delete{} );
 
 		//_vkDevice = null;
 		return true;

@@ -1,5 +1,6 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
+#if 0
 #include "Engine/PipelineCompiler/Serializers/AngelScriptSerializer.h"
 #include "Core/STL/Algorithms/StringParser.h"
 
@@ -682,7 +683,7 @@ namespace PipelineCompiler
 		void operator () (const UniformBuffer &ub) const
 		{
 			ASSERT( ub.binding != UMax and ub.uniqueIndex != UMax );
-			ASSERT( ub.size > BytesU(0) );
+			ASSERT( ub.size > 0_b );
 
 			str << '\n' << indent << "\t\t.AddUniformBuffer( \"" << ub.name << "\", " << usize(ub.size) << "_b, "
 				<< ub.binding << ", " << ub.uniqueIndex << ", " << ToString( ub.stageFlags ) << " )";
@@ -692,7 +693,7 @@ namespace PipelineCompiler
 		void operator () (const StorageBuffer &sb) const
 		{
 			ASSERT( sb.binding != UMax and sb.uniqueIndex != UMax );
-			ASSERT( sb.staticSize > BytesUL(0) or sb.arrayStride > BytesUL(0) );
+			ASSERT( sb.staticSize > 0_b or sb.arrayStride > 0_b );
 
 			str << '\n' << indent << "\t\t.AddStorageBuffer( \"" << sb.name << "\", " << usize(sb.staticSize) << "_b, "
 				<< usize(sb.arrayStride) << "_b, " << ToString( sb.access ) << ", " << sb.binding << ", "
@@ -727,7 +728,7 @@ namespace PipelineCompiler
 		PipelineLayoutToStringFunc	func( INOUT str, ExtractIndent( name ) );
 
 		FOR( i, value.GetUniforms() ) {
-			value.GetUniforms()[i].Apply( func );
+			value.GetUniforms()[i].Accept( func );
 		}
 
 		str << '\n' << ExtractIndent( name ) << "\t\t.Finish();\n";
@@ -1711,3 +1712,4 @@ namespace PipelineCompiler
 	}
 
 }	// PipelineCompiler
+#endif

@@ -19,6 +19,7 @@
 #include "Engine/Platforms/Public/GPU/ImageEnums.h"
 #include "Engine/Platforms/Public/GPU/VertexEnums.h"
 #include "Engine/Platforms/Public/GPU/ObjectEnums.h"
+#include "Engine/Platforms/Public/GPU/QueryEnums.h"
 
 namespace Engine
 {
@@ -45,14 +46,15 @@ namespace PlatformGL
 	enum GL4AddressMode {};
 	enum GL4Object {};
 	enum GL4BufferUsage {};
-
+	enum GL4QueryTarget {};
 	
+
 /*
 =================================================
 	Shader
 =================================================
 */
-	inline GL4Shader GL4Enum (EShader::type value)
+	ND_ inline GL4Shader  GL4Enum (EShader::type value)
 	{
 		switch ( value )
 		{
@@ -72,7 +74,7 @@ namespace PlatformGL
 	ShaderBits
 =================================================
 */
-	inline GL4ShaderBits GL4Enum (EShader::bits values)
+	ND_ inline GL4ShaderBits  GL4Enum (EShader::bits values)
 	{
 		gl::GLbitfield	flags = 0;
 
@@ -102,7 +104,7 @@ namespace PlatformGL
 	TextureTarget
 =================================================
 */
-	inline GL4TextureTarget GL4Enum (EImage::type value)
+	ND_ inline GL4TextureTarget  GL4Enum (EImage::type value)
 	{
 		switch ( value )
 		{
@@ -126,7 +128,7 @@ namespace PlatformGL
 	Primitive
 =================================================
 */
-	inline GL4Primitive GL4Enum (EPrimitive::type value)
+	ND_ inline GL4Primitive  GL4Enum (EPrimitive::type value)
 	{
 		switch ( value )
 		{
@@ -146,7 +148,7 @@ namespace PlatformGL
 	IndexType
 =================================================
 */
-	inline GL4Index GL4Enum (EIndex::type value)
+	ND_ inline GL4Index  GL4Enum (EIndex::type value)
 	{
 		switch ( value )
 		{
@@ -162,7 +164,7 @@ namespace PlatformGL
 	LogicOp
 =================================================
 */
-	inline GL4LogicOp GL4Enum (ELogicOp::type value)
+	ND_ inline GL4LogicOp  GL4Enum (ELogicOp::type value)
 	{
 		switch ( value )
 		{
@@ -192,7 +194,7 @@ namespace PlatformGL
 	BlendEq
 =================================================
 */
-	inline GL4BlendEq GL4Enum (EBlendEq::type value)
+	ND_ inline GL4BlendEq  GL4Enum (EBlendEq::type value)
 	{
 		switch ( value )
 		{
@@ -211,7 +213,7 @@ namespace PlatformGL
 	BlendFunc
 =================================================
 */
-	inline GL4BlendFunc GL4Enum (EBlendFunc::type value)
+	ND_ inline GL4BlendFunc  GL4Enum (EBlendFunc::type value)
 	{
 		switch ( value )
 		{
@@ -240,7 +242,7 @@ namespace PlatformGL
 	CompareFunc
 =================================================
 */
-	inline GL4CompareFunc GL4Enum (ECompareFunc::type value)
+	ND_ inline GL4CompareFunc  GL4Enum (ECompareFunc::type value)
 	{
 		switch ( value )
 		{
@@ -263,7 +265,7 @@ namespace PlatformGL
 	StencilOp
 =================================================
 */
-	inline GL4StencilOp GL4Enum (EStencilOp::type value)
+	ND_ inline GL4StencilOp  GL4Enum (EStencilOp::type value)
 	{
 		switch ( value )
 		{
@@ -285,7 +287,7 @@ namespace PlatformGL
 	WrapMode
 =================================================
 */
-	inline GL4AddressMode GL4Enum (EAddressMode::type value)
+	ND_ inline GL4AddressMode  GL4Enum (EAddressMode::type value)
 	{
 		switch ( value )
 		{
@@ -409,7 +411,7 @@ namespace PlatformGL
 	Object
 =================================================
 */
-	inline GL4Object GL4Enum (EGpuObject::type value)
+	ND_ inline GL4Object  GL4Enum (EGpuObject::type value)
 	{
 		switch ( value )
 		{
@@ -430,7 +432,7 @@ namespace PlatformGL
 	BufferUsage
 =================================================
 */
-	inline GL4BufferUsage GL4Enum (EGpuMemory::bits flags, EMemoryAccess::bits access)
+	ND_ inline GL4BufferUsage  GL4Enum (EGpuMemory::bits flags, EMemoryAccess::bits access)
 	{
 		int result = gl::GL_DYNAMIC_STORAGE_BIT;
 
@@ -451,13 +453,37 @@ namespace PlatformGL
 
 		return GL4BufferUsage(result);
 	}
+	
+/*
+=================================================
+	QueryTarget
+=================================================
+*/
+	ND_ inline GL4QueryTarget  GL4Enum (EPipelineStatistic::type value)
+	{
+		switch ( value )
+		{
+			case EPipelineStatistic::InputAssemblyVertices :					return GL4QueryTarget( gl::GL_VERTICES_SUBMITTED_ARB );
+			case EPipelineStatistic::TessellationControllShaderPatches :		return GL4QueryTarget( gl::GL_TESS_CONTROL_SHADER_PATCHES_ARB );
+			case EPipelineStatistic::InputAssembluPrimitives :					return GL4QueryTarget( gl::GL_PRIMITIVES_SUBMITTED_ARB );
+			case EPipelineStatistic::GeometryShaderPrimitives :					return GL4QueryTarget( gl::GL_GEOMETRY_SHADER_PRIMITIVES_EMITTED_ARB );
+			case EPipelineStatistic::ClippingPrimitives :						return GL4QueryTarget( gl::GL_CLIPPING_OUTPUT_PRIMITIVES_ARB );
+			case EPipelineStatistic::VertexShaderInvocations :					return GL4QueryTarget( gl::GL_VERTEX_SHADER_INVOCATIONS_ARB );
+			case EPipelineStatistic::GeometryShaderInvocations :				return GL4QueryTarget( gl::GL_GEOMETRY_SHADER_INVOCATIONS );
+			case EPipelineStatistic::ClippingInvocations :						return GL4QueryTarget( gl::GL_CLIPPING_INPUT_PRIMITIVES_ARB );
+			case EPipelineStatistic::FragmentShaderInvocations :				return GL4QueryTarget( gl::GL_FRAGMENT_SHADER_INVOCATIONS_ARB );
+			case EPipelineStatistic::TessellationEvaluationShaderInvocations :	return GL4QueryTarget( gl::GL_TESS_EVALUATION_SHADER_INVOCATIONS_ARB );
+			case EPipelineStatistic::ComputeShaderInvocations :					return GL4QueryTarget( gl::GL_COMPUTE_SHADER_INVOCATIONS_ARB );
+		}
+		RETURN_ERR( "unknown pipeline statitstic type!", GL4QueryTarget() );
+	}
 
 /*
 =================================================
 	InternalPixelFormat
 =================================================
 */
-	inline GL4InternalPixelFormat GL4Enum (EPixelFormat::type value)
+	ND_ inline GL4InternalPixelFormat  GL4Enum (EPixelFormat::type value)
 	{
 		switch ( value )
 		{

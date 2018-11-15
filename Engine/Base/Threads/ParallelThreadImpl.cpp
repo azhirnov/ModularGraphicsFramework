@@ -7,7 +7,6 @@ namespace Engine
 namespace Base
 {
 	
-	const TypeIdList	ParallelThreadImpl::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	ParallelThreadImpl::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -16,7 +15,7 @@ namespace Base
 =================================================
 */
 	ParallelThreadImpl::ParallelThreadImpl (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Thread &info) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_onStarted( RVREF( info.onStarted.Get() ) ),
 		_isLooping( false )
 	{
@@ -34,8 +33,6 @@ namespace Base
 		_SubscribeOnMsg( this, &ParallelThreadImpl::_Link );
 		_SubscribeOnMsg( this, &ParallelThreadImpl::_Compose );
 		_SubscribeOnMsg( this, &ParallelThreadImpl::_Delete );
-		
-		CHECK( _ValidateMsgSubscriptions() );
 	}
 	
 /*
@@ -45,7 +42,7 @@ namespace Base
 */
 	ParallelThreadImpl::~ParallelThreadImpl ()
 	{
-		LOG( "ParallelThread finalized", ELog::Debug );
+		//LOG( "ParallelThread finalized", ELog::Debug );
 
 		ASSERT( not _isLooping );
 
@@ -54,6 +51,18 @@ namespace Base
 		}
 	}
 	
+/*
+=================================================
+	SetDebugName
+=================================================
+*/
+	void ParallelThreadImpl::SetDebugName (StringCRef name)
+	{
+		BaseObject::SetDebugName( name );
+
+		_thread.SetCurrentThreadName( name );
+	}
+
 /*
 =================================================
 	_Link

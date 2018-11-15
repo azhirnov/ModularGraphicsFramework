@@ -22,16 +22,9 @@ namespace Base
 	_Subscribe2
 =================================================
 */
-	bool MessageHandler::_Subscribe2 (const TypeIdList& validTypes, TypeId id, EPriority priority, Handler &&handler, bool checked)
+	bool MessageHandler::_Subscribe2 (TypeId id, EPriority priority, Handler &&handler)
 	{
-		#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))
-			checked = true;
-		#endif
-
 		ASSERT( priority != EPriority::Auto );
-
-		if ( checked and not validTypes.HasType( id ) )
-			RETURN_ERR( "Can't subscribe for event '" << ToString( id ) << "'" );
 		
 		// remove existing handler
 		usize	first;
@@ -56,9 +49,10 @@ namespace Base
 	_CopySubscriptions
 =================================================
 */
-	bool MessageHandler::_CopySubscriptions (const TypeIdList& validTypes, const Object_t *obj, const MessageHandler &other, ArrayCRef<TypeId> ids, EPriority priority)
+	bool MessageHandler::_CopySubscriptions (const Object_t *selfObj, const Object_t *, const MessageHandler &other,
+											 ArrayCRef<TypeId> msgIds, bool warnIfNotExist, EPriority priority)
 	{
-		for (auto id : ids)
+		for (auto id : msgIds)
 		{
 			uint	copied = 0;
 			usize	first;
@@ -67,17 +61,19 @@ namespace Base
 			{
 				for (usize i = first; i < other._handlers.Count() and other._handlers[i].first.id == id; ++i)
 				{
-					if ( other._handlers[i].second.ptr.Lock().RawPtr() == obj )
+					auto*	ptr = other._handlers[i].second.ptr.Lock().RawPtr();
+
+					if ( ptr != selfObj )
 					{
 						EPriority	prior = (priority == EPriority::Auto ? other._handlers[i].first.priority : priority);
 
-						_Subscribe2( validTypes, id, prior, Handler(other._handlers[i].second), false );
+						_Subscribe2( id, prior, Handler(other._handlers[i].second) );
 						copied++;
 					}
 				}
 			}
 
-			if ( copied == 0 )
+			if ( warnIfNotExist and copied == 0 )
 				RETURN_ERR( "Handler for message '" << ToString( id ) << "' is not exist" );
 		}
 		return true;
@@ -197,7 +193,7 @@ namespace Base
 	bool MessageHandler::Validate (const TypeIdList &typelist) const
 	{
 		// is all handlers presented in typelist?
-		#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))
+		/*#if not (defined(GX_ENABLE_DEBUGGING) or defined(GX_ENABLE_PROFILING))
 		{
 			FOR( i, _handlers )
 			{
@@ -207,7 +203,7 @@ namespace Base
 					RETURN_ERR( "Type '" << ToString( id ) << "' is not exist in typelist" );
 			}
 		}
-		#endif
+		#endif*/
 
 		// is all types in typelist has handlers?
 		for (usize i = 0, cnt = typelist.Count(); i < cnt; ++i)

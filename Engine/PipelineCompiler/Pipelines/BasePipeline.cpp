@@ -17,7 +17,7 @@ namespace PipelineCompiler
 	BasePipeline::BasePipeline (StringCRef name) :
 		_path( name ),
 		_name( FileAddress::GetNameAndExt(name) ),
-		shaderFormat{ EShaderSrcFormat::GLSL }
+		shaderFormat{ EShaderFormat::DefaultSrc }
 	{
 		usize	pos = 0;
 		if ( _name.Find( '.', OUT pos ) )
@@ -40,7 +40,7 @@ namespace PipelineCompiler
 	BasePipeline::BasePipeline (StringCRef path, StringCRef name) :
 		_path( path ),
 		_name( name ),
-		shaderFormat{ EShaderSrcFormat::GLSL }
+		shaderFormat{ EShaderFormat::DefaultSrc }
 	{
 		_lastEditTime = OS::FileSystem::GetFileLastModificationTime( _path ).ToTime();
 
@@ -225,9 +225,26 @@ namespace PipelineCompiler
 	pass 1 & 2
 =================================================
 */
-	String BasePipeline::_GetVersionGLSL ()
+	String BasePipeline::_GetVersionGLSL (EShaderFormat::type fmt)
 	{
-		return "#version "_str << ShaderCompiler::GLSL_VERSION << " core\n";
+		const uint	version = EShaderFormat::GetVersion( fmt );
+
+		switch ( EShaderFormat::GetAPI( fmt ) )
+		{
+			case EShaderFormat::OpenGL :
+				CHECK_ERR( version >= 330 );
+				return "#version "_str << version << " core\n";
+				
+			case EShaderFormat::GX_API :
+				CHECK_ERR( version == 100 );
+				return "#version 450 core\n";
+
+			case EShaderFormat::Vulkan :
+				CHECK_ERR( version >= 100 );
+				return "#version 450 core\n";
+		}
+
+		RETURN_ERR( "unsupported shader format!" );
 	}
 
 /*
@@ -246,16 +263,23 @@ namespace PipelineCompiler
 #define SH_GEOMETRY         (1<<3)
 #define SH_FRAGMENT         (1<<4)
 #define SH_COMPUTE          (1<<5)
-
+		)#";
+		return header;
+	}
+	
+/*
+=================================================
+	_GetTypeRedefinitionGLSL
+----
+	pass 1 & 2
+=================================================
+*/
+	StringCRef  BasePipeline::_GetTypeRedefinitionGLSL ()
+	{
+		static const char	header[] = R"#(
 #ifdef GL_ARB_gpu_shader_int64
 #extension GL_ARB_gpu_shader_int64 : require
 //#define ARB_gpu_shader_int64_enabled  1
-#endif
-
-// for vulkan compatibility
-#ifdef GL_ARB_separate_shader_objects
-#extension GL_ARB_separate_shader_objects : enable
-#define ARB_separate_shader_objects_enabled  1
 #endif
 
 #define bool2		bvec2
@@ -310,14 +334,17 @@ namespace PipelineCompiler
 #define double4x4	dmat4x4
 
 #ifdef VULKAN
-#define PUSH_CONSTANT( _name_ )	layout (std140, push_constant) uniform _name_
+#define PUSH_CONSTANT( _name_ )		layout (std140, push_constant) uniform _name_
 #else
-#define PUSH_CONSTANT( _name_ )	layout (std140) uniform pushConst_##_name_
+#define PUSH_CONSTANT( _name_ )		layout (std140) uniform pushConst_##_name_
+#define subpassInput				sampler2D
+#define subpassLoad( _input_ )		texelFetch( _input_, ivec2(gl_FragCoord.xy), 0 )
+#define subpassLoadMS( _input_ )	texelFetch( _input_, ivec2(gl_FragCoord.xy), 0, 0 )	// TODO
 #endif
 		)#";
 		return header;
 	}
-	
+
 /*
 =================================================
 	_GetPerShaderHeaderGLSL
@@ -399,7 +426,7 @@ namespace PipelineCompiler
 	pass 1 & 2
 =================================================
 */
-	bool BasePipeline::_OnCompilationFailed (EShader::type shaderType, EShaderSrcFormat::type, ArrayCRef<StringCRef> source, StringCRef log) const
+	bool BasePipeline::_OnCompilationFailed (EShader::type shaderType, EShaderFormat::type, ArrayCRef<StringCRef> source, StringCRef log) const
 	{
 		String	str;
 
@@ -476,6 +503,23 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	Bindings::Subpass
+=================================================
+*/
+	BasePipeline::Bindings&  BasePipeline::Bindings::Subpass (StringCRef name, uint attachmentIndex, bool isMultisample, EShader::bits shaderUsage)
+	{
+		SubpassInput	spi;
+		spi.name			= name;
+		spi.attachmentIndex	= attachmentIndex;
+		spi.isMultisample	= isMultisample;
+		spi.shaderUsage		= shaderUsage;
+
+		uniforms.PushBack( _Uniform( RVREF(spi) ) );
+		return *this;
+	}
+
+/*
+=================================================
 	Bindings::UniformBuffer
 =================================================
 */
@@ -516,37 +560,36 @@ namespace PipelineCompiler
 	Location::BindingToStringGLSL
 =================================================
 */
-	String  BasePipeline::Location::BindingToStringGLSL (EShaderType shaderApi) const
+	String  BasePipeline::Location::BindingToStringGLSL (EShaderFormat::type shaderApi) const
 	{
 		String	str;
 		
-		switch ( shaderApi )
+		switch ( EShaderFormat::GetAPI( shaderApi ) )
 		{
-			case EShaderType::None :
+			case EShaderFormat::Unknown :
 				break;
 
-			case EShaderType::GLSL :
+			case EShaderFormat::OpenGL :
 				if ( index != UMax ) {
 					str << "layout(binding=" << index << ") ";
 				}
 				break;
 				
-			case EShaderType::CL :
-			case EShaderType::HLSL :
-			case EShaderType::Software :
+			case EShaderFormat::OpenCL :
+			case EShaderFormat::DirectX :
+			case EShaderFormat::Software :
 				if ( uniqueIndex != UMax ) {
 					str << "layout(binding=" << uniqueIndex << ") ";
 				}
 				break;
 
-			case EShaderType::SPIRV :
+			case EShaderFormat::Vulkan :
 				if ( uniqueIndex != UMax ) {
 					str << "layout(binding=" << uniqueIndex << (descriptorSet != UMax ? ", set="_str << descriptorSet : "") << ") ";
 				}
 				break;
 
-			case EShaderType::GLSL_ES_2 :
-			case EShaderType::GLSL_ES_3 :
+			case EShaderFormat::OpenGLES :
 			default :
 				WARNING( "not supported" );
 		}
@@ -558,17 +601,17 @@ namespace PipelineCompiler
 	Location::LocationToStringGLSL
 =================================================
 */
-	String  BasePipeline::Location::LocationToStringGLSL (EShaderType shaderApi) const
+	String  BasePipeline::Location::LocationToStringGLSL (EShaderFormat::type shaderApi) const
 	{
 		String	str;
 		
-		switch ( shaderApi )
+		switch ( EShaderFormat::GetAPI( shaderApi ) )
 		{
-			case EShaderType::None :
+			case EShaderFormat::Unknown :
 				break;
 
-			case EShaderType::GLSL :
-			case EShaderType::GLSL_ES_3 :
+			case EShaderFormat::OpenGL :
+			case EShaderFormat::OpenGLES :
 				if ( index != UMax ) {
 					str << "layout(location=" << index << ") ";
 				}
@@ -588,7 +631,7 @@ namespace PipelineCompiler
 	TextureUniform::ToStringGLSL
 =================================================
 */
-	String  BasePipeline::TextureUniform::ToStringGLSL (EShaderType shaderApi) const
+	String  BasePipeline::TextureUniform::ToStringGLSL (EShaderFormat::type shaderApi) const
 	{
 		bool	is_shadow = defaultSampler.IsDefined() and defaultSampler->CompareOp() != ECompareFunc::None;
 		
@@ -605,11 +648,25 @@ namespace PipelineCompiler
 	ImageUniform::ToStringGLSL
 =================================================
 */
-	String  BasePipeline::ImageUniform::ToStringGLSL (EShaderType shaderApi) const
+	String  BasePipeline::ImageUniform::ToStringGLSL (EShaderFormat::type shaderApi) const
 	{
 		return	location.BindingToStringGLSL( shaderApi ) << "layout(" << PipelineCompiler::ToStringGLSL( format ) << ") " <<
 				PipelineCompiler::ToStringGLSL( memoryModel ) << " uniform " <<
 				PipelineCompiler::ToStringGLSL( EShaderVariable::ToImage( imageType, format ) ) << " " << name << ";\n";
+	}
+//=========================================================
+
+	
+
+/*
+=================================================
+	SubpassInput::ToStringGLSL
+=================================================
+*/
+	String  BasePipeline::SubpassInput::ToStringGLSL (EShaderFormat::type shaderApi) const
+	{
+		return	location.BindingToStringGLSL( shaderApi ) << "layout(input_attachment_index=" << attachmentIndex << ") " <<
+				" uniform subpassInput " << name << ";\n";
 	}
 //=========================================================
 
@@ -643,7 +700,7 @@ namespace PipelineCompiler
 	UniformBuffer::ToStringGLSL
 =================================================
 */
-	String  BasePipeline::UniformBuffer::ToStringGLSL (StringCRef fields, EShaderType shaderApi) const
+	String  BasePipeline::UniformBuffer::ToStringGLSL (StringCRef fields, EShaderFormat::type shaderApi) const
 	{
 		return	location.BindingToStringGLSL( shaderApi ) << "layout(" << PipelineCompiler::ToStringGLSL( packing ) << ") " <<
 				"uniform " << typeName << " {\n" << fields << "\n} " << name << ";\n";
@@ -657,7 +714,7 @@ namespace PipelineCompiler
 	StorageBuffer::ToStringGLSL
 =================================================
 */
-	String  BasePipeline::StorageBuffer::ToStringGLSL (StringCRef fields, EShaderType shaderApi) const
+	String  BasePipeline::StorageBuffer::ToStringGLSL (StringCRef fields, EShaderFormat::type shaderApi) const
 	{
 		String	str;
 		str << location.BindingToStringGLSL( shaderApi ) << "layout(" << PipelineCompiler::ToStringGLSL( packing ) << ") ";

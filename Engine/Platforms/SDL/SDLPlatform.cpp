@@ -25,14 +25,14 @@ namespace PlatformSDL
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											OSMsg::GetDisplays,
 											OSMsg::GetOSModules,
 											OSMsg::GetProccessorInfo,
 											OSMsg::GetMemoryInfo
-										> >;
+										>;
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Delete,
 											OSMsg::OnSDLPlatformCreated
@@ -49,7 +49,6 @@ namespace PlatformSDL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -97,7 +96,6 @@ namespace PlatformSDL
 
 
 
-	const TypeIdList	SDLPlatform::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SDLPlatform::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -106,7 +104,7 @@ namespace PlatformSDL
 =================================================
 */
 	SDLPlatform::SDLPlatform (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Platform &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_createInfo( ci ), _isCreated( false )
 	{
 		SetDebugName( "SDLPlatform" );
@@ -128,7 +126,7 @@ namespace PlatformSDL
 		_SubscribeOnMsg( this, &SDLPlatform::_GetProccessorInfo );
 		_SubscribeOnMsg( this, &SDLPlatform::_GetMemoryInfo );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 	}
 	
 /*
@@ -138,7 +136,7 @@ namespace PlatformSDL
 */
 	SDLPlatform::~SDLPlatform ()
 	{
-		LOG( "SDLPlatform finalized", ELog::Debug );
+		//LOG( "SDLPlatform finalized", ELog::Debug );
 
 		_windows.Clear();
 
@@ -184,15 +182,13 @@ namespace PlatformSDL
 		FOR( i, _windows )
 		{
 			CHECK( GlobalSystems()->taskModule->SendAsync( ModuleMsg::PushAsyncMessage{
-						AsyncMessage{ LAMBDA(
-							target = _windows[i],
-							msg = OSMsg::OnSDLPlatformCreated{} ) (GlobalSystemsRef)
+						_windows[i]->GetThreadID(),
+						LAMBDA( target = _windows[i], msg = OSMsg::OnSDLPlatformCreated{} ) (GlobalSystemsRef)
 						{
+							ASSERT( target->SupportsAllMessages< SDLWindowMsgList_t >() );
 							target->Send( msg );
-						}},
-						_windows[i]->GetThreadID()
-					})
-			);
+						}}
+					));
 		}
 		return true;
 	}
@@ -205,7 +201,6 @@ namespace PlatformSDL
 	bool SDLPlatform::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
 		CHECK_ERR( msg.module );
-		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< SDLWindowMsgList_t >() );
 		ASSERT( not _windows.IsExist( msg.module ) );
 
 		_windows.Add( msg.module );
@@ -213,15 +208,13 @@ namespace PlatformSDL
 		if ( _IsCreated() )
 		{
 			CHECK( GlobalSystems()->taskModule->SendAsync( ModuleMsg::PushAsyncMessage{
-						AsyncMessage{ LAMBDA(
-							target = msg.module,
-							msg = OSMsg::OnSDLPlatformCreated{} ) (GlobalSystemsRef)
+						msg.module->GetThreadID(),
+						LAMBDA( target = msg.module, msg = OSMsg::OnSDLPlatformCreated{} ) (GlobalSystemsRef)
 						{
+							ASSERT( target->SupportsAllMessages< SDLWindowMsgList_t >() );
 							target->Send( msg );
-						}},
-						msg.module->GetThreadID()
-					})
-			);
+						}}
+					));
 		}
 		return true;
 	}
@@ -341,7 +334,7 @@ namespace PlatformSDL
 	bool SDLPlatform::_GetMemoryInfo (const OSMsg::GetMemoryInfo &msg)
 	{
 		OSMsg::GetMemoryInfo::Info	info;
-		info.total	= BytesUL::FromMb( ::SDL_GetSystemRAM() );
+		info.total	= BytesU::FromMb( ::SDL_GetSystemRAM() );
 
 		msg.result.Set( info );
 		return true;

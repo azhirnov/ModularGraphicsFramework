@@ -26,8 +26,8 @@ namespace PlatformTools
 	// variables
 	private:
 		ubyte *					_ptr;
-		BytesUL					_offset;
-		BytesUL					_size;
+		BytesU					_offset;
+		BytesU					_size;
 
 		EMemoryAccess::bits		_access;
 		EMemoryAccess::bits		_mappingAccess;
@@ -48,27 +48,27 @@ namespace PlatformTools
 		ND_ bool				IsMapped ()					const	{ return _ptr != null; }
 		ND_ void *				Pointer ()							{ return _ptr; }
 		ND_ bool				IsMappedMemoryChanged ()	const	{ return _changed; }
-		ND_ BytesUL				MappedOffset ()				const	{ return _offset; }
-		ND_ BytesUL				MappedSize ()				const	{ return _size; }
+		ND_ BytesU				MappedOffset ()				const	{ return _offset; }
+		ND_ BytesU				MappedSize ()				const	{ return _size; }
 		ND_ EMemoryAccess::bits	MemoryAccess ()				const	{ return _access; }
 		ND_ EMemoryAccess::bits	MappingAccess ()			const	{ return _mappingAccess; }
 
 		ND_ bool IsMappingAllowed (EMappingFlags mapFlags);
 
-		void OnMapped (void *ptr, BytesUL offset, BytesUL size, EMappingFlags mapFlags);
-		bool FlushMemoryRange (BytesUL offset, BytesUL size);
+		void OnMapped (void *ptr, BytesU offset, BytesU size, EMappingFlags mapFlags);
+		bool FlushMemoryRange (BytesU offset, BytesU size);
 		bool Unmap ();
 
-		bool Read (BytesUL offset, BytesUL size, OUT BinArrayCRef &result) const;
-		bool Write (BinArrayCRef data, BytesUL offset, OUT BytesUL &result);
+		bool Read (BytesU offset, BytesU size, OUT BinArrayCRef &result) const;
+		bool Write (BinArrayCRef data, BytesU offset, OUT BytesU &result);
 
-		bool ReadImage (OUT BytesUL &readn, OUT BinArrayRef result, BitsU bitPerPixel,
-						const uint3 &dstDimension, BytesUL dstRowPitch, BytesUL dstSlicePitch,
-						const uint3 &srcOffset, const uint3 &srcDimension, BytesUL srcMemOffset, BytesUL srcMemSize, BytesUL srcRowPitch, BytesUL srcSlicePitch) const;
+		bool ReadImage (OUT BytesU &readn, OUT BinArrayRef result, BitsU bitPerPixel,
+						const uint3 &dstDimension, BytesU dstRowPitch, BytesU dstSlicePitch,
+						const uint3 &srcOffset, const uint3 &srcDimension, BytesU srcMemOffset, BytesU srcMemSize, BytesU srcRowPitch, BytesU srcSlicePitch) const;
 
-		bool WriteImage (OUT BytesUL &written, BinArrayCRef data, BitsU bitPerPixel,
-						 const uint3 &srcDimension, BytesUL srcRowPitch, BytesUL srcSlicePitch,
-						 const uint3 &dstOffset, const uint3 &dstDimension, BytesUL dstMemOffset, BytesUL dstMemSize, BytesUL dstRowPitch, BytesUL dstSlicePitch);
+		bool WriteImage (OUT BytesU &written, BinArrayCRef data, BitsU bitPerPixel,
+						 const uint3 &srcDimension, BytesU srcRowPitch, BytesU srcSlicePitch,
+						 const uint3 &dstOffset, const uint3 &dstDimension, BytesU dstMemOffset, BytesU dstMemSize, BytesU dstRowPitch, BytesU dstSlicePitch);
 
 	private:
 		static EMemoryAccess::bits _GpuMemoryToMemoryAccess (EGpuMemory::bits flags);

@@ -27,12 +27,10 @@ namespace Graphics
 										::Append< GpuMsg::DefaultComputeCommands_t >
 										::Append< GpuMsg::DefaultGraphicsCommands_t >;
 		
-		using SupportedMessages_t	= GraphicsBaseModule::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											GraphicsMsg::CmdBeginAsync,
 											GraphicsMsg::CmdEndAsync
-										> >
-										::Append< CmdBufferMsgList_t >;
-
+										>;
 		using SupportedEvents_t		= GraphicsBaseModule::SupportedEvents_t;
 
 
@@ -64,7 +62,6 @@ namespace Graphics
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -111,7 +108,6 @@ namespace Graphics
 //-----------------------------------------------------------------------------
 
 
-	const TypeIdList	AsyncCommandBuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	AsyncCommandBuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -120,7 +116,7 @@ namespace Graphics
 =================================================
 */
 	AsyncCommandBuffer::AsyncCommandBuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::AsyncCommandBuffer &ci) :
-		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_cmdBufferMngr{ ci.cmdBufMngr },	_cmdBufferId{ 0 },
 		_currCmdIndex{ UMax }
 	{
@@ -138,6 +134,8 @@ namespace Graphics
 		_SubscribeOnMsg( this, &AsyncCommandBuffer::_OnManagerChanged );
 		_SubscribeOnMsg( this, &AsyncCommandBuffer::_CmdBeginAsync );
 		_SubscribeOnMsg( this, &AsyncCommandBuffer::_CmdEndAsync );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGpuThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -168,7 +166,7 @@ namespace Graphics
 		GpuMsg::GetGraphicsModules	req_ids;
 		CHECK( _GetManager()->Send( req_ids ) );
 
-		_cmdBufferId = req_ids.graphics->commandBuffer;
+		_cmdBufferId = req_ids.result->graphics.commandBuffer;
 
 
 		// create builder
@@ -177,7 +175,7 @@ namespace Graphics
 		if ( not _builder )
 		{
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-										req_ids.graphics->commandBuilder,
+										req_ids.result->graphics.commandBuilder,
 										GlobalSystems(),
 										CreateInfo::GpuCommandBuilder{ _GetManager() },
 										OUT _builder ) );
@@ -311,7 +309,7 @@ namespace Graphics
 
 			case ESyncMode::InFrame :
 			case ESyncMode::BeforeFrame :
-				CHECK_ERR( msg.waitSemaphores.Empty() );	// may be sync or perfomance issues, so don't use it
+				CHECK_ERR( msg.waitSemaphores.Empty() );	// may be sync or performance issues, so don't use it
 				CHECK_ERR( msg.beforeFrameExecuting == GpuSemaphoreId::Unknown );
 				break;
 
@@ -394,8 +392,8 @@ namespace Graphics
 		CHECK( _syncManager->Send( fence_ctor ) );
 
 		// submit commands
-		GpuMsg::SubmitGraphicsQueueCommands		submit;
-		submit.commands << cmdBuf;
+		GpuMsg::SubmitCommands		submit;
+		submit.commands	<< cmdBuf;
 		submit.fence	 = *fence_ctor.result;
 		submit.waitSemaphores.Append( cmd.waitSemaphores );
 		CHECK( _GetManager()->Send( submit ) );
@@ -420,7 +418,7 @@ namespace Graphics
 		auto&	cmd = _pendingCommands.Back();
 
 		// submit commands
-		GpuMsg::SubmitGraphicsQueueCommands	submit;
+		GpuMsg::SubmitCommands	submit;
 
 		_waitingCommands.PushBack({});
 		_waitingCommands.Back().cmdBuffer	 = cmdBuf;

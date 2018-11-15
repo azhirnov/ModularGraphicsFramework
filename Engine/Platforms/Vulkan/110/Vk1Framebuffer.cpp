@@ -55,7 +55,6 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -99,7 +98,6 @@ namespace PlatformVK
 
 
 	
-	const TypeIdList	Vk1Framebuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1Framebuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -108,7 +106,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Framebuffer::Vk1Framebuffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuFramebuffer &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_framebufferId( VK_NULL_HANDLE ),
 		_descr( ci.size, ci.layers )
 	{
@@ -132,7 +130,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_GetVkPrivateClasses );
 		_SubscribeOnMsg( this, &Vk1Framebuffer::_FramebufferAttachImage );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
@@ -198,13 +196,13 @@ namespace PlatformVK
 	{
 		CHECK_ERR( msg.newModule );
 		
-		if ( msg.newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >() )
+		if ( msg.newModule->SupportsAllMessages< ImageMsgList_t >() )
 		{
 			return _FramebufferAttachImage({ msg.name, msg.newModule });
 		}
 
 		// render pass must be unique
-		const bool	is_render_pass	= msg.newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
+		const bool	is_render_pass	= msg.newModule->SupportsAllMessages< RenderPassMsgList_t >();
 
 		CHECK( _Attach( msg.name, msg.newModule, is_render_pass ) );
 
@@ -235,10 +233,10 @@ namespace PlatformVK
 		}
 		CHECK_ERR( old_mod );
 
-		bool	is_render_pass	= msg.newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
-		bool	was_render_pass	= old_mod->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
-		bool	is_image		= msg.newModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
-		bool	was_image		= old_mod->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+		bool	is_render_pass	= msg.newModule->SupportsAllMessages< RenderPassMsgList_t >();
+		bool	was_render_pass	= old_mod->SupportsAllMessages< RenderPassMsgList_t >();
+		bool	is_image		= msg.newModule->SupportsAllMessages< ImageMsgList_t >();
+		bool	was_image		= old_mod->SupportsAllMessages< ImageMsgList_t >();
 
 		CHECK_ERR( is_render_pass == was_render_pass and is_image == was_image );
 
@@ -315,8 +313,8 @@ namespace PlatformVK
 	{
 		CHECK_ERR( msg.oldModule );
 
-		bool	is_render_pass	= msg.oldModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >();
-		bool	is_image		= msg.oldModule->GetSupportedMessages().HasAllTypes< ImageMsgList_t >();
+		bool	is_render_pass	= msg.oldModule->SupportsAllMessages< RenderPassMsgList_t >();
+		bool	is_image		= msg.oldModule->SupportsAllMessages< ImageMsgList_t >();
 
 		if ( _Detach( msg.oldModule ) and (is_image or is_render_pass) )
 		{
@@ -407,8 +405,8 @@ namespace PlatformVK
 			GpuMsg::CreateVkImageView	req_view{ att.descr };
 			mod->Send( req_view );
 			
-			att.descr.format	= att.descr.format == EPixelFormat::Unknown ? img_res.Get<1>().format : att.descr.format;
-			att.descr.viewType	= att.descr.viewType == EImage::Unknown ? img_res.Get<1>().imageType : att.descr.viewType;
+			att.descr.format	= (att.descr.format == EPixelFormat::Unknown ? img_res.Get<1>().format : att.descr.format);
+			att.descr.viewType	= (att.descr.viewType == EImage::Unknown ? img_res.Get<1>().imageType : att.descr.viewType);
 			att.samples			= img_res.Get<1>().samples;
 			att.view			= *req_view.result;
 			
@@ -428,11 +426,9 @@ namespace PlatformVK
 
 		
 		// check attachments
-		if ( render_pass == VK_NULL_HANDLE )
-		{
+		if ( render_pass == VK_NULL_HANDLE ) {
 			CHECK_ERR( _CreateRenderPassByAttachment( OUT render_pass_descr, OUT render_pass ) );
-		}
-		else
+		}else
 			CHECK_ERR( _ValidateAttachment( render_pass_descr ) );
 		
 		// prepare

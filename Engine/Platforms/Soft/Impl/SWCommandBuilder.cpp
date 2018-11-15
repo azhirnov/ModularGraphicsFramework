@@ -29,7 +29,7 @@ namespace PlatformSW
 											GpuMsg::CmdEnd,
 											GpuMsg::SetCommandBufferDependency,
 											GpuMsg::GetCommandBufferState
-										> >::Append< GpuMsg::DefaultComputeCommands_t >;
+										> >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t;
 
@@ -44,7 +44,6 @@ namespace PlatformSW
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -95,7 +94,6 @@ namespace PlatformSW
 
 
 	
-	const TypeIdList	SWCommandBuilder::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SWCommandBuilder::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -104,7 +102,7 @@ namespace PlatformSW
 =================================================
 */
 	SWCommandBuilder::SWCommandBuilder (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
-		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
+		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes )
 	{
 		SetDebugName( "SWCommandBuilder" );
 
@@ -145,7 +143,7 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdPushDebugGroup );
 		_SubscribeOnMsg( this, &SWCommandBuilder::_CmdPopDebugGroup );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -237,7 +235,7 @@ namespace PlatformSW
 		// use target command buffer
 		if ( msg.targetCmdBuffer )
 		{
-			CHECK_ERR( msg.targetCmdBuffer->GetSupportedMessages().HasAllTypes< CmdBufferMsg_t >() );
+			CHECK_ERR( msg.targetCmdBuffer->SupportsAllMessages< CmdBufferMsg_t >() );
 
 			_cmdBuffer = msg.targetCmdBuffer;
 		}
@@ -251,6 +249,8 @@ namespace PlatformSW
 								CommandBufferDescription{ msg.flags }
 							},
 							OUT _cmdBuffer ) );
+
+			_cmdBuffer->SetDebugName( String(GetDebugName()) << "_Buffer" );
 
 			CHECK_ERR( _Attach( "", _cmdBuffer ) );
 		}

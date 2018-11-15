@@ -182,18 +182,19 @@ namespace PipelineCompiler
 */
 	void ShaderVarNameValidator::_ReplaceKeyword (INOUT String &name) const
 	{
-		switch ( _dstShader )
+		switch ( EShaderFormat::GetAPI( _dstShader ) )
 		{
-			case EShaderDstFormat::GLSL_Source :
+			case EShaderFormat::OpenGL :
+			case EShaderFormat::Vulkan :
 				return _ReplaceGLSLKeyword( INOUT name );
 
-			case EShaderDstFormat::CL_Source :
+			case EShaderFormat::OpenCL :
 				return _ReplaceCLKeyword( INOUT name );
 
-			case EShaderDstFormat::CPP_Module :
+			case EShaderFormat::Software :
 				return _ReplaceCPPKeyword( INOUT name );
 
-			case EShaderDstFormat::HLSL_Source :
+			case EShaderFormat::DirectX :
 				return _ReplaceHLSLKeyword( INOUT name );
 		}
 
@@ -207,18 +208,19 @@ namespace PipelineCompiler
 */
 	void ShaderVarNameValidator::_ReplaceBuiltinFunctions (INOUT String &name) const
 	{
-		switch ( _dstShader )
+		switch ( EShaderFormat::GetAPI( _dstShader ) )
 		{
-			case EShaderDstFormat::GLSL_Source :
+			case EShaderFormat::OpenGL :
+			case EShaderFormat::Vulkan :
 				return _ReplaceGLSLBuiltinFn( INOUT name );
-
-			case EShaderDstFormat::CL_Source :
+				
+			case EShaderFormat::OpenCL :
 				return _ReplaceCLBuiltinFn( INOUT name );
-
-			case EShaderDstFormat::CPP_Module :
+				
+			case EShaderFormat::Software :
 				return _ReplaceCPPBuiltinFn( INOUT name );
-
-			case EShaderDstFormat::HLSL_Source :
+				
+			case EShaderFormat::DirectX :
 				return _ReplaceHLSLBuiltinFn( INOUT name );
 		}
 

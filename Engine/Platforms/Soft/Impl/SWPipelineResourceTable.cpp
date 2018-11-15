@@ -38,7 +38,7 @@ namespace PlatformSW
 											GpuMsg::PipelineAttachBuffer,
 											GpuMsg::PipelineAttachImage,
 											GpuMsg::PipelineAttachTexture
-										> >::Append< LayoutMsgList_t >;
+										> >;
 
 		using SupportedEvents_t		= SWBaseModule::SupportedEvents_t;
 		
@@ -58,8 +58,8 @@ namespace PlatformSW
 		
 		struct BufferAttachment
 		{
-			BytesUL		offset;
-			BytesUL		size;
+			BytesU		offset;
+			BytesU		size;
 		};
 
 		struct ImageAttachment
@@ -74,7 +74,6 @@ namespace PlatformSW
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -114,7 +113,6 @@ namespace PlatformSW
 
 
 	
-	const TypeIdList	SWPipelineResourceTable::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SWPipelineResourceTable::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -123,7 +121,7 @@ namespace PlatformSW
 =================================================
 */
 	SWPipelineResourceTable::SWPipelineResourceTable (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		SWBaseModule( gs, ModuleConfig{ id, UMax, true }, &_msgTypes, &_eventTypes )
+		SWBaseModule( gs, ModuleConfig{ id, UMax, true }, &_eventTypes )
 	{
 		SetDebugName( "SWPipelineResourceTable" );
 
@@ -146,6 +144,8 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWPipelineResourceTable::_PipelineAttachImage );
 		_SubscribeOnMsg( this, &SWPipelineResourceTable::_PipelineAttachBuffer );
 		_SubscribeOnMsg( this, &SWPipelineResourceTable::_PipelineAttachTexture );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -232,7 +232,7 @@ namespace PlatformSW
 		CHECK_ERR( msg.newModule );
 
 		// pipeline layout must be unique
-		const bool	is_layout = msg.newModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >();
+		const bool	is_layout = msg.newModule->SupportsAllMessages< LayoutMsgList_t >();
 
 		CHECK( _Attach( msg.name, msg.newModule ) );
 		CHECK( _SetState( EState::Initial ) );
@@ -327,7 +327,7 @@ namespace PlatformSW
 		{
 			CHECK( _SetState( EState::Initial ) );
 
-			if ( msg.oldModule->GetSupportedMessages().HasAllTypes< LayoutMsgList_t >() )
+			if ( msg.oldModule->SupportsAllMessages< LayoutMsgList_t >() )
 				_DestroyResourceTable();
 		}
 		return true;
@@ -367,7 +367,7 @@ namespace PlatformSW
 
 			for (const auto& mod : self._GetAttachments())
 			{
-				if ( mod.second->GetSupportedMessages().HasAnyType< ResourceMsgList >() )
+				if ( mod.second->SupportsAnyMessage< ResourceMsgList >() )
 					moduleMap.Add( mod.first, mod.second );
 			}
 		}
@@ -408,7 +408,7 @@ namespace PlatformSW
 			
 			if ( moduleMap.Find( name, OUT iter ) )
 			{
-				CHECK_ERR( iter->second->GetSupportedMessages().HasAllTypes< MsgList >() );
+				CHECK_ERR( iter->second->SupportsAllMessages< MsgList >() );
 				result = iter->second;
 
 				DEBUG_ONLY( moduleMap.EraseByIter( iter ) );
@@ -486,7 +486,7 @@ namespace PlatformSW
 			
 			CHECK_ERR( FindModule< BufferMsgList >( buf.name, OUT cached.resource ) );
 			
-			GpuMsg::GetBufferDescription		req_descr;
+			GpuMsg::GetBufferDescription	req_descr;
 			cached.resource->Send( req_descr );
 			
 			CHECK( req_descr.result->usage[ EBufferUsage::Uniform ] );
@@ -495,13 +495,13 @@ namespace PlatformSW
 
 			if ( self._attachmentInfo.Find( cached.resource.RawPtr(), OUT info ) )
 			{
-				CHECK_ERR( info->second.Get<BufferAttachment>().size == BytesUL(buf.size) );
+				CHECK_ERR( info->second.Get<BufferAttachment>().size == buf.size );
 			}
 			else
 			{
-				CHECK_ERR( req_descr.result->size >= BytesUL(buf.size) );
+				CHECK_ERR( req_descr.result->size >= buf.size );
 
-				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{BufferAttachment{ BytesUL(0), req_descr.result->size }} );
+				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{BufferAttachment{ 0_b, req_descr.result->size }} );
 			}
 			return true;
 		}
@@ -539,7 +539,7 @@ namespace PlatformSW
 				CHECK_ERR(	(req_descr.result->size >= buf.staticSize) and
 							(buf.arrayStride == 0 or (req_descr.result->size - buf.staticSize) % buf.arrayStride == 0) );
 
-				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{BufferAttachment{ BytesUL(0), req_descr.result->size }} );
+				self._attachmentInfo.Add( cached.resource.RawPtr(), AttachmentInfo_t{BufferAttachment{ 0_b, req_descr.result->size }} );
 			}
 			return true;
 		}
@@ -558,10 +558,10 @@ namespace PlatformSW
 		_layout->Send( req_descr );
 
 		PipelineLayoutDescription const&	layout_descr = *req_descr.result;
-		_CacheResources_Func			func{ *this };
+		_CacheResources_Func				func{ *this };
 
 		FOR( i, layout_descr.GetUniforms() ) {
-			layout_descr.GetUniforms()[i].Apply( func );
+			layout_descr.GetUniforms()[i].Accept( func );
 		}
 		return true;
 	}
@@ -592,8 +592,8 @@ namespace PlatformSW
 
 		auto const&	range = iter->second.Get< BufferAttachment >();
 
-		msg.message.offset	= BytesU(range.offset);
-		msg.message.size	= BytesU(range.size);
+		msg.message.offset	= range.offset;
+		msg.message.size	= range.size;
 
 		CHECK( cached.resource->SendAsync( msg.message ) );
 		return true;

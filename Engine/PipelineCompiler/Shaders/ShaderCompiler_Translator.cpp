@@ -807,7 +807,11 @@ namespace PipelineCompiler
 		// subpass
 		if ( type.isSubpass() )
 		{
-			// TODO
+			result.type = EShaderVariable::SubpassInput;
+
+			CHECK( qual.hasAttachment() );
+
+			//qual.layoutAttachment
 		}
 		else
 		// for scalar, vector and matrix types only

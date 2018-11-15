@@ -32,7 +32,6 @@ namespace PlatformCL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -67,7 +66,6 @@ namespace PlatformCL
 
 
 
-	const TypeIdList	CL1Sampler::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	CL1Sampler::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -76,7 +74,7 @@ namespace PlatformCL
 =================================================
 */
 	CL1Sampler::CL1Sampler (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
-		CL1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		CL1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),		_samplerId( null )
 	{
 		SetDebugName( "CL1Sampler" );
@@ -97,7 +95,7 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1Sampler::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &CL1Sampler::_GetCLPrivateClasses );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}

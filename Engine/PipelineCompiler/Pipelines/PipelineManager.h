@@ -25,6 +25,7 @@ namespace PipelineCompiler
 		using SharedTypes		= StaticArray< NamedTypes, BindableTypes::Count >;
 		using TextureUniform	= BasePipeline::TextureUniform;
 		using ImageUniform		= BasePipeline::ImageUniform;
+		using SubpassInput		= BasePipeline::SubpassInput;
 		using UniformBuffer		= BasePipeline::UniformBuffer;
 		using StorageBuffer		= BasePipeline::StorageBuffer;
 

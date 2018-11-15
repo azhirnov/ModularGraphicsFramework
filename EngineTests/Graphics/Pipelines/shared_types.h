@@ -17,11 +17,11 @@ struct NativeVertex_default3 final
 	template <typename Vertex>
 	ND_ static VertexInputState  GetAttribs ()
 	{
-		using Self = NativeVertex_renderdots;
+		using Self = NativeVertex_default3;
 		return VertexInputState()
-			.Add( "at_Color", &NativeVertex_default3::at_Color, CompileTime::IsFloat<decltype(Self::at_Color)> )
-			.Add( "at_Position", &NativeVertex_default3::at_Position, CompileTime::IsFloat<decltype(Self::at_Position)> )
-			.Add( "at_Texcoord", &NativeVertex_default3::at_Texcoord, CompileTime::IsFloat<decltype(Self::at_Texcoord)> )
+			.Add( "at_Color", &Self::at_Color, CompileTime::IsFloat<decltype(Vertex::at_Color)> != CompileTime::IsFloat<decltype(Self::at_Color)> )
+			.Add( "at_Position", &Self::at_Position, CompileTime::IsFloat<decltype(Vertex::at_Position)> != CompileTime::IsFloat<decltype(Self::at_Position)> )
+			.Add( "at_Texcoord", &Self::at_Texcoord, CompileTime::IsFloat<decltype(Vertex::at_Texcoord)> != CompileTime::IsFloat<decltype(Self::at_Texcoord)> )
 			.Bind( "", SizeOf<Vertex> );
 	}
 

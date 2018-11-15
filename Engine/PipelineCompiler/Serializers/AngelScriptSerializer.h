@@ -2,6 +2,7 @@
 
 #pragma once
 
+#if 0
 #include "Engine/PipelineCompiler/Serializers/ISerializer.h"
 #include "Core/STL/Containers/Stack.h"
 
@@ -121,3 +122,4 @@ namespace PipelineCompiler
 
 
 }	// PipelineCompiler
+#endif

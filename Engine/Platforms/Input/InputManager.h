@@ -17,10 +17,6 @@ namespace Platforms
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
-											ModuleMsg::AddToManager,
-											ModuleMsg::RemoveFromManager
-										> >;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
 		using InputThreads_t		= Set< ModulePtr >;
@@ -28,7 +24,6 @@ namespace Platforms
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		

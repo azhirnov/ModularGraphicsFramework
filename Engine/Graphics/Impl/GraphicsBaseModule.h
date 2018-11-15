@@ -17,13 +17,6 @@ namespace Graphics
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >
-										::Append< MessageListFrom<
-											ModuleMsg::OnManagerChanged
-										> >;
-
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Compose,
 											ModuleMsg::Delete,
@@ -34,7 +27,6 @@ namespace Graphics
 	public:
 		GraphicsBaseModule (const GlobalSystemsRef gs,
 							const ModuleConfig &config,
-							const TypeIdList *msgTypes,
 							const TypeIdList *eventTypes);
 
 	// message handlers

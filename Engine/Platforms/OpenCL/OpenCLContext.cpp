@@ -26,22 +26,21 @@ namespace Platforms
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											GpuMsg::GetGraphicsModules
-										> >;
+										>;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
 		using CLThreads_t			= Set< ModulePtr >;
 		
-		using CLThreadMsgList_t		= MessageListFrom< GpuMsg::SubmitComputeQueueCommands, GpuMsg::GetCLDeviceInfo >;
+		using CLThreadMsgList_t		= MessageListFrom< GpuMsg::GetDeviceProperties, GpuMsg::GetCLDeviceInfo >;
 		using CLThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		
@@ -81,7 +80,6 @@ namespace Platforms
 
 
 
-	const TypeIdList	OpenCLContext::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	OpenCLContext::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -90,7 +88,7 @@ namespace Platforms
 =================================================
 */
 	OpenCLContext::OpenCLContext (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_createInfo( ci )
 	{
 		SetDebugName( "OpenCLContext" );
@@ -109,7 +107,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenCLContext::_RemoveFromManager );
 		_SubscribeOnMsg( this, &OpenCLContext::_GetGraphicsModules );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 	}
 	
 /*
@@ -119,7 +117,7 @@ namespace Platforms
 */
 	OpenCLContext::~OpenCLContext ()
 	{
-		LOG( "OpenCLContext finalized", ELog::Debug );
+		//LOG( "OpenCLContext finalized", ELog::Debug );
 
 		ASSERT( _threads.Empty() );
 	}
@@ -132,7 +130,7 @@ namespace Platforms
 	bool OpenCLContext::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
 		CHECK_ERR( msg.module );
-		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< CLThreadMsgList_t >() );
+		CHECK_ERR( msg.module->SupportsAllMessages< CLThreadMsgList_t >() );
 		CHECK_ERR( msg.module->GetSupportedEvents().HasAllTypes< CLThreadEventList_t >() );
 		ASSERT( not _threads.IsExist( msg.module ) );
 
@@ -167,7 +165,7 @@ namespace Platforms
 */
 	bool OpenCLContext::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg.compute.Set( OpenCLObjectsConstructor::GetComputeModules() );
+		msg.result.Set({ OpenCLObjectsConstructor::GetComputeModules(), Uninitialized });
 		return true;
 	}
 //-----------------------------------------------------------------------------

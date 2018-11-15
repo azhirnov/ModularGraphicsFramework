@@ -35,6 +35,8 @@ namespace Platforms
 			{}
 
 			bool IsEnabled () const		{ return imageType != EImage::Unknown; }
+			
+			DEBUG_ONLY( ND_ String ToString () const; )
 		};
 
 		using Attachments_t = FixedSizeArray< AttachmentInfo, GlobalConst::GAPI_MaxColorBuffers >;
@@ -61,28 +63,10 @@ namespace Platforms
 
 		Self&	DepthStencilImage (StringCRef name, EImage::type imageType = EImage::Tex2D);
 		Self&	DepthStencilRenderbuffer (StringCRef name, EImage::type imageType = EImage::Tex2D);
+
+		DEBUG_ONLY( ND_ String ToString () const; )
 	};
 	
-
-	inline FramebufferDescription&  FramebufferDescription::ColorImage (StringCRef name, EImage::type imageType) {
-		colorAttachments.PushBack({ name, imageType, false });
-		return *this;
-	}
-
-	inline FramebufferDescription&  FramebufferDescription::ColorRenderbuffer (StringCRef name, EImage::type imageType) {
-		colorAttachments.PushBack({ name, imageType, true });
-		return *this;
-	}
-
-	inline FramebufferDescription&  FramebufferDescription::DepthStencilImage (StringCRef name, EImage::type imageType) {
-		depthStencilAttachment = { name, imageType, false };
-		return *this;
-	}
-
-	inline FramebufferDescription&  FramebufferDescription::DepthStencilRenderbuffer (StringCRef name, EImage::type imageType) {
-		depthStencilAttachment = { name, imageType, true };
-		return *this;
-	}
 
 }	// Platforms
 
@@ -114,7 +98,7 @@ namespace GpuMsg
 	//
 	// Get Framebuffer Description
 	//
-	struct GetFramebufferDescription : _MessageBase_
+	struct GetFramebufferDescription : _MsgBase_
 	{
 		Out< Platforms::FramebufferDescription >		result;
 	};
@@ -123,7 +107,7 @@ namespace GpuMsg
 	//
 	// Attach Image toframebuffer (use it instead of AttachModule)
 	//
-	struct FramebufferAttachImage : _MessageBase_
+	struct FramebufferAttachImage : _MsgBase_
 	{
 	// types
 		using ImageLayer		= Platforms::ImageLayer;

@@ -18,9 +18,8 @@ namespace PlatformVK
 */
 	Vk1BaseModule::Vk1BaseModule (const GlobalSystemsRef gs,
 								  const ModuleConfig &config,
-								  const TypeIdList *msgTypes,
 								  const TypeIdList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes )
+		Module( gs, config, eventTypes )
 	{
 	}
 	
@@ -64,7 +63,7 @@ namespace PlatformVK
 */
 	bool Vk1BaseModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg( ModuleMsg::Delete{} );
+		Send( ModuleMsg::Delete{} );
 		
 		if ( _vkResourceCache )
 			_vkResourceCache->Erase( this );

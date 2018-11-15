@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Core/STL/ThreadSafe/AtomicFlag.h"
 #include "Engine/Base/Public/AsyncMessage.h"
 #include "Engine/Base/Modules/Module.h"
 #include "Engine/Base/Public/TaskModule.h"
@@ -34,10 +35,10 @@ namespace Base
 		ModulePtr				_currentThreadModule;		// module in thread where waiting task result and updates progress 
 		ModulePtr				_targetThreadModule;		// module in thread where task will be schedule
 
-		mutable OS::SyncEvent	_event;
-		mutable Atomic<int>		_isCanceled;
-		mutable Atomic<int>		_onCanceledCalled;
-		mutable Atomic<int>		_isSync;					// if current and target threads are same
+		mutable SyncEvent		_event;
+		mutable AtomicFlag		_isCanceled;
+		mutable AtomicFlag		_onCanceledCalled;
+		const bool				_isSync;					// if current and target threads are same
 
 		Result_t				_result;
 
@@ -90,14 +91,14 @@ namespace Base
 */
 	template <typename R, typename P>
 	inline AsyncTask<R,P>::AsyncTask (const ModulePtr &currentThreadModule, const ModulePtr &targetThreadModule) :
-		BaseObject( currentThreadModule->GlobalSystems() ),
-		_currentThreadModule( currentThreadModule ),
-		_targetThreadModule( targetThreadModule ),
-		_event( OS::SyncEvent::MANUAL_RESET ),
-		_isCanceled( false ),
-		_onCanceledCalled( false ),
-		_isSync( _targetThreadModule->GetThreadID() == _currentThreadModule->GetThreadID() ),
-		_result()
+		BaseObject{ currentThreadModule->GlobalSystems() },
+		_currentThreadModule{ currentThreadModule },
+		_targetThreadModule{ targetThreadModule },
+		_event{ SyncEvent::MANUAL_RESET },
+		_isCanceled{ false },
+		_onCanceledCalled{ false },
+		_isSync{ _targetThreadModule->GetThreadID() == _currentThreadModule->GetThreadID() },
+		_result{}
 	{
 	}
 	
@@ -151,7 +152,7 @@ namespace Base
 		}
 
 		// target thread is current
-		if ( !!_isSync.Get() )
+		if ( _isSync )
 		{
 			_RunSync();
 			return this;
@@ -161,10 +162,10 @@ namespace Base
 		CHECK_ERR( task_mod, this );
 
 		CHECK( task_mod->SendAsync( ModuleMsg::PushAsyncMessage{
-					AsyncMessage{ &AsyncTask::_RunAsync, SelfPtr(this) },
-					_targetThreadModule->GetThreadID()
-				})
-		);
+					_targetThreadModule->GetThreadID(),
+					&AsyncTask::_RunAsync,
+					SelfPtr(this)
+				}));
 		return this;
 	}
 	
@@ -187,7 +188,7 @@ namespace Base
 	template <typename R, typename P>
 	inline bool AsyncTask<R,P>::IsCanceled () const noexcept
 	{
-		return !!_isCanceled.Get();
+		return bool(_isCanceled);
 	}
 
 /*
@@ -201,7 +202,7 @@ namespace Base
 		ASSERT( _targetThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 
 		// target thread is current
-		if ( !!_isSync.Get() )
+		if ( _isSync )
 		{
 			UpdateProgress( _currentThreadModule, RVREF( value ) );
 			return;
@@ -211,10 +212,11 @@ namespace Base
 		CHECK_ERR( task_mod, );
 
 		CHECK( task_mod->SendAsync( ModuleMsg::PushAsyncMessage{
-					AsyncMessage{ &AsyncTask::_UpdateProgress, SelfPtr(this), RVREF(value) },
-					_currentThreadModule->GetThreadID()
-				})
-		);
+					_currentThreadModule->GetThreadID(),
+					&AsyncTask::_UpdateProgress,
+					SelfPtr(this),
+					RVREF(value)
+				}));
 	}
 	
 /*
@@ -260,10 +262,10 @@ namespace Base
 		if ( IsCanceled() )
 		{
 			CHECK( task_mod->SendAsync( ModuleMsg::PushAsyncMessage{
-						AsyncMessage{ &AsyncTask::_OnCanceled, SelfPtr(this) },
-						_currentThreadModule->GetThreadID()
-					})
-			);
+						_currentThreadModule->GetThreadID(),
+						&AsyncTask::_OnCanceled,
+						SelfPtr(this)
+					}));
 			return;
 		}
 		
@@ -272,18 +274,18 @@ namespace Base
 		if ( IsCanceled() )
 		{
 			CHECK( task_mod->SendAsync( ModuleMsg::PushAsyncMessage{
-						AsyncMessage{ &AsyncTask::_OnCanceled, SelfPtr(this) },
-						_currentThreadModule->GetThreadID()
-					})
-			);
+						_currentThreadModule->GetThreadID(),
+						&AsyncTask::_OnCanceled,
+						SelfPtr(this)
+					}));
 		}
 		else
 		{
 			CHECK( task_mod->SendAsync( ModuleMsg::PushAsyncMessage{
-						AsyncMessage{ &AsyncTask::_PostExecute, SelfPtr(this) },
-						_currentThreadModule->GetThreadID()
-					})
-			);
+						_currentThreadModule->GetThreadID(),
+						&AsyncTask::_PostExecute,
+						SelfPtr(this)
+					}));
 		}
 
 		// unlock '_currentThreadModule' thread 
@@ -326,7 +328,7 @@ namespace Base
 	{
 		ASSERT( _currentThreadModule->GetThreadID() == ThreadID::GetCurrent() );
 
-		if ( !!_onCanceledCalled.Get() )
+		if ( _onCanceledCalled )
 			return;
 
 		_onCanceledCalled = true;

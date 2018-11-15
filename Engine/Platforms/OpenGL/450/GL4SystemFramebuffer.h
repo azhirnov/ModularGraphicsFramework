@@ -36,7 +36,6 @@ namespace PlatformGL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -67,7 +66,6 @@ namespace PlatformGL
 
 
 	
-	const TypeIdList	GL4Device::GL4SystemFramebuffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4Device::GL4SystemFramebuffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -76,7 +74,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4Device::GL4SystemFramebuffer::GL4SystemFramebuffer (GlobalSystemsRef gs) :
-		GL4BaseModule( gs, ModuleConfig{ GLFramebufferModuleID, 1 }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ GLFramebufferModuleID, 1 }, &_eventTypes ),
 		_framebufferId( 0 )
 	{
 		SetDebugName( "GL4SystemFramebuffer" );
@@ -95,7 +93,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_GetGLDeviceInfo );
 		_SubscribeOnMsg( this, &GL4SystemFramebuffer::_GetGLPrivateClasses );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( null ), UntypedID_t(0), true );
 	}

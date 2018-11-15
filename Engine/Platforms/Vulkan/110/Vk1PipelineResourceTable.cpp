@@ -65,8 +65,8 @@ namespace PlatformVK
 		
 		struct BufferRange
 		{
-			BytesUL		offset;
-			BytesUL		size;
+			BytesU		offset;
+			BytesU		size;
 		};
 
 		using ResourceDescr_t		= Union< ImageDescr, BufferDescr, TextureBufferDescr >;
@@ -74,8 +74,8 @@ namespace PlatformVK
 
 		struct BufferAttachment
 		{
-			BytesUL		offset;
-			BytesUL		size;
+			BytesU		offset;
+			BytesU		size;
 		};
 
 		struct ImageAttachment
@@ -95,7 +95,6 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -136,7 +135,6 @@ namespace PlatformVK
 
 
 	
-	const TypeIdList	Vk1PipelineResourceTable::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1PipelineResourceTable::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -145,7 +143,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1PipelineResourceTable::Vk1PipelineResourceTable (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::PipelineResourceTable &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ id, UMax, true }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax, true }, &_eventTypes ),
 		_descriptorPoolId( VK_NULL_HANDLE ),
 		_descriptorSetId( VK_NULL_HANDLE )
 	{
@@ -399,7 +397,7 @@ namespace PlatformVK
 
 			for (const auto& mod : self._GetAttachments())
 			{
-				if ( mod.second->GetSupportedMessages().HasAnyType< ResourceMsgList >() )
+				if ( mod.second->SupportsAnyMessage< ResourceMsgList >() )
 					moduleMap.Add( mod.first, mod.second );
 			}
 		}
@@ -435,7 +433,7 @@ namespace PlatformVK
 			
 			if ( moduleMap.Find( name, OUT iter ) )
 			{
-				CHECK_ERR( iter->second->GetSupportedMessages().HasAllTypes< MsgList >() );
+				CHECK_ERR( iter->second->SupportsAllMessages< MsgList >() );
 				result = iter->second;
 				
 				DEBUG_ONLY( moduleMap.EraseByIter( iter ) );
@@ -494,6 +492,9 @@ namespace PlatformVK
 
 					img_view	= req_imageview.result.Get( VK_NULL_HANDLE );
 					layout		= Vk1Enum( att_info.layout );
+
+					CHECK( att_info.layout == EImageLayout::General or att_info.layout == EImageLayout::ShaderReadOnlyOptimal );
+					CHECK( att_info.descr.viewType == EImage::Unknown or att_info.descr.viewType == tex.textureType );
 				}
 				
 				// create descriptor
@@ -551,6 +552,9 @@ namespace PlatformVK
 
 				img_view	= req_imageview.result.Get( VK_NULL_HANDLE );
 				layout		= Vk1Enum( att_info.layout );
+
+				CHECK( att_info.layout == EImageLayout::General  );
+				CHECK( att_info.descr.viewType == EImage::Unknown or att_info.descr.viewType == img.imageType );
 			}
 
 			// create descriptor
@@ -584,7 +588,7 @@ namespace PlatformVK
 			
 			// find attachment info
 			AttachmentInfoMap_t::iterator	info;
-			BytesUL							offset;
+			BytesU							offset;
 
 			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
 			{
@@ -592,11 +596,11 @@ namespace PlatformVK
 
 				offset = buf_info.offset;
 
-				CHECK_ERR( buf_info.size == BytesUL(buf.size) );
+				CHECK_ERR( buf_info.size == buf.size );
 			}
 			else
 			{
-				CHECK_ERR( buf_res.Get<1>().size >= BytesUL(buf.size) );
+				CHECK_ERR( buf_res.Get<1>().size >= buf.size );
 			}
 			
 			// create descriptor
@@ -630,8 +634,8 @@ namespace PlatformVK
 			
 			// find attachment info
 			AttachmentInfoMap_t::iterator	info;
-			BytesUL							offset;
-			BytesUL							size	= buf_res.Get<1>().size;
+			BytesU							offset;
+			BytesU							size	= buf_res.Get<1>().size;
 
 			if ( self._attachmentInfo.Find( buf_mod.RawPtr(), OUT info ) )
 			{
@@ -691,7 +695,7 @@ namespace PlatformVK
 
 		// initialize table
 		for (auto& un : layout_descr.GetUniforms()) {
-			un.Apply( func );
+			un.Accept( func );
 		}
 
 		// remove empty pool sizes
@@ -801,7 +805,7 @@ namespace PlatformVK
 		_WriteDescription_Func		func( OUT write_descr, _descriptorSetId );
 
 		for (auto& res : _resources) {
-			res.Apply( func );
+			res.Accept( func );
 		}
 		
 		vkUpdateDescriptorSets( GetVkDevice(), uint(write_descr.Count()), write_descr.RawPtr(), 0, null );

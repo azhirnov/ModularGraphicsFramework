@@ -24,8 +24,8 @@ namespace PlatformVK
 	private:
 		using ForwardToMem_t		= MessageListFrom< 
 											DSMsg::GetDataSourceDescription,
-											DSMsg::ReadRegion,
-											DSMsg::WriteRegion,
+											DSMsg::ReadMemRange,
+											DSMsg::WriteMemRange,
 											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::MapImageToCpu,
@@ -40,9 +40,8 @@ namespace PlatformVK
 		using SupportedMessages_t	= Vk1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::GetBufferDescription,
 											GpuMsg::SetBufferDescription,
-											GpuMsg::GetVkBufferID,
-											GpuMsg::GpuMemoryRegionChanged
-										> >::Append< ForwardToMem_t >;
+											GpuMsg::GetVkBufferID
+										> >;
 
 		using SupportedEvents_t		= Vk1BaseModule::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::SetBufferDescription
@@ -53,7 +52,6 @@ namespace PlatformVK
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -87,7 +85,6 @@ namespace PlatformVK
 		bool _GetVkBufferID (const GpuMsg::GetVkBufferID &);
 		bool _GetBufferDescription (const GpuMsg::GetBufferDescription &);
 		bool _SetBufferDescription (const GpuMsg::SetBufferDescription &);
-		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
 		
 	// event handlers
 		bool _OnMemoryBindingChanged (const GpuMsg::OnMemoryBindingChanged &);
@@ -96,14 +93,15 @@ namespace PlatformVK
 	private:
 		bool _IsCreated () const;
 		bool _CreateBuffer ();
-
 		void _DestroyAll ();
+
+		static void _ValidateMemFlags (INOUT EGpuMemory::bits &flags);
+		static void _ValidateDescription (INOUT BufferDescription &descr);
 	};
 //-----------------------------------------------------------------------------
 
 
 	
-	const TypeIdList	Vk1Buffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1Buffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -112,7 +110,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1Buffer::Vk1Buffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),				_memManager( ci.memManager ),
 		_bufferId( VK_NULL_HANDLE ),	_memFlags( ci.memFlags ),
 		_memAccess( ci.access ),		_useMemMngr( ci.allocMem or ci.memManager.IsNotNull() ),
@@ -136,9 +134,13 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkDeviceInfo );
 		_SubscribeOnMsg( this, &Vk1Buffer::_GetVkPrivateClasses );
-		_SubscribeOnMsg( this, &Vk1Buffer::_GpuMemoryRegionChanged );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
+
+		_ValidateMemFlags( INOUT _memFlags );
+		_ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -249,7 +251,7 @@ namespace PlatformVK
 
 		if ( msg.oldModule == _memObj )
 		{
-			_SendMsg( ModuleMsg::Delete{} );
+			Send( ModuleMsg::Delete{} );
 		}
 		return true;
 	}
@@ -382,17 +384,29 @@ namespace PlatformVK
 		_bufferId			= VK_NULL_HANDLE;
 		_descr				= Uninitialized;
 	}
-
+	
 /*
 =================================================
-	_GpuMemoryRegionChanged
+	_ValidateMemFlags
 =================================================
 */
-	bool Vk1Buffer::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
+	void Vk1Buffer::_ValidateMemFlags (INOUT EGpuMemory::bits &flags)
 	{
-		// request buffer memory barrier
-		TODO( "" );
-		return false;
+		if ( flags[EGpuMemory::Dedicated] and flags[EGpuMemory::SupportAliasing] )
+		{
+			WARNING( "not supported" );
+
+			flags[EGpuMemory::Dedicated] = false;
+		}
+	}
+	
+/*
+=================================================
+	_ValidateDescription
+=================================================
+*/
+	void Vk1Buffer::_ValidateDescription (INOUT BufferDescription &)
+	{
 	}
 
 }	// PlatformVK

@@ -3,7 +3,6 @@
 #include "Engine/Graphics/Impl/GraphicsObjectsConstructor.h"
 #include "Engine/Graphics/Public/BatchRenderer.h"
 #include "Engine/Graphics/Public/Font.h"
-#include "Engine/Graphics/Public/MemStream.h"
 #include "Engine/Graphics/Public/Commands.h"
 
 namespace Engine

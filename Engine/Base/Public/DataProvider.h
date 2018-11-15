@@ -19,19 +19,16 @@ namespace Base
 	struct DataSourceDescription
 	{
 	// variables
-		BytesUL					totalSize;		// can be 0 if total size is unknown
-		BytesUL					available;		
+		BytesU					totalSize;		// can be 0 if total size is unknown
+		BytesU					available;		
 		EMemoryAccess::bits		memoryFlags;
 		bool					resizable	= false;
 
 	// methods
 		DataSourceDescription () {}
 		
-		DataSourceDescription (Bytes<ulong> totalSize, Bytes<ulong> available, EMemoryAccess::bits memoryFlags) :
+		DataSourceDescription (BytesU totalSize, BytesU available, EMemoryAccess::bits memoryFlags) :
 			totalSize{totalSize}, available{available}, memoryFlags{memoryFlags} {}
-		
-		DataSourceDescription (Bytes<uint> totalSize, Bytes<uint> available, EMemoryAccess::bits memoryFlags) :
-			totalSize{BytesUL{totalSize}}, available{BytesUL{available}}, memoryFlags{memoryFlags} {}
 	};
 
 }	// Base
@@ -201,7 +198,7 @@ namespace DSMsg
 	//
 	// Get Data Source Description	// TODO: rename
 	//
-	struct GetDataSourceDescription : _MessageBase_
+	struct GetDataSourceDescription : _MsgBase_
 	{
 		Out< Base::DataSourceDescription >		result;
 	};
@@ -210,7 +207,7 @@ namespace DSMsg
 	//
 	// Release Data
 	//
-	struct ReleaseData : _MessageBase_
+	struct ReleaseData : _MsgBase_
 	{
 	};
 
@@ -218,17 +215,16 @@ namespace DSMsg
 	//
 	// (Sequential) Read from CPU Visible Memory
 	//
-	struct ReadFromStream : _MessageBase_
+	struct ReadFromStream : _MsgBase_
 	{
 	// variables
-		BytesUL					offset;
-		Editable< BinArrayRef >	writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
-		Out< BinArrayCRef >		result;
+		BytesU						offset;
+		Editable< BinArrayRef >		writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
+		Out_opt< BinArrayCRef >		result;
 
 	// methods
 		ReadFromStream () {}
-		ReadFromStream (Bytes<uint> off, BinArrayRef buf) : offset{off}, writableBuffer{buf} {}
-		ReadFromStream (Bytes<ulong> off, BinArrayRef buf) : offset{off}, writableBuffer{buf} {}
+		ReadFromStream (BytesU off, BinArrayRef buf) : offset{off}, writableBuffer{buf} {}
 		explicit ReadFromStream (BinArrayRef buf) : writableBuffer{buf} {}
 	};
 
@@ -236,11 +232,11 @@ namespace DSMsg
 	//
 	// (Sequential) Write to CPU Visible Memory
 	//
-	struct WriteToStream : _MessageBase_
+	struct WriteToStream : _MsgBase_
 	{
 	// variables
-		BinArrayCRef		data;
-		Out< BytesUL >		wasWritten;
+		BinArrayCRef			data;
+		Out_opt< BytesU >		wasWritten;
 
 	// methods
 		WriteToStream () {}
@@ -253,85 +249,57 @@ namespace DSMsg
 	//
 	// (Random Access) Read from CPU Visible Memory
 	//
-	struct ReadRegion : _MessageBase_
+	struct ReadMemRange : _MsgBase_
 	{
 	// variables
-		BytesUL					position;
-		Editable< BinArrayRef >	writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
-		Out< BinArrayCRef >		result;
+		BytesU						position;
+		Editable< BinArrayRef >		writableBuffer;	// preallocated memory, 'result' may contains all or part of this buffer
+		Out_opt< BinArrayCRef >		result;
 
 	// methods
-		ReadRegion () {}
-		ReadRegion (Bytes<uint> pos, BinArrayRef buf) : position{pos}, writableBuffer{buf} {}
-		ReadRegion (Bytes<ulong> pos, BinArrayRef buf) : position{pos}, writableBuffer{buf} {}
-		explicit ReadRegion (BinArrayRef buf) : writableBuffer{buf} {}
+		ReadMemRange () {}
+		ReadMemRange (BytesU pos, BinArrayRef buf) : position{pos}, writableBuffer{buf} {}
+		explicit ReadMemRange (BinArrayRef buf) : writableBuffer{buf} {}
 	};
 	
 
 	//
 	// (Random Access) Write to CPU Visible Memory
 	//
-	struct WriteRegion : _MessageBase_
+	struct WriteMemRange : _MsgBase_
 	{
 	// variables
-		BytesUL					position;
-		BinArrayCRef			data;
-		Out< BytesUL >			wasWritten;
+		BytesU						position;
+		BinArrayCRef				data;
+		Out_opt< BytesU >			wasWritten;
 
 	// methods
-		WriteRegion () {}
-		explicit WriteRegion (Bytes<uint> pos, BinArrayCRef data) : position{BytesUL(pos)}, data(data) {}
-		explicit WriteRegion (Bytes<ulong> pos, BinArrayCRef data) : position{pos}, data(data) {}
-		template <typename T>			explicit WriteRegion (Bytes<uint> pos, ArrayCRef<T> arr) : position{BytesUL(pos)}, data(BinArrayCRef::From(arr)) {}
-		template <typename T>			explicit WriteRegion (Bytes<ulong> pos, ArrayCRef<T> arr) : position{pos}, data(BinArrayCRef::From(arr)) {}
-		template <typename B, usize I>	explicit WriteRegion (Bytes<uint> pos, const B (&arr)[I]) : position{BytesUL(pos)}, data(BinArrayCRef::From(arr)) {}
-		template <typename B, usize I>	explicit WriteRegion (Bytes<ulong> pos, const B (&arr)[I]) : position{pos}, data(BinArrayCRef::From(arr)) {}
+		WriteMemRange () {}
+		explicit WriteMemRange (BytesU pos, BinArrayCRef data) : position{pos}, data(data) {}
+		template <typename T>			explicit WriteMemRange (BytesU pos, ArrayCRef<T> arr) : position{pos}, data(BinArrayCRef::From(arr)) {}
+		template <typename B, usize I>	explicit WriteMemRange (BytesU pos, const B (&arr)[I]) : position{pos}, data(BinArrayCRef::From(arr)) {}
 	};
 
 
 	//
 	// (Random Access) Allocate memory for writing and return pointer
 	//
-	struct MapDataSource : _MessageBase_
+	struct MapDataSource : _MsgBase_
 	{
 	// variables
-		BytesUL					position;
-		BytesUL					size;			// must be defined for resizable data source
+		BytesU					position;
+		BytesU					size;			// must be defined for resizable data source
 		Out< BinArrayRef >		result;
 		
 	// methods
-		MapDataSource (BytesUL pos, BytesUL size) : position{pos}, size{size} {}
-	};
-
-
-	//
-	// Data Region Changed Event
-	//
-	struct DataRegionChanged : _MessageBase_
-	{
-	// types
-		using EMemoryAccess		= Base::EMemoryAccess;
-
-	// variables
-		EMemoryAccess::type		access	= EMemoryAccess::Unknown;
-		BytesUL					offset;
-		BytesUL					size;
-
-	// methods
-		DataRegionChanged (EMemoryAccess::type access, Bytes<uint> offset, Bytes<uint> size) :
-			access(access), offset(BytesUL(offset)), size(BytesUL(size))
-		{}
-
-		DataRegionChanged (EMemoryAccess::type access, Bytes<ulong> offset, Bytes<ulong> size) :
-			access(access), offset(offset), size(size)
-		{}
+		MapDataSource (BytesU pos, BytesU size) : position{pos}, size{size} {}
 	};
 
 
 	//
 	// Add / Remove On Data Modified Listener
 	//
-	struct AddOnDataModifiedListener : _MessageBase_
+	struct AddOnDataModifiedListener : _MsgBase_
 	{
 	// types
 		using Callback_t	= Delegate< void (StringCRef fname) >;
@@ -350,7 +318,7 @@ namespace DSMsg
 	};
 
 	// not needed if 'callback' delegate created from weak pointer
-	struct RemoveOnDataModifiedListener : _MessageBase_
+	struct RemoveOnDataModifiedListener : _MsgBase_
 	{
 	// variables
 		ModuleWPtr		module;
@@ -363,7 +331,7 @@ namespace DSMsg
 	//
 	// Is URI Exists
 	//
-	struct IsUriExists : _MessageBase_
+	struct IsUriExists : _MsgBase_
 	{
 	// variables
 		StringCRef		uri;
@@ -377,7 +345,7 @@ namespace DSMsg
 	//
 	// Create Data Input Module
 	//
-	struct CreateDataInputModule : _MessageBase_
+	struct CreateDataInputModule : _MsgBase_
 	{
 	// variables
 		StringCRef			uri;
@@ -391,7 +359,7 @@ namespace DSMsg
 	//
 	// Create Data Output Module
 	//
-	struct CreateDataOutputModule : _MessageBase_
+	struct CreateDataOutputModule : _MsgBase_
 	{
 	// variables
 		StringCRef			uri;
@@ -405,7 +373,7 @@ namespace DSMsg
 	//
 	// Get Data Provider For URI
 	//
-	struct GetDataProviderForURI : _MessageBase_
+	struct GetDataProviderForURI : _MsgBase_
 	{
 	// variables
 		StringCRef			uri;

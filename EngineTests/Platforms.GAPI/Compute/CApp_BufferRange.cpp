@@ -74,7 +74,7 @@ bool CApp::_Test_BufferRange ()
 					OUT resource_table ) );
 	
 	resource_table->Send( ModuleMsg::AttachModule{ "pipeline", pipeline });
-	resource_table->Send( GpuMsg::PipelineAttachBuffer{ "ssb", buffer, (buf_size - buf_off), buf_off });
+	resource_table->Send( GpuMsg::PipelineAttachBuffer{ "ssb", buffer, buf_off, (buf_size - buf_off) });
 
 	ModuleUtils::Initialize({ cmd_buffer, buffer, pipeline, resource_table });
 
@@ -82,7 +82,7 @@ bool CApp::_Test_BufferRange ()
 	// write data to buffer
 	GpuMsg::WriteToGpuMemory	write_cmd{ buf_off, BinArrayCRef::FromValue(st1) };
 	buffer->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL::SizeOf(st1) );
+	CHECK_ERR( *write_cmd.wasWritten == BytesU::SizeOf(st1) );
 
 
 	// build command buffer
@@ -97,7 +97,7 @@ bool CApp::_Test_BufferRange ()
 
 
 	// submit and sync
-	gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
+	gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
 
 	syncManager->Send( GpuMsg::ClientWaitFence{ *fence_ctor.result });
 

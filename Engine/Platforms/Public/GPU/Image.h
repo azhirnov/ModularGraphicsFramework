@@ -51,6 +51,8 @@ namespace Platforms
 						  EImageUsage::bits		usage,
 						  MipmapLevel			maxLevel	= Uninitialized,
 						  MultiSamples			samples		= Uninitialized);
+		
+		DEBUG_ONLY( ND_ String ToString () const; )
 	};
 
 
@@ -85,6 +87,8 @@ namespace Platforms
 
 		ND_ bool operator == (const ImageViewDescription &right) const;
 		ND_ bool operator >  (const ImageViewDescription &right) const;
+
+		DEBUG_ONLY( ND_ String ToString () const; )
 	};
 
 }	// Platforms
@@ -131,12 +135,12 @@ namespace GpuMsg
 	//
 	// Set / Get Image Description
 	//
-	struct GetImageDescription : _MessageBase_
+	struct GetImageDescription : _MsgBase_
 	{
 		Out< Platforms::ImageDescription >		result;
 	};
 
-	struct SetImageDescription : _MessageBase_
+	struct SetImageDescription : _MsgBase_
 	{
 	// variables
 		Platforms::ImageDescription				descr;
@@ -149,15 +153,15 @@ namespace GpuMsg
 	//
 	// Get Image Memory Layout
 	//
-	struct GetImageMemoryLayout : _MessageBase_
+	struct GetImageMemoryLayout : _MsgBase_
 	{
 	// types
 		struct MemLayout
 		{
-			BytesUL		offset;		// offset for mipmap level and array layer, may be zero for all levels and layers if not supported
-			BytesUL		rowPitch;
-			BytesUL		slicePitch;	// size of array layer or 3D image slice, may be zero for 1D and 2D images
-			BytesUL		size;
+			BytesU		offset;		// offset for mipmap level and array layer, may be zero for all levels and layers if not supported
+			BytesU		rowPitch;
+			BytesU		slicePitch;	// size of array layer or 3D image slice, may be zero for 1D and 2D images
+			BytesU		size;
 			uint3		dimension;	// dimension of current layer/level
 		};
 		using MipmapLevel	= Platforms::MipmapLevel;

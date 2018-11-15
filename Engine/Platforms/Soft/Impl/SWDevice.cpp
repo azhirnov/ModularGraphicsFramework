@@ -115,7 +115,7 @@ namespace PlatformSW
 			switch ( t )
 			{
 				case EDbgReport::Debug :		str << "Debug ";		log = ELog::Debug;	break;
-				case EDbgReport::Perfomance :	str << "Perfomance ";	log = ELog::Debug;	break;
+				case EDbgReport::Performance :	str << "Performance ";	log = ELog::Debug;	break;
 				case EDbgReport::Info :			str << "Info ";			log = ELog::Info;	break;
 				case EDbgReport::Warning :		str << "Warning ";		log = ELog::Info;	break;
 				case EDbgReport::Error :		str << "Error ";		log = ELog::Error;	break;

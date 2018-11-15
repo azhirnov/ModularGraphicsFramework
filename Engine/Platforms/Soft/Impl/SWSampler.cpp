@@ -31,7 +31,6 @@ namespace PlatformSW
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -58,7 +57,6 @@ namespace PlatformSW
 
 
 
-	const TypeIdList	SWSampler::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SWSampler::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -67,7 +65,7 @@ namespace PlatformSW
 =================================================
 */
 	SWSampler::SWSampler (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSampler &ci) :
-		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		SWBaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr )
 	{
 		SetDebugName( "SWSampler" );
@@ -87,7 +85,7 @@ namespace PlatformSW
 		_SubscribeOnMsg( this, &SWSampler::_GetSWDeviceInfo );
 		_SubscribeOnMsg( this, &SWSampler::_GetSWPrivateClasses );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}

@@ -1,6 +1,7 @@
 // Copyright (c)  Zhirnov Andrey. For more information see 'LICENSE.txt'
 
 #include "Engine/Platforms/Public/GPU/Image.h"
+#include "Engine/Platforms/Public/GPU/Enums.ToString.h"
 
 namespace Engine
 {
@@ -22,6 +23,27 @@ namespace Platforms
 		format(format),			usage(usage),
 		maxLevel(maxLevel),		samples(samples)
 	{}
+	
+/*
+=================================================
+	ToString
+=================================================
+*/
+	DEBUG_ONLY(
+	String  ImageDescription::ToString () const
+	{
+		String	str;
+		str << "ImageDescription {"
+			<< "\n	imageType:   " << EImage::ToString( imageType )
+			<< "\n	dimension:   " << dimension.x << ", " << dimension.y << ", " << dimension.z
+			<< "\n	layers:      " << dimension.w
+			<< "\n	format:      " << EPixelFormat::ToString( format )
+			<< "\n	usage:       " << EImageUsage::ToString( usage )
+			<< "\n	maxLevel:    " << maxLevel.Get()
+			<< "\n	samples:     " << samples.Get()
+			<< "\n}\n";
+		return str;
+	})
 //-----------------------------------------------------------------------------
 
 
@@ -77,6 +99,25 @@ namespace Platforms
 				layerCount	!= right.layerCount	?	layerCount	> right.layerCount	:
 													swizzle		> right.swizzle;
 	}
+	
+/*
+=================================================
+	ToString
+=================================================
+*/
+	DEBUG_ONLY(
+	String  ImageViewDescription::ToString () const
+	{
+		String	str;
+		str << "ImageViewDescription {"
+			<< "\n	viewType:  " << EImage::ToString( viewType )
+			<< "\n	format:    " << EPixelFormat::ToString( format )
+			<< "\n	levels:    " << baseLevel.Get() << " - " << (baseLevel.Get() + levelCount)
+			<< "\n	layers:    " << baseLayer.Get() << " - " << (baseLayer.Get() + layerCount)
+			<< "\n	swizzle:   " << swizzle.ToString()
+			<< "\n}\n";
+		return str;
+	})
 
 }	// Platforms
 }	// Engine

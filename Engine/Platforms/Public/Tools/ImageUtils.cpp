@@ -234,28 +234,28 @@ namespace PlatformTools
 	GetImageSize
 =================================================
 */
-	BytesUL ImageUtils::GetImageSize (EPixelFormat::type format, EImage::type, const ulong3 &size, BytesU xAlign, BytesU xyAlign)
+	BytesU ImageUtils::GetImageSize (EPixelFormat::type format, EImage::type, const ulong3 &size, BytesU xAlign, BytesU xyAlign)
 	{
 		CHECK_ERR( not EPixelFormat::IsCompressed( format ) );
 
-		const BytesUL	bpp = BytesUL( EPixelFormat::BitPerPixel( format ) );
+		const BytesU	bpp = BytesU( EPixelFormat::BitPerPixel( format ) );
 
-		return GXImageUtils::AlignedDataSize( size, bpp, BytesUL(xAlign), BytesUL(xyAlign) );
+		return GXImageUtils::AlignedDataSize( size, bpp, xAlign, BytesU(xyAlign) );
 	}
 
-	BytesUL ImageUtils::GetImageSize (EPixelFormat::type format, EImage::type type, const ulong4 &dim, BytesU xAlign, BytesU xyAlign)
+	BytesU ImageUtils::GetImageSize (EPixelFormat::type format, EImage::type type, const ulong4 &dim, BytesU xAlign, BytesU xyAlign)
 	{
 		return GetImageSize( format, type, ConvertSize( type, dim ), xAlign, xyAlign );
 	}
 	
 	BytesU ImageUtils::GetImageSize (EPixelFormat::type format, EImage::type type, const uint3 &size, BytesU xAlign, BytesU xyAlign)
 	{
-		return BytesU(GetImageSize( format, type, ulong3(size), xAlign, xyAlign ));
+		return GetImageSize( format, type, ulong3(size), xAlign, xyAlign );
 	}
 	
 	BytesU ImageUtils::GetImageSize (EPixelFormat::type format, EImage::type type, const uint4 &dim, BytesU xAlign, BytesU xyAlign)
 	{
-		return BytesU(GetImageSize( format, type, ulong4(dim), xAlign, xyAlign ));
+		return GetImageSize( format, type, ulong4(dim), xAlign, xyAlign );
 	}
 	
 /*
@@ -284,14 +284,14 @@ namespace PlatformTools
 
 		if ( EImage::IsMultisampled( descr.imageType ) )
 		{
-			ASSERT( descr.samples > MultiSamples(1) );
-			ASSERT( descr.maxLevel == MipmapLevel(1) );
-			descr.maxLevel = MipmapLevel(1);
+			ASSERT( descr.samples > 1_samples );
+			ASSERT( descr.maxLevel == 1_mipmap );
+			descr.maxLevel = 1_mipmap;
 		}
 		else
 		{
-			ASSERT( descr.samples <= MultiSamples(1) );
-			descr.samples = MultiSamples(1);
+			ASSERT( descr.samples <= 1_samples );
+			descr.samples = 1_samples;
 			descr.maxLevel = MipmapLevel( Clamp( descr.maxLevel.Get(), 1u, NumberOfMipmaps( descr.imageType, descr.dimension ) ));
 		}
 	}

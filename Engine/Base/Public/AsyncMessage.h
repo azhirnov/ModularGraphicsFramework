@@ -65,7 +65,7 @@ namespace ModuleMsg
 	//
 	// Push Async Message
 	//
-	struct PushAsyncMessage : _MessageBase_
+	struct PushAsyncMessage : _MsgBase_
 	{
 	// variables
 		ReadOnce< Base::AsyncMessage >		asyncMsg;
@@ -73,12 +73,19 @@ namespace ModuleMsg
 		Base::ThreadID						altTarget;
 
 	// methods
-		PushAsyncMessage (Base::AsyncMessage &&msg, Base::ThreadID target) :
-			asyncMsg{ RVREF(msg) }, target{ target }, altTarget{ target }
+		PushAsyncMessage (Base::ThreadID target, Base::AsyncMessage::Func_t &&func) :
+			asyncMsg{Base::AsyncMessage{ RVREF(func) }}, target{ target }, altTarget{ target }
+		{}
+		
+		template <typename FN>
+		PushAsyncMessage (Base::ThreadID target, FN value) :
+			asyncMsg{Base::AsyncMessage{ value }}, target{ target }, altTarget{ target }
 		{}
 
-		PushAsyncMessage (Base::AsyncMessage &&msg, Base::ThreadID target, Base::ThreadID altTarget) :
-			asyncMsg{ RVREF(msg) }, target{ target }, altTarget{ altTarget }
+		template <typename FN, typename ...Args>
+		PushAsyncMessage (Base::ThreadID target, FN func, Args&& ...args) :
+			asyncMsg{Base::AsyncMessage{ std::bind( func, FW<Args>(args)..., std::placeholders::_1 ) }},
+			target{ target }, altTarget{ target }
 		{}
 
 		template <typename T>

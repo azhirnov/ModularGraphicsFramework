@@ -28,6 +28,11 @@ namespace Platforms
 		};
 
 		GX_ENUM_BITFIELD( EBufferUsage );
+
+		static constexpr bits	All			= bits().SetAll();
+		static constexpr bits	Transfer	= bits() | TransferDst | TransferSrc;
+
+		static String  ToString (bits values);
 	};
 
 

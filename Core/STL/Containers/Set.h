@@ -402,13 +402,13 @@ namespace _types_hidden_
 	template <typename Value, usize Size>
 	using MixedSizeSet = _types_hidden_::BaseSet< Array, Value, true,
 								typename AutoDetectCopyStrategy< Value >::type,
-								StaticMemoryContainer< Value, Size > >;
+								MixedMemoryContainer< Value, Size > >;
 	
 
 	template <typename Value, usize Size>
 	using MixedSizeMultiSet = _types_hidden_::BaseSet< Array, Value, false,
 									typename AutoDetectCopyStrategy< Value >::type,
-									StaticMemoryContainer< Value, Size > >;
+									MixedMemoryContainer< Value, Size > >;
 
 	
 	template <	template <typename, typename, typename> class Container,

@@ -35,8 +35,8 @@ namespace PlatformCL
 	private:
 		using SupportedMessages_t	= CL1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											DSMsg::GetDataSourceDescription,
-											DSMsg::ReadRegion,
-											DSMsg::WriteRegion,
+											DSMsg::ReadMemRange,
+											DSMsg::WriteMemRange,
 											GpuMsg::GetGpuMemoryDescription,
 											GpuMsg::MapMemoryToCpu,
 											GpuMsg::FlushMemoryRange,
@@ -46,8 +46,7 @@ namespace PlatformCL
 											GpuMsg::GetBufferDescription,
 											GpuMsg::SetBufferDescription,
 											GpuMsg::GetCLBufferID,
-											GpuMsg::CreateCLSubBuffer,
-											GpuMsg::GpuMemoryRegionChanged
+											GpuMsg::CreateCLSubBuffer
 										> >;
 
 		using SupportedEvents_t		= CL1BaseModule::SupportedEvents_t::Append< MessageListFrom<
@@ -57,7 +56,7 @@ namespace PlatformCL
 		using MemoryMsg_t			= MessageListFrom< GpuMsg::GetGpuMemoryDescription >;
 		using MemoryEvents_t		= MessageListFrom< GpuMsg::OnMemoryBindingChanged >;
 
-		using SubBufferMap_t		= HashMap< Pair<BytesUL, BytesUL>, cl_mem >;
+		using SubBufferMap_t		= HashMap< Pair<BytesU, BytesU>, cl_mem >;
 		using ESharing				= GpuMsg::GetCLImageID::ESharing;
 		
 		using MemMapper_t			= PlatformTools::MemoryMapperHelper;
@@ -72,7 +71,6 @@ namespace PlatformCL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -107,13 +105,12 @@ namespace PlatformCL
 		bool _CreateCLSubBuffer (const GpuMsg::CreateCLSubBuffer &);
 		bool _SetBufferDescription (const GpuMsg::SetBufferDescription &);
 		bool _GetBufferDescription (const GpuMsg::GetBufferDescription &);
-		bool _GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &);
 		bool _GetGpuMemoryDescription (const GpuMsg::GetGpuMemoryDescription &);
 		bool _GetDataSourceDescription (const DSMsg::GetDataSourceDescription &);
 		bool _ReadFromGpuMemory (const GpuMsg::ReadFromGpuMemory &);
 		bool _WriteToGpuMemory (const GpuMsg::WriteToGpuMemory &);
-		bool _ReadRegion (const DSMsg::ReadRegion &);
-		bool _WriteRegion (const DSMsg::WriteRegion &);
+		bool _ReadMemRange (const DSMsg::ReadMemRange &);
+		bool _WriteMemRange (const DSMsg::WriteMemRange &);
 		bool _MapMemoryToCpu (const GpuMsg::MapMemoryToCpu &);
 		bool _FlushMemoryRange (const GpuMsg::FlushMemoryRange &);
 		bool _UnmapMemory (const GpuMsg::UnmapMemory &);
@@ -129,12 +126,14 @@ namespace PlatformCL
 		bool _CreateSharedBuffer ();
 		bool _FindSharedObjects ();
 		void _DestroyAll ();
+
+		static void _ValidateMemFlags (INOUT EGpuMemory::bits &flags);
+		static void _ValidateDescription (INOUT BufferDescription &descr);
 	};
 //-----------------------------------------------------------------------------
 
 
 	
-	const TypeIdList	CL1Buffer::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	CL1Buffer::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 	static const EBufferUsage::bits	supportedBufferUsage	= EBufferUsage::Storage | EBufferUsage::Uniform |
@@ -146,7 +145,7 @@ namespace PlatformCL
 =================================================
 */
 	CL1Buffer::CL1Buffer (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuBuffer &ci) :
-		CL1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		CL1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_descr( ci.descr ),						_bufferId( null ),
 		_memMapper( ci.memFlags, ci.access ),	_memFlags{ ci.memFlags },
 		_sharing{ ESharing::None }
@@ -167,27 +166,25 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1Buffer::_CreateCLSubBuffer );
 		_SubscribeOnMsg( this, &CL1Buffer::_SetBufferDescription );
 		_SubscribeOnMsg( this, &CL1Buffer::_GetBufferDescription );
-		_SubscribeOnMsg( this, &CL1Buffer::_GpuMemoryRegionChanged );
 		_SubscribeOnMsg( this, &CL1Buffer::_GetDataSourceDescription );
 		_SubscribeOnMsg( this, &CL1Buffer::_GetGpuMemoryDescription );
 		_SubscribeOnMsg( this, &CL1Buffer::_ReadFromGpuMemory );
 		_SubscribeOnMsg( this, &CL1Buffer::_WriteToGpuMemory );
-		_SubscribeOnMsg( this, &CL1Buffer::_ReadRegion );
-		_SubscribeOnMsg( this, &CL1Buffer::_WriteRegion );
+		_SubscribeOnMsg( this, &CL1Buffer::_ReadMemRange );
+		_SubscribeOnMsg( this, &CL1Buffer::_WriteMemRange );
 		_SubscribeOnMsg( this, &CL1Buffer::_MapMemoryToCpu );
 		_SubscribeOnMsg( this, &CL1Buffer::_FlushMemoryRange );
 		_SubscribeOnMsg( this, &CL1Buffer::_UnmapMemory );
 		_SubscribeOnMsg( this, &CL1Buffer::_GetDeviceInfo );
 		_SubscribeOnMsg( this, &CL1Buffer::_GetCLDeviceInfo );
 		_SubscribeOnMsg( this, &CL1Buffer::_GetCLPrivateClasses );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 
-		if ( _descr.size > 0 and _descr.usage.IsNotZero() )
-		{
-			ASSERT( (_descr.usage & supportedBufferUsage).IsNotZero() and "none of supported flags is used" );
-			ASSERT( (_descr.usage & ~supportedBufferUsage).IsZero() and "used unsupported flags" );
-		}
+		_ValidateMemFlags( INOUT _memFlags );
+		_ValidateDescription( INOUT _descr );
 	}
 	
 /*
@@ -267,10 +264,8 @@ namespace PlatformCL
 		_sharedObj->Subscribe( this, &CL1Buffer::_OnSharedObjectDeleted );
 		_sharedObj->Subscribe( this, &CL1Buffer::_SetBufferDescription );
 		
-		// copy descriptor
-		GpuMsg::GetBufferDescription		req_descr;
-		_sharedObj->Send( req_descr );
-		_descr = *req_descr.result;
+		// copy description
+		_descr = _sharedObj->Request( GpuMsg::GetBufferDescription{} );
 		
 		return true;
 	}
@@ -412,7 +407,7 @@ namespace PlatformCL
 		CHECK_ERR( _IsCreated() );
 		CHECK_ERR( msg.offset < _descr.size and msg.offset + msg.size <= _descr.size );
 
-		if ( msg.offset == BytesUL(0) and msg.size == _descr.size )
+		if ( msg.offset == 0_b and msg.size == _descr.size )
 		{
 			msg.result.Set({ _bufferId, _sharing });
 			return true;
@@ -494,15 +489,14 @@ namespace PlatformCL
 		#ifdef GRAPHICS_API_OPENGL
 		if ( _sharing == ESharing::OpenGL )
 		{
-			GpuMsg::GetGLBufferID	req_buf;
-			_sharedObj->Send( req_buf );
-			CHECK_ERR( req_buf.result.Get(0) != 0 );
+			gl::GLuint	buf_id = _sharedObj->Request( GpuMsg::GetGLBufferID{} );
+			CHECK_ERR( buf_id != 0 );
 
 			cl_int	cl_err = 0;
 			CL_CHECK( ((_bufferId = clCreateFromGLBuffer(
 								GetContext(),
 								CL1Enum( _memFlags, _memMapper.MemoryAccess() ),
-								*req_buf.result,
+								buf_id,
 								OUT &cl_err )), cl_err ) );
 		}
 		#endif
@@ -565,34 +559,31 @@ namespace PlatformCL
 	
 /*
 =================================================
-	_ReadRegion
+	_ReadMemRange
 =================================================
 */
-	bool CL1Buffer::_ReadRegion (const DSMsg::ReadRegion &msg)
+	bool CL1Buffer::_ReadMemRange (const DSMsg::ReadMemRange &msg)
 	{
 		BinArrayCRef	data;
-		CHECK_ERR( _memMapper.Read( msg.position, BytesUL(msg.writableBuffer->Size()), OUT data ) );
+		CHECK_ERR( _memMapper.Read( msg.position, msg.writableBuffer->Size(), OUT data ) );
 
-		MemCopy( *msg.writableBuffer, data );
+		MemCopy( OUT *msg.writableBuffer, data );
 
 		msg.result.Set( msg.writableBuffer->SubArray( 0, data.Count() ) );
-		
-		//_SendEvent( ModuleMsg::DataRegionChanged{ EMemoryAccess::CpuRead, _memMapper.MappedOffset() + msg.offset, BytesUL(data.Size()) });
 		return true;
 	}
 	
 /*
 =================================================
-	_WriteRegion
+	_WriteMemRange
 =================================================
 */
-	bool CL1Buffer::_WriteRegion (const DSMsg::WriteRegion &msg)
+	bool CL1Buffer::_WriteMemRange (const DSMsg::WriteMemRange &msg)
 	{
-		BytesUL	written;
+		BytesU	written;
 		CHECK_ERR( _memMapper.Write( msg.data, msg.position, OUT written ) );
-		msg.wasWritten.Set( written );
 
-		//_SendEvent( ModuleMsg::DataRegionChanged{ EMemoryAccess::CpuWrite, _memMapper.MappedOffset() + msg.offset, written });
+		msg.wasWritten.Set( written );
 		return true;
 	}
 	
@@ -606,7 +597,7 @@ namespace PlatformCL
 		CHECK_ERR( _IsCreated() and _memMapper.IsMappingAllowed( msg.flags ) );
 		CHECK_ERR( msg.position < _descr.size );
 		
-		const BytesUL	size	= Min( _descr.size, msg.size );
+		const BytesU	size	= Min( _descr.size, msg.size );
 		void *			ptr		= null;
 
 		CHECK( GetDevice()->AddSharedObj( this, _bufferId, _sharing ) );
@@ -626,7 +617,7 @@ namespace PlatformCL
 		
 		_memMapper.OnMapped( ptr, msg.position, size, msg.flags );
 
-		msg.result.Set( BinArrayRef::FromVoid( ptr, BytesU(size) ) );
+		msg.result.Set( BinArrayRef::FromVoid( ptr, size ) );
 		return true;
 	}
 	
@@ -674,7 +665,7 @@ namespace PlatformCL
 		CHECK_ERR( msg.writableBuffer->Size() > 0 );
 		CHECK_ERR( msg.position < _descr.size );
 		
-		const BytesUL	req_size = BytesUL(msg.writableBuffer->Size());
+		const BytesU	req_size = msg.writableBuffer->Size();
 
 		// read from mapped memory
 		if ( _memMapper.IsMapped() )
@@ -683,17 +674,18 @@ namespace PlatformCL
 					   msg.position + req_size <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
 
 			// read
-			DSMsg::ReadRegion	read_stream;
+			DSMsg::ReadMemRange	read_stream;
 			read_stream.position		= msg.position - _memMapper.MappedOffset();
 			read_stream.writableBuffer	= msg.writableBuffer;
 
-			CHECK( _ReadRegion( read_stream ) );
+			CHECK( _ReadMemRange( read_stream ) );
 			
 			// copy to writable buffer
 			CHECK( msg.writableBuffer->Size() >= read_stream.result->Size() );
 
-			MemCopy( *msg.writableBuffer, *read_stream.result );
+			MemCopy( OUT *msg.writableBuffer, *read_stream.result );
 			msg.result.Set( msg.writableBuffer->SubArray( 0, usize(read_stream.result->Size()) ) );
+
 			return true;
 		}
 
@@ -733,26 +725,26 @@ namespace PlatformCL
 		if ( _memMapper.IsMapped() )
 		{
 			CHECK_ERR( msg.position >= _memMapper.MappedOffset() and
-					   msg.position + BytesUL(msg.data.Size()) <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
+					   msg.position + msg.data.Size() <= _memMapper.MappedOffset() + _memMapper.MappedSize() );
 
 			// write
-			DSMsg::WriteRegion	write_stream;
-			write_stream.position	= msg.position - _memMapper.MappedOffset();
-			write_stream.data		= msg.data;
+			DSMsg::WriteMemRange	write;
+			write.position	= msg.position - _memMapper.MappedOffset();
+			write.data		= msg.data;
 
-			CHECK( _WriteRegion( write_stream ) );
+			CHECK( _WriteMemRange( write ) );
 
 			// flush
 			if ( not _memFlags[ EGpuMemory::CoherentWithCPU ] )
 			{
 				GpuMsg::FlushMemoryRange	flush;
-				flush.offset	= write_stream.position;
-				flush.size		= write_stream.wasWritten.Get( UMax );
+				flush.offset	= write.position;
+				flush.size		= write.wasWritten.Get( UMax );
 
 				CHECK( _FlushMemoryRange( flush ) );
 			}
 
-			msg.wasWritten.Set( *write_stream.wasWritten );
+			msg.wasWritten.Set( *write.wasWritten );
 			return true;
 		}
 
@@ -773,9 +765,7 @@ namespace PlatformCL
 		
 		CHECK( GetDevice()->ReleaseSharedObj( this ) );
 
-		msg.wasWritten.Set( BytesUL(size) );
-		
-		//_SendEvent( ModuleMsg::DataRegionChanged{ EMemoryAccess::CpuWrite, msg.offset, BytesUL(size) });
+		msg.wasWritten.Set( BytesU(size) );
 		return true;
 	}
 	
@@ -788,8 +778,8 @@ namespace PlatformCL
 	{
 		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuRead] );
-		CHECK_ERR( msg.memOffset == BytesUL(0) );	// not supported
-		CHECK_ERR( msg.mipLevel == MipmapLevel(0) );
+		CHECK_ERR( msg.memOffset == 0_b );	// not supported
+		CHECK_ERR( msg.mipLevel == 0_mipmap );
 		
 		// read without mapping
 		const uint3		img_size = Max( ImageUtils::ConvertSize( _descr.imageType, _descr.dimension ), 1u );
@@ -834,8 +824,8 @@ namespace PlatformCL
 	{
 		CHECK_ERR( _IsCreated() and not _memMapper.IsMapped() );
 		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::CpuWrite] );
-		CHECK_ERR( msg.memOffset == BytesUL(0) );	// not supported
-		CHECK_ERR( msg.mipLevel == MipmapLevel(0) );
+		CHECK_ERR( msg.memOffset == 0_b );	// not supported
+		CHECK_ERR( msg.mipLevel == 0_mipmap );
 		CHECK_ERR( msg.data.Size() >= msg.dimension.z * msg.slicePitch );
 		CHECK_ERR( IsNotZero( msg.dimension ) );
 
@@ -868,22 +858,8 @@ namespace PlatformCL
 		
 		CHECK( GetDevice()->ReleaseSharedObj( this ) );
 
-		msg.wasWritten.Set( BytesUL(msg.dimension.z * msg.slicePitch) );
+		msg.wasWritten.Set( msg.dimension.z * msg.slicePitch );
 		return true;
-	}
-
-/*
-=================================================
-	_GpuMemoryRegionChanged
-=================================================
-*/
-	bool CL1Buffer::_GpuMemoryRegionChanged (const GpuMsg::GpuMemoryRegionChanged &)
-	{
-		CHECK_ERR( _memMapper.MemoryAccess()[EMemoryAccess::GpuWrite] );	// this message allowed only for gpu-writable memory
-
-		// request memory barrier
-		TODO( "" );
-		return false;
 	}
 	
 /*
@@ -901,6 +877,33 @@ namespace PlatformCL
 
 		msg.result.Set( descr );
 		return true;
+	}
+	
+/*
+=================================================
+	_ValidateMemFlags
+=================================================
+*/
+	void CL1Buffer::_ValidateMemFlags (INOUT EGpuMemory::bits &flags)
+	{
+		ASSERT( not flags[EGpuMemory::SupportAliasing] );	// not supported
+
+		flags[EGpuMemory::SupportAliasing]	= false;
+		flags[EGpuMemory::Dedicated]		= true;
+	}
+	
+/*
+=================================================
+	_ValidateDescription
+=================================================
+*/
+	void CL1Buffer::_ValidateDescription (INOUT BufferDescription &descr)
+	{
+		if ( descr.size > 0 and descr.usage.IsNotZero() )
+		{
+			ASSERT( (descr.usage & supportedBufferUsage).IsNotZero() and "none of supported flags is used" );
+			ASSERT( (descr.usage & ~supportedBufferUsage).IsZero() and "used unsupported flags" );
+		}
 	}
 
 }	// PlatformCL

@@ -27,7 +27,7 @@ namespace PlatformSW
 			enum type : uint
 			{
 				Debug,
-				Perfomance,
+				Performance,
 				Info,
 				Warning,
 				Error,

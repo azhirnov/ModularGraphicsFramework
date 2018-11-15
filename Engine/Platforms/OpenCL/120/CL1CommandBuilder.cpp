@@ -24,14 +24,12 @@ namespace PlatformCL
 	{
 	// types
 	private:
-		using ComputeCommands_t		= GpuMsg::DefaultComputeCommands_t::Erase< GpuMsg::CmdDispatchIndirect >;
-
 		using SupportedMessages_t	= CL1BaseModule::SupportedMessages_t::Append< MessageListFrom<
 											GpuMsg::CmdBegin,
 											GpuMsg::CmdEnd,
 											GpuMsg::SetCommandBufferDependency,
 											GpuMsg::GetCommandBufferState
-										> >::Append< ComputeCommands_t >;
+										> >;
 
 		using SupportedEvents_t		= CL1BaseModule::SupportedEvents_t;
 
@@ -46,7 +44,6 @@ namespace PlatformCL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -96,7 +93,6 @@ namespace PlatformCL
 
 
 	
-	const TypeIdList	CL1CommandBuilder::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	CL1CommandBuilder::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -105,7 +101,7 @@ namespace PlatformCL
 =================================================
 */
 	CL1CommandBuilder::CL1CommandBuilder (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
-		CL1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
+		CL1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes )
 	{
 		SetDebugName( "CL1CommandBuilder" );
 
@@ -145,7 +141,7 @@ namespace PlatformCL
 		_SubscribeOnMsg( this, &CL1CommandBuilder::_CmdPushDebugGroup );
 		_SubscribeOnMsg( this, &CL1CommandBuilder::_CmdPopDebugGroup );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -237,7 +233,7 @@ namespace PlatformCL
 		// use target command buffer
 		if ( msg.targetCmdBuffer )
 		{
-			CHECK_ERR( msg.targetCmdBuffer->GetSupportedMessages().HasAllTypes< CmdBufferMsg_t >() );
+			CHECK_ERR( msg.targetCmdBuffer->SupportsAllMessages< CmdBufferMsg_t >() );
 
 			_cmdBuffer = msg.targetCmdBuffer;
 		}
@@ -252,6 +248,8 @@ namespace PlatformCL
 							},
 							OUT _cmdBuffer ) );
 
+			_cmdBuffer->SetDebugName( String(GetDebugName()) << "_Buffer" );
+
 			CHECK_ERR( _Attach( "", _cmdBuffer ) );
 		}
 
@@ -259,9 +257,7 @@ namespace PlatformCL
 		_cmdBuffer->Send( GpuMsg::SetCommandBufferState{ ERecordingState::Recording } );
 		
 		// check buffer state
-		GpuMsg::GetCommandBufferState	req_state;
-		_cmdBuffer->Send( req_state );
-		CHECK_ERR( *req_state.result == ERecordingState::Recording );
+		CHECK_ERR( _cmdBuffer->Request( GpuMsg::GetCommandBufferState{} ) == ERecordingState::Recording );
 
 		return true;
 	}

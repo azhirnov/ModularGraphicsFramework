@@ -8,7 +8,6 @@ namespace Engine
 namespace Base
 {
 	
-	const TypeIdList	TaskManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	TaskManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -17,7 +16,7 @@ namespace Base
 =================================================
 */
 	TaskManager::TaskManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::TaskManager &) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes )
 	{
 		SetDebugName( "TaskManager" );
 
@@ -36,7 +35,7 @@ namespace Base
 		_SubscribeOnMsg( this, &TaskManager::_AddTaskSchedulerToManager );
 		_SubscribeOnMsg( this, &TaskManager::_PushAsyncMessage );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 	}
 	
 /*
@@ -46,7 +45,7 @@ namespace Base
 */
 	TaskManager::~TaskManager ()
 	{
-		LOG( "TaskManager finalized", ELog::Debug );
+		//LOG( "TaskManager finalized", ELog::Debug );
 
 		ASSERT( _threads.Empty() );
 	}

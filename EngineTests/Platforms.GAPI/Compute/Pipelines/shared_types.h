@@ -4,29 +4,6 @@
 namespace Pipelines
 {
 // Packing: Std140
-struct DynamicBuffer_Struct final
-{
-	int2  i2;    // offset: 0, align: 8
-	Bool32  b1;    // offset: 8, align: 4
-	float  _padding0;    // offset: 12, align: 4
-	float2  f2;    // offset: 16, align: 8
-	float2  _padding1;    // offset: 24, align: 8
-	int4  i3;    // offset: 32, align: 16
-	Bool32_2  b2;    // offset: 48, align: 8
-	float2  _padding2;    // offset: 56, align: 8
-
-	DynamicBuffer_Struct ()
-	{
-		STATIC_ASSERT( sizeof(DynamicBuffer_Struct) == 64 );
-		STATIC_ASSERT( (offsetof( DynamicBuffer_Struct, i2 ) == 0) and (sizeof( i2 ) == 8) );
-		STATIC_ASSERT( (offsetof( DynamicBuffer_Struct, b1 ) == 8) and (sizeof( b1 ) == 4) );
-		STATIC_ASSERT( (offsetof( DynamicBuffer_Struct, f2 ) == 16) and (sizeof( f2 ) == 8) );
-		STATIC_ASSERT( (offsetof( DynamicBuffer_Struct, i3 ) == 32) and (sizeof( i3 ) == 16) );
-		STATIC_ASSERT( (offsetof( DynamicBuffer_Struct, b2 ) == 48) and (sizeof( b2 ) == 8) );
-	}
-};
-
-// Packing: Std140
 struct BufferAlign_Struct final
 {
 	int4  i4;    // offset: 0, align: 16
@@ -52,18 +29,25 @@ struct BufferAlign_Struct final
 };
 
 // Packing: Std140
-struct BufferAlign_SSBO final
+struct DynamicBuffer_Struct final
 {
-	BufferAlign_Struct  src;    // offset: 0, align: 16
-	BufferAlign_Struct  dst1;    // offset: 64, align: 16
-	BufferAlign_Struct  dst2;    // offset: 128, align: 16
+	int2  i2;    // offset: 0, align: 8
+	Bool32  b1;    // offset: 8, align: 4
+	float  _padding0;    // offset: 12, align: 4
+	float2  f2;    // offset: 16, align: 8
+	float2  _padding1;    // offset: 24, align: 8
+	int4  i3;    // offset: 32, align: 16
+	Bool32_2  b2;    // offset: 48, align: 8
+	float2  _padding2;    // offset: 56, align: 8
 
-	BufferAlign_SSBO ()
+	DynamicBuffer_Struct ()
 	{
-		STATIC_ASSERT( sizeof(BufferAlign_SSBO) == 192 );
-		STATIC_ASSERT( (offsetof( BufferAlign_SSBO, src ) == 0) and (sizeof( src ) == 64) );
-		STATIC_ASSERT( (offsetof( BufferAlign_SSBO, dst1 ) == 64) and (sizeof( dst1 ) == 64) );
-		STATIC_ASSERT( (offsetof( BufferAlign_SSBO, dst2 ) == 128) and (sizeof( dst2 ) == 64) );
+		STATIC_ASSERT( sizeof(DynamicBuffer_Struct) == 64 );
+		STATIC_ASSERT( (offsetof( DynamicBuffer_Struct, i2 ) == 0) and (sizeof( i2 ) == 8) );
+		STATIC_ASSERT( (offsetof( DynamicBuffer_Struct, b1 ) == 8) and (sizeof( b1 ) == 4) );
+		STATIC_ASSERT( (offsetof( DynamicBuffer_Struct, f2 ) == 16) and (sizeof( f2 ) == 8) );
+		STATIC_ASSERT( (offsetof( DynamicBuffer_Struct, i3 ) == 32) and (sizeof( i3 ) == 16) );
+		STATIC_ASSERT( (offsetof( DynamicBuffer_Struct, b2 ) == 48) and (sizeof( b2 ) == 8) );
 	}
 };
 
@@ -94,13 +78,29 @@ struct DynamicBuffer_SSBO final
 	}
 };
 
+// Packing: Std140
+struct BufferAlign_SSBO final
+{
+	BufferAlign_Struct  src;    // offset: 0, align: 16
+	BufferAlign_Struct  dst1;    // offset: 64, align: 16
+	BufferAlign_Struct  dst2;    // offset: 128, align: 16
+
+	BufferAlign_SSBO ()
+	{
+		STATIC_ASSERT( sizeof(BufferAlign_SSBO) == 192 );
+		STATIC_ASSERT( (offsetof( BufferAlign_SSBO, src ) == 0) and (sizeof( src ) == 64) );
+		STATIC_ASSERT( (offsetof( BufferAlign_SSBO, dst1 ) == 64) and (sizeof( dst1 ) == 64) );
+		STATIC_ASSERT( (offsetof( BufferAlign_SSBO, dst2 ) == 128) and (sizeof( dst2 ) == 64) );
+	}
+};
+
 }	// Pipelines
 
 namespace GX_STL::CompileTime::_ctime_hidden_ {
-	template <> struct _IsPOD< Pipelines::DynamicBuffer_Struct > { static const bool value = true; };
 	template <> struct _IsPOD< Pipelines::BufferAlign_Struct > { static const bool value = true; };
-	template <> struct _IsPOD< Pipelines::BufferAlign_SSBO > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::DynamicBuffer_Struct > { static const bool value = true; };
 	template <> struct _IsPOD< Pipelines::DynamicBuffer_SSBO > { static const bool value = true; };
 	template <> struct _IsPOD< Pipelines::DynamicBuffer_SSBO::Element > { static const bool value = true; };
+	template <> struct _IsPOD< Pipelines::BufferAlign_SSBO > { static const bool value = true; };
 }
 

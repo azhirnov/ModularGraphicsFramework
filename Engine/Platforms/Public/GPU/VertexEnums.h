@@ -121,6 +121,8 @@ namespace Platforms
 
 		static type  SetNormalized (type value, bool norm);
 
+		static String  ToString (type value);
+
 		struct ValueType
 		{
 			static bool IsInteger(type value);
@@ -144,6 +146,9 @@ namespace Platforms
 		template <typename T>	static constexpr type From ();
 
 		static BytesU	SizeOf (type value);
+		static ulong	MaxValue (type value);
+
+		static StringCRef ToString (type value);
 	};
 	
 
@@ -157,6 +162,8 @@ namespace Platforms
 			_Count,
 			Unknown		= ~0u,
 		};
+
+		static StringCRef ToString (type value);
 	};
 
 
@@ -194,28 +201,33 @@ namespace Platforms
 			
 		RETURN_ERR( "invalid attrib type", ftype );
 	}
-	 
+	
+
 	ND_ inline EVertexAttribute::type  EVertexAttribute::SetNormalized (type value, bool norm)
 	{
 		return type( (value & ~NormalizedFlag) | (norm ? NormalizedFlag : 0) );
 	}
 	
+
 	ND_ inline bool EVertexAttribute::ValueType::IsInteger (type value)
 	{
 		return	EnumEqMask( ToDstType( value ), _vtypeinfo::_INT,  _vtypeinfo::_TYPE_MASK ) or
 				EnumEqMask( ToDstType( value ), _vtypeinfo::_UINT, _vtypeinfo::_TYPE_MASK );
 	}
 
+
 	ND_ inline bool EVertexAttribute::ValueType::IsFloat (type value)
 	{
 		return EnumEqMask( ToDstType( value ), _vtypeinfo::_FLOAT, _vtypeinfo::_TYPE_MASK );
 	}
 
+
 	ND_ inline bool EVertexAttribute::ValueType::IsDouble (type value)
 	{
 		return EnumEqMask( ToDstType( value ), _vtypeinfo::_DOUBLE, _vtypeinfo::_TYPE_MASK );
 	}
-		
+
+
 
 //-----------------------------------------------------------------------------//
 // EIndex
@@ -223,7 +235,8 @@ namespace Platforms
 	template <>	ND_ inline constexpr EIndex::type  EIndex::From< ushort > ()	{ return UShort; }
 	template <>	ND_ inline constexpr EIndex::type  EIndex::From< uint > ()		{ return UInt; }
 	
-	ND_ inline BytesU EIndex::SizeOf (type value)
+
+	ND_ inline BytesU  EIndex::SizeOf (type value)
 	{
 		switch ( value )
 		{
@@ -232,6 +245,18 @@ namespace Platforms
 		}
 		RETURN_ERR( "unknown index type!" );
 	}
+	
+
+	ND_ inline ulong  EIndex::MaxValue (type value)
+	{
+		switch ( value )
+		{
+			case EIndex::UShort :	return GXTypes::MaxValue<ushort>();
+			case EIndex::UInt :		return GXTypes::MaxValue<uint>();
+		}
+		RETURN_ERR( "unknown index type!" );
+	}
+
 
 }	// Platforms
 }	// Engine

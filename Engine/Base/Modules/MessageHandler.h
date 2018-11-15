@@ -87,22 +87,22 @@ namespace Base
 		MessageHandler ();
 		
 		template <typename Class, typename Class2, typename MsgT>
-		bool Subscribe (const TypeIdList& validTypes, const SP<Class> &obj, bool (Class2::*) (const MsgT &), EPriority priority, bool checked = true);
+		bool Subscribe (const SP<Class> &obj, bool (Class2::*) (const MsgT &), EPriority priority);
 		
 		template <typename Class, typename Class2, typename MsgT>
-		bool Subscribe (const TypeIdList& validTypes, const SP<Class> &obj, bool (Class2::*) (const MsgT &) const, EPriority priority, bool checked = true);
+		bool Subscribe (const SP<Class> &obj, bool (Class2::*) (const MsgT &) const, EPriority priority);
 
 		template <typename Class, typename Class2, typename MsgT>
-		bool Subscribe (const TypeIdList& validTypes, const WP<Class> &obj, bool (Class2::*) (const MsgT &), EPriority priority, bool checked = true);
+		bool Subscribe (const WP<Class> &obj, bool (Class2::*) (const MsgT &), EPriority priority);
 		
 		template <typename Class, typename Class2, typename MsgT>
-		bool Subscribe (const TypeIdList& validTypes, const WP<Class> &obj, bool (Class2::*) (const MsgT &) const, EPriority priority, bool checked = true);
+		bool Subscribe (const WP<Class> &obj, bool (Class2::*) (const MsgT &) const, EPriority priority);
 
 		template <typename Class, typename Class2, typename MsgT>
-		bool Subscribe (const TypeIdList& validTypes, Class *obj, bool (Class2::*) (const MsgT &), EPriority priority, bool checked = true);
+		bool Subscribe (Class *obj, bool (Class2::*) (const MsgT &), EPriority priority);
 		
 		template <typename Class, typename Class2, typename MsgT>
-		bool Subscribe (const TypeIdList& validTypes, Class *obj, bool (Class2::*) (const MsgT &) const, EPriority priority, bool checked = true);
+		bool Subscribe (Class *obj, bool (Class2::*) (const MsgT &) const, EPriority priority);
 
 
 		template <typename Class>
@@ -131,8 +131,9 @@ namespace Base
 		void UnsubscribeDeadHandlers ();
 
 
-		template <typename Class>
-		bool CopySubscriptions (const TypeIdList& validTypes, const SP<Class> &obj, const MessageHandler &other, ArrayCRef<TypeId> msgIds, EPriority priority);
+		template <typename Class, typename Class2>
+		bool CopySubscriptions (const Class *selfObj, const SP<Class2> &otherObj, const MessageHandler &other,
+								ArrayCRef<TypeId> msgIds, bool warnIfNotExist, EPriority priority);
 
 		void Clear ();
 		
@@ -140,8 +141,10 @@ namespace Base
 		bool Validate (const TypeIdList &msgTypes, const TypeIdList &eventTypes) const;
 
 	private:
-		bool _Subscribe2 (const TypeIdList& validTypes, TypeId id, EPriority priority, Handler &&handler, bool checked);
-		bool _CopySubscriptions (const TypeIdList& validTypes, const Object_t *otherObj, const MessageHandler &other, ArrayCRef<TypeId> ids, EPriority priority);
+		bool _Subscribe2 (TypeId id, EPriority priority, Handler &&handler);
+
+		bool _CopySubscriptions (const Object_t *selfObj, const Object_t *otherObj, const MessageHandler &other,
+								 ArrayCRef<TypeId> ids, bool warnIfNotExist, EPriority priority);
 
 		void _UnsubscribeAll (const Object_t* obj);
 		void _UnsubscribeAll (TypeId msgID);
@@ -149,7 +152,7 @@ namespace Base
 		void _Unsubscribe2 (const Object_t* obj, TypeId msgID);
 
 		template <typename Msg, typename Class, typename Func>
-		bool _Subscribe (const TypeIdList& validTypes, const WP<Class> &obj, Func func, EPriority priority, bool checked);
+		bool _Subscribe (const WP<Class> &obj, Func func, EPriority priority);
 		
 		template <typename Func>
 		void _Unsubscribe (const Object_t* obj, Func func);
@@ -165,43 +168,43 @@ namespace Base
 =================================================
 */
 	template <typename Class, typename Class2, typename MsgT>
-	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, Class *obj, bool (Class2::* func) (const MsgT &), EPriority priority, bool checked)
+	forceinline bool MessageHandler::Subscribe (Class *obj, bool (Class2::* func) (const MsgT &), EPriority priority)
 	{
-		return Subscribe( validTypes, WP<Class>(obj), func, priority, checked );
+		return Subscribe( WP<Class>(obj), func, priority );
 	}
 	
 	template <typename Class, typename Class2, typename MsgT>
-	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, Class *obj, bool (Class2::* func) (const MsgT &) const, EPriority priority, bool checked)
+	forceinline bool MessageHandler::Subscribe (Class *obj, bool (Class2::* func) (const MsgT &) const, EPriority priority)
 	{
-		return Subscribe( validTypes, WP<Class>(obj), func, priority, checked );
+		return Subscribe( WP<Class>(obj), func, priority );
 	}
 	
 	template <typename Class, typename Class2, typename MsgT>
-	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, const SP<Class> &obj, bool (Class2::* func) (const MsgT &), EPriority priority, bool checked)
+	forceinline bool MessageHandler::Subscribe (const SP<Class> &obj, bool (Class2::* func) (const MsgT &), EPriority priority)
 	{
-		return Subscribe( validTypes, WP<Class>(obj), func, priority, checked );
+		return Subscribe( WP<Class>(obj), func, priority );
 	}
 	
 	template <typename Class, typename Class2, typename MsgT>
-	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, const SP<Class> &obj, bool (Class2::* func) (const MsgT &) const, EPriority priority, bool checked)
+	forceinline bool MessageHandler::Subscribe (const SP<Class> &obj, bool (Class2::* func) (const MsgT &) const, EPriority priority)
 	{
-		return Subscribe( validTypes, WP<Class>(obj), func, priority, checked );
+		return Subscribe( WP<Class>(obj), func, priority );
 	}
 
 	template <typename Class, typename Class2, typename MsgT>
-	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, const WP<Class> &obj, bool (Class2::* func) (const MsgT &), EPriority priority, bool checked)
+	forceinline bool MessageHandler::Subscribe (const WP<Class> &obj, bool (Class2::* func) (const MsgT &), EPriority priority)
 	{
-		STATIC_ASSERT( MsgT::__is_message(true) );
+        STATIC_ASSERT( typename MsgT::__is_message(true) );
 		STATIC_ASSERT(( CompileTime::IsSameTypes< Class, Class2 > or CompileTime::IsBaseOf< Class2, Class > ));
-		return _Subscribe< MsgT >( validTypes, obj, func, priority, checked );
+		return _Subscribe< MsgT >( obj, func, priority );
 	}
 
 	template <typename Class, typename Class2, typename MsgT>
-	forceinline bool MessageHandler::Subscribe (const TypeIdList& validTypes, const WP<Class> &obj, bool (Class2::* func) (const MsgT &) const, EPriority priority, bool checked)
+	forceinline bool MessageHandler::Subscribe (const WP<Class> &obj, bool (Class2::* func) (const MsgT &) const, EPriority priority)
 	{
-		STATIC_ASSERT( MsgT::__is_message(true) );
+        STATIC_ASSERT( typename MsgT::__is_message(true) );
 		STATIC_ASSERT(( CompileTime::IsSameTypes< Class, Class2 > or CompileTime::IsBaseOf< Class2, Class > ));
-		return _Subscribe< MsgT >( validTypes, obj, func, priority, checked );
+		return _Subscribe< MsgT >( obj, func, priority );
 	}
 
 /*
@@ -210,7 +213,7 @@ namespace Base
 =================================================
 */
 	template <typename Msg, typename Class, typename Func>
-	forceinline bool MessageHandler::_Subscribe (const TypeIdList& validTypes, const WP<Class> &obj, Func func, EPriority priority, bool checked)
+	forceinline bool MessageHandler::_Subscribe (const WP<Class> &obj, Func func, EPriority priority)
 	{
 		STATIC_ASSERT( sizeof(Handler::data) >= sizeof(func) );
 
@@ -219,7 +222,7 @@ namespace Base
 		handler.ptr		= obj;
 		handler.func	= &_Call< Class, Msg, Func >;
 		
-		return _Subscribe2( validTypes, TypeIdOf< Msg >(), priority, RVREF(handler), checked );
+		return _Subscribe2( TypeIdOf< Msg >(), priority, RVREF(handler) );
 	}
 
 /*
@@ -278,10 +281,11 @@ namespace Base
 	CopySubscriptions
 =================================================
 */
-	template <typename Class>
-	forceinline bool MessageHandler::CopySubscriptions (const TypeIdList& validTypes, const SP<Class> &obj, const MessageHandler &other, ArrayCRef<TypeId> msgIds, EPriority priority)
+	template <typename Class, typename Class2>
+	forceinline bool MessageHandler::CopySubscriptions (const Class *selfObj, const SP<Class2> &otherObj, const MessageHandler &other,
+														ArrayCRef<TypeId> msgIds, bool warnIfNotExist, EPriority priority)
 	{
-		return _CopySubscriptions( validTypes, obj.RawPtr(), other, msgIds, priority );
+		return _CopySubscriptions( selfObj, otherObj.RawPtr(), other, msgIds, warnIfNotExist, priority );
 	}
 	
 /*

@@ -42,8 +42,26 @@ namespace PlatformGL
 										> >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
+		
+		template <typename T, usize UID>
+		struct _GLWrap
+		{
+		// variables
+			T					ptr		= null;
+			StaticString<64>	name;
+			
+		// methods
+			_GLWrap () {}
+			_GLWrap (T val, StringCRef name) : ptr{val}, name{name} {}
+			explicit _GLWrap (T value) : ptr{value} {}
+			explicit _GLWrap (StringCRef name) : name{name} {}
+		};
+		
+		using Fence_t				= _GLWrap< GLsync, 1 >;
+		using Event_t				= _GLWrap< GLsync, 2 >;
+		using Semaphore_t			= _GLWrap< GLsync, 3 >;
 
-		using SyncUnion_t			= Union< GLsync >;
+		using SyncUnion_t			= Union< Fence_t, Event_t, Semaphore_t >;
 		using SyncArray_t			= Map< ulong, SyncUnion_t >;
 
 		struct _DeleteSync_Func;
@@ -51,7 +69,6 @@ namespace PlatformGL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -92,7 +109,6 @@ namespace PlatformGL
 
 
 	
-	const TypeIdList	GL4SyncManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4SyncManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -101,7 +117,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4SyncManager::GL4SyncManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_counter{ 0 }
 	{
 		SetDebugName( "GL4SyncManager" );
@@ -136,7 +152,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4SyncManager::_GetGLSemaphore );
 		_SubscribeOnMsg( this, &GL4SyncManager::_WaitGLSemaphore );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -161,9 +177,19 @@ namespace PlatformGL
 		_DeleteSync_Func ()
 		{}
 
-		void operator () (GLsync fence) const
+		void operator () (Fence_t fence) const
 		{
-			GL_CALL( glDeleteSync( fence ) );
+			GL_CALL( glDeleteSync( fence.ptr ) );
+		}
+
+		void operator () (Event_t event) const
+		{
+			GL_CALL( glDeleteSync( event.ptr ) );
+		}
+
+		void operator () (Semaphore_t sem) const
+		{
+			GL_CALL( glDeleteSync( sem.ptr ) );
 		}
 	};
 
@@ -177,7 +203,7 @@ namespace PlatformGL
 		_DeleteSync_Func	func;
 
 		for (auto& sync : _syncs) {
-			sync.second.Apply( func );
+			sync.second.Accept( func );
 		}
 
 		_syncs.Clear();
@@ -228,7 +254,7 @@ namespace PlatformGL
 			if ( not _syncs.IsExist( _counter ) )
 				break;
 		}
-		_syncs.Add( _counter, SyncUnion_t{ GLsync(null) } );
+		_syncs.Add( _counter, SyncUnion_t{Fence_t( msg.name.Empty() ? "Fence" : msg.name )} );
 
 		msg.result.Set( GpuFenceId(_counter) );
 		return true;
@@ -245,9 +271,9 @@ namespace PlatformGL
 
 		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
-			CHECK_ERR( iter->second.Is< GLsync >() );
+			CHECK_ERR( iter->second.Is< Fence_t >() );
 			
-			GLsync&	fence = iter->second.Get< GLsync >();
+			GLsync	fence = iter->second.Get< Fence_t >().ptr;
 
 			if ( fence ) {
 				GL_CALL( glDeleteSync( fence ) );
@@ -272,7 +298,7 @@ namespace PlatformGL
 			SyncArray_t::iterator	iter;
 			CHECK_ERR( _syncs.Find( ulong(wfence), OUT iter ) );
 
-			GLsync	fence = iter->second.Get< GLsync >();
+			GLsync	fence = iter->second.Get< Fence_t >().ptr;
 
 			if ( fence ) {
 				GL_CALL( glClientWaitSync( fence, GL_SYNC_FLUSH_COMMANDS_BIT, timeout ) );
@@ -293,17 +319,19 @@ namespace PlatformGL
 	{
 		SyncArray_t::iterator	iter;
 		CHECK_ERR( _syncs.Find( ulong(msg.fenceId), OUT iter ) );
-		CHECK_ERR( iter->second.Is< GLsync >() );
+		CHECK_ERR( iter->second.Is< Fence_t >() );
 		
-		GLsync&	fence = iter->second.Get< GLsync >();
+		Fence_t&	fence = iter->second.Get< Fence_t >();
 
-		if ( fence ) {
-			GL_CALL( glDeleteSync( fence ) );
+		if ( fence.ptr ) {
+			GL_CALL( glDeleteSync( fence.ptr ) );
 		}
 			
-		GL_CALL( fence = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 ) );
+		GL_CALL( fence.ptr = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 ) );
 
-		msg.result.Set( fence );
+		GetDevice()->SetObjectName( fence.ptr, fence.name, EGpuObject::Fence );
+
+		msg.result.Set( fence.ptr );
 		return true;
 	}
 	
@@ -316,9 +344,9 @@ namespace PlatformGL
 	{
 		SyncArray_t::iterator	iter;
 		CHECK_ERR( _syncs.Find( ulong(msg.fenceId), OUT iter ) );
-		CHECK_ERR( iter->second.Is< GLsync >() );
+		CHECK_ERR( iter->second.Is< Fence_t >() );
 		
-		msg.result.Set( iter->second.Get< GLsync >() );
+		msg.result.Set( iter->second.Get< Fence_t >().first );
 		return true;
 	}
 
@@ -336,7 +364,7 @@ namespace PlatformGL
 			if ( not _syncs.IsExist( _counter ) )
 				break;
 		}
-		_syncs.Add( _counter, SyncUnion_t{ GLsync(null) } );
+		_syncs.Add( _counter, SyncUnion_t{Event_t( msg.name.Empty() ? "Event" : msg.name )} );
 
 		msg.result.Set( GpuEventId(_counter) );
 		return true;
@@ -353,9 +381,9 @@ namespace PlatformGL
 
 		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
-			CHECK_ERR( iter->second.Is< GLsync >() );
+			CHECK_ERR( iter->second.Is< Event_t >() );
 			
-			GLsync&	sem = iter->second.Get< GLsync >();
+			GLsync	sem = iter->second.Get< Event_t >().ptr;
 
 			if ( sem ) {
 				GL_CALL( glDeleteSync( sem ) );
@@ -375,9 +403,9 @@ namespace PlatformGL
 	{
 		SyncArray_t::iterator	iter;
 		CHECK_ERR( _syncs.Find( ulong(msg.id), OUT iter ) );
-		CHECK_ERR( iter->second.Is< GLsync >() );
+		CHECK_ERR( iter->second.Is< Event_t >() );
 
-		GLsync&	event = iter->second.Get< GLsync >();
+		GLsync	event = iter->second.Get< Event_t >().ptr;
 
 		// don't create fence, it is same to make event signaled
 		if ( event == null )
@@ -405,21 +433,23 @@ namespace PlatformGL
 	{
 		SyncArray_t::iterator	iter;
 		CHECK_ERR( _syncs.Find( ulong(msg.id), OUT iter ) );
-		CHECK_ERR( iter->second.Is< GLsync >() );
+		CHECK_ERR( iter->second.Is< Event_t >() );
 
-		GLsync&	event = iter->second.Get< GLsync >();
+		Event_t		event = iter->second.Get< Event_t >();
 
 		// create fence, it is same to make event unsignaled
-		if ( event == null )
+		if ( event.ptr == null )
 		{
-			GL_CALL( event = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 ) );
+			GL_CALL( event.ptr = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 ) );
+
+			GetDevice()->SetObjectName( event.ptr, event.name, EGpuObject::Fence );
 			return true;
 		}
 
 		// fence already created and may be unsignaled, and we can't change fence state
 		GLint	values[1] = {};
 		GLsizei	length = 0;
-		GL_CALL( glGetSynciv( event, GL_SYNC_STATUS, sizeof(values), OUT &length, OUT values ) );
+		GL_CALL( glGetSynciv( event.ptr, GL_SYNC_STATUS, sizeof(values), OUT &length, OUT values ) );
 		ASSERT( values[0] == GL_SIGNALED or values[0] == GL_UNSIGNALED );
 
 		// fence is already unsignaled, 'ResetEvent' has no effect
@@ -441,9 +471,9 @@ namespace PlatformGL
 	{
 		SyncArray_t::iterator	iter;
 		CHECK_ERR( _syncs.Find( ulong(msg.eventId), OUT iter ) );
-		CHECK_ERR( iter->second.Is< GLsync >() );
+		CHECK_ERR( iter->second.Is< Event_t >() );
 		
-		msg.result.Set( iter->second.Get< GLsync >() );
+		msg.result.Set( iter->second.Get< Event_t >().ptr );
 		return true;
 	}
 
@@ -461,7 +491,7 @@ namespace PlatformGL
 			if ( not _syncs.IsExist( _counter ) )
 				break;
 		}
-		_syncs.Add( _counter, SyncUnion_t{ GLsync(null) } );
+		_syncs.Add( _counter, SyncUnion_t{Semaphore_t( msg.name.Empty() ? "Semaphore" : msg.name )} );
 
 		msg.result.Set( GpuSemaphoreId(_counter) );
 		return true;
@@ -478,9 +508,9 @@ namespace PlatformGL
 
 		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
-			CHECK_ERR( iter->second.Is< GLsync >() );
+			CHECK_ERR( iter->second.Is< Semaphore_t >() );
 			
-			GLsync&	sem = iter->second.Get< GLsync >();
+			GLsync	sem = iter->second.Get< Semaphore_t >().ptr;
 
 			if ( sem ) {
 				GL_CALL( glDeleteSync( sem ) );
@@ -500,17 +530,19 @@ namespace PlatformGL
 	{
 		SyncArray_t::iterator	iter;
 		CHECK_ERR( _syncs.Find( ulong(msg.semId), OUT iter ) );
-		CHECK_ERR( iter->second.Is< GLsync >() );
+		CHECK_ERR( iter->second.Is< Semaphore_t >() );
 		
-		GLsync&	sem = iter->second.Get< GLsync >();
+		Semaphore_t&	sem = iter->second.Get< Semaphore_t >();
 
-		if ( sem ) {
-			GL_CALL( glDeleteSync( sem ) );
+		if ( sem.ptr ) {
+			GL_CALL( glDeleteSync( sem.ptr ) );
 		}
 			
-		GL_CALL( sem = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 ) );
+		GL_CALL( sem.ptr = glFenceSync( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 ) );
 
-		msg.result.Set( sem );
+		GetDevice()->SetObjectName( sem.ptr, sem.name, EGpuObject::Fence );
+
+		msg.result.Set( sem.ptr );
 		return true;
 	}
 	
@@ -523,9 +555,9 @@ namespace PlatformGL
 	{
 		SyncArray_t::iterator	iter;
 		CHECK_ERR( _syncs.Find( ulong(msg.semId), OUT iter ) );
-		CHECK_ERR( iter->second.Is< GLsync >() );
+		CHECK_ERR( iter->second.Is< Semaphore_t >() );
 		
-		msg.result.Set( iter->second.Get< GLsync >() );
+		msg.result.Set( iter->second.Get< Semaphore_t >().ptr );
 		return true;
 	}
 	

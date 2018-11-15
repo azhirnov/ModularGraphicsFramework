@@ -13,7 +13,7 @@ namespace Platforms
 	// Image Array Layer
 	//
 	
-	struct ImageLayer
+	struct ImageLayer final : CompileTime::PODStruct
 	{
 	// types
 	private:
@@ -27,19 +27,19 @@ namespace Platforms
 
 	// methods
 	public:
-		ImageLayer (GX_DEFCTOR) : _value(UMax)
-		{}
+		constexpr ImageLayer (GX_DEFCTOR) : _value(UMax) {}
 
-		explicit
-		ImageLayer (uint value) : _value(value)
-		{}
+		explicit constexpr ImageLayer (uint value) : _value(value) {}
 
-		ND_ bool IsDefined ()	const	{ return _value != UMax; }
+		ND_ constexpr bool IsDefined ()	const	{ return _value != UMax; }
 
-		ND_ uint Get ()			const	{ return IsDefined() ? _value : 0; }
+		ND_ constexpr uint Get ()		const	{ return IsDefined() ? _value : 0; }
 
 		_GX_DIM_CMP_OPERATORS_SELF( _value )
 	};
+	
+
+	ND_ inline constexpr ImageLayer operator "" _layer (unsigned long long value)		{ return ImageLayer( uint(value) ); }
 
 
 }	// Platforms

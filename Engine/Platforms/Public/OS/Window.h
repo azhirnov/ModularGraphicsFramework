@@ -99,20 +99,20 @@ namespace OSMsg
 	//
 	// Window events
 	//
-	struct WindowCreated : _MessageBase_
+	struct WindowCreated : _MsgBase_
 	{};
 
-	struct WindowBeforeDestroy : _MessageBase_
+	struct WindowBeforeDestroy : _MsgBase_
 	{};
 
-	struct WindowAfterDestroy : _MessageBase_
+	struct WindowAfterDestroy : _MsgBase_
 	{};
 
 	
 	//
 	// Set / Get / OnChanged Window Description
 	//
-	struct WindowSetDescription : _MessageBase_
+	struct WindowSetDescription : _MsgBase_
 	{
 	// variables
 		Platforms::WindowDesc			descr;
@@ -122,17 +122,13 @@ namespace OSMsg
 	};
 
 
-	struct WindowGetDescription : _MessageBase_
+	struct WindowGetDescription : _MsgBase_
 	{
-	// variables
 		Out< Platforms::WindowDesc >	result;
-
-	// methods
-		WindowGetDescription () {}
 	};
 
 
-	struct WindowDescriptionChanged : _MessageBase_
+	struct WindowDescriptionChanged : _MsgBase_
 	{
 	// variables
 		Platforms::WindowDesc			descr;
@@ -145,7 +141,7 @@ namespace OSMsg
 	//
 	// On Window Visibility / Focus Changed
 	//
-	struct WindowVisibilityChanged : _MessageBase_
+	struct WindowVisibilityChanged : _MsgBase_
 	{
 	// variables
 		CreateInfo::Window::EVisibility		state;
@@ -158,7 +154,7 @@ namespace OSMsg
 	//
 	// Before Create Window
 	//
-	struct WindowBeforeCreate : _MessageBase_
+	struct WindowBeforeCreate : _MsgBase_
 	{
 	// variables
 		const     CreateInfo::Window		info;

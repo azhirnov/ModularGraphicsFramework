@@ -18,9 +18,8 @@ namespace PlatformGL
 */
 	GL4BaseModule::GL4BaseModule (const GlobalSystemsRef gs,
 								  const ModuleConfig &config,
-								  const TypeIdList *msgTypes,
 								  const TypeIdList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes )
+		Module( gs, config, eventTypes )
 	{
 	}
 	
@@ -64,7 +63,7 @@ namespace PlatformGL
 */
 	bool GL4BaseModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg( ModuleMsg::Delete{} );
+		Send( ModuleMsg::Delete{} );
 		
 		if ( _glResourceCache )
 			_glResourceCache->Erase( this );

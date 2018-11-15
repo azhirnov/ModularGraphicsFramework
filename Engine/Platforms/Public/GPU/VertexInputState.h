@@ -14,11 +14,10 @@ namespace Platforms
 	// Vertex Input State
 	//
 
-	class VertexInputState : public CompileTime::CopyQualifiers< FixedSizeHashMap<StaticString<32>, int, 1> >
+	class VertexInputState final : public CompileTime::CopyQualifiers< FixedSizeHashMap<StaticString<32>, int, 1> >
 	{
 	// types
 	public:
-		//using AttribIndex	= VertexAttribs::AttribIndex;
 		using Self			= VertexInputState;
 		using Name_t		= VertexAttribs::Name_t;
 		
@@ -39,12 +38,12 @@ namespace Platforms
 		// variables
 			EVertexAttribute::type	type;	// src type, if src type is normalized short3, then dst type is float3.
 			AttribIndex				index;
-			BytesU					offset;
+			Bytes<uint>				offset;
 			BindingIndex			bindingIndex;
 
 		// methods
 			Attrib (GX_DEFCTOR);
-			Attrib (AttribIndex index, EVertexAttribute::type type, BytesU offset, BindingIndex bindingIndex);
+			Attrib (AttribIndex index, EVertexAttribute::type type, Bytes<uint> offset, BindingIndex bindingIndex);
 			
 			EVertexAttribute::type ToDstType () const;
 
@@ -60,12 +59,12 @@ namespace Platforms
 		{
 		// variables
 			BindingIndex			index;
-			BytesU					stride;
+			Bytes<uint>				stride;
 			EVertexInputRate::type	rate;
 
 		// methods
 			Binding (GX_DEFCTOR);
-			Binding (BindingIndex index, BytesU stride, EVertexInputRate::type rate);
+			Binding (BindingIndex index, Bytes<uint> stride, EVertexInputRate::type rate);
 
 			ND_ bool operator == (const Binding &right) const;
 			ND_ bool operator >  (const Binding &right) const;
@@ -96,17 +95,21 @@ namespace Platforms
 		Self & Add (StringCRef name, ValueType ClassType:: *vertex, bool norm = false, StringCRef buffer = StringCRef());
 		Self & Add (StringCRef name, EVertexAttribute::type type, BytesU offset, StringCRef buffer = StringCRef());
 
+		Self & Bind (StringCRef name, Bytes<uint> stride, uint index = BindingIndex_Auto, EVertexInputRate::type rate = EVertexInputRate::Vertex);
 		Self & Bind (StringCRef name, BytesU stride, uint index = BindingIndex_Auto, EVertexInputRate::type rate = EVertexInputRate::Vertex);
 
 		void  Clear ();
 
 			bool Merge (const VertexAttribs &attribs, OUT VertexInputState &result) const;
-		ND_ bool Equals (const VertexInputState &other, bool ignoreNames) const;
+		//ND_ bool Equals (const VertexInputState &other, bool ignoreNames) const;
+		ND_ bool EqualsRelaxed (const VertexInputState &other) const;
 
 		ND_ Attribs_t const&	Attribs () const	{ return _attribs; }
 		ND_ Bindings_t const&	Bindings () const	{ return _bindings; }
 
 		ND_ bool operator == (const VertexInputState &right) const;
+
+		DEBUG_ONLY( ND_ String ToString () const; )
 	};
 	
 		

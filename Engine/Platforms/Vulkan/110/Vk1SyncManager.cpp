@@ -45,26 +45,30 @@ namespace PlatformVK
 		template <typename T, usize UID>
 		struct _VkWrap
 		{
-			T	ptr;
-
-			_VkWrap () : ptr{VK_NULL_HANDLE} {}
+		// variables
+			T					ptr		= VK_NULL_HANDLE;
+			StaticString<64>	name;
+			
+		// methods
+			_VkWrap () {}
+			_VkWrap (T val, StringCRef name) : ptr{val}, name{name} {}
 			explicit _VkWrap (T value) : ptr{value} {}
+			explicit _VkWrap (StringCRef name) : name{name} {}
 		};
 
-		using Fence_t		= _VkWrap< VkFence, 1 >;
-		using Event_t		= _VkWrap< VkEvent, 2 >;
-		using Semaphore_t	= _VkWrap< VkSemaphore, 3 >;
+		using Fence_t			= _VkWrap< VkFence, 1 >;
+		using Event_t			= _VkWrap< VkEvent, 2 >;
+		using Semaphore_t		= _VkWrap< VkSemaphore, 3 >;
 
 
-		using SyncUnion_t			= Union< Fence_t, Event_t, Semaphore_t >;
-		using SyncArray_t			= Map< ulong, SyncUnion_t >;
+		using SyncUnion_t		= Union< Fence_t, Event_t, Semaphore_t >;
+		using SyncArray_t		= Map< ulong, SyncUnion_t >;
 
 		struct _DeleteSync_Func;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -103,7 +107,6 @@ namespace PlatformVK
 
 
 	
-	const TypeIdList	Vk1SyncManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1SyncManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -112,7 +115,7 @@ namespace PlatformVK
 =================================================
 */
 	Vk1SyncManager::Vk1SyncManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuSyncManager &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_counter{ 0 }
 	{
 		SetDebugName( "Vk1SyncManager" );
@@ -144,7 +147,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1SyncManager::_GetVkEvent );
 		_SubscribeOnMsg( this, &Vk1SyncManager::_GetVkSemaphore );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -203,7 +206,7 @@ namespace PlatformVK
 			_DeleteSync_Func	func{ dev };
 
 			for (auto& sync : _syncs) {
-				sync.second.Apply( func );
+				sync.second.Accept( func );
 			}
 		}
 
@@ -253,7 +256,7 @@ namespace PlatformVK
 			if ( not _syncs.IsExist( _counter ) )
 				break;
 		}
-		_syncs.Add( _counter, SyncUnion_t{ Fence_t() } );
+		_syncs.Add( _counter, SyncUnion_t{Fence_t( msg.name.Empty() ? "Fence" : msg.name )} );
 
 		msg.result.Set( GpuFenceId(_counter) );
 		return true;
@@ -274,8 +277,10 @@ namespace PlatformVK
 		{
 			CHECK_ERR( iter->second.Is< Fence_t >() );
 			
-			if ( dev != VK_NULL_HANDLE ) {
-				vkDestroyFence( dev, iter->second.Get< Fence_t >().ptr, null );
+			VkFence&	fence = iter->second.Get< Fence_t >().ptr;
+
+			if ( fence and dev ) {
+				vkDestroyFence( dev, fence, null );
 			}		
 			_syncs.EraseByIter( iter );
 		}
@@ -322,19 +327,21 @@ namespace PlatformVK
 		CHECK_ERR( _syncs.Find( ulong(msg.fenceId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< Fence_t >() );
 		
-		VkFence &	fence = iter->second.Get< Fence_t >().ptr;
+		auto&	fence = iter->second.Get< Fence_t >();
 
-		if ( not fence )
+		if ( not fence.ptr )
 		{
 			VkFenceCreateInfo	fence_info	= {};
 
 			fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 			fence_info.flags = /*msg.signaled ? VK_FENCE_CREATE_SIGNALED_BIT :*/ 0;
 
-			VK_CHECK( vkCreateFence( GetVkDevice(), &fence_info, null, OUT &fence ) );
+			VK_CHECK( vkCreateFence( GetVkDevice(), &fence_info, null, OUT &fence.ptr ) );
+
+			GetDevice()->SetObjectName( uint64_t(fence.ptr), fence.name, EGpuObject::Fence );
 		}
 
-		msg.result.Set( fence );
+		msg.result.Set( fence.ptr );
 		return true;
 	}
 
@@ -352,7 +359,7 @@ namespace PlatformVK
 			if ( not _syncs.IsExist( _counter ) )
 				break;
 		}
-		_syncs.Add( _counter, SyncUnion_t{ Event_t() } );
+		_syncs.Add( _counter, SyncUnion_t{Event_t( msg.name.Empty() ? "Event" : msg.name )} );
 
 		msg.result.Set( GpuEventId(_counter) );
 		return true;
@@ -372,9 +379,11 @@ namespace PlatformVK
 		if ( _syncs.Find( ulong(msg.id), OUT iter ) )
 		{
 			CHECK_ERR( iter->second.Is< Event_t >() );
-			
-			if ( dev != VK_NULL_HANDLE ) {
-				vkDestroyEvent( dev, iter->second.Get< Event_t >().ptr, null );
+
+			auto&	event = iter->second.Get< Event_t >().ptr;
+
+			if ( event and dev ) {
+				vkDestroyEvent( dev, event, null );
 			}		
 			_syncs.EraseByIter( iter );
 		}
@@ -392,19 +401,21 @@ namespace PlatformVK
 		CHECK_ERR( _syncs.Find( ulong(msg.eventId), OUT iter ) );
 		CHECK_ERR( iter->second.Is< Event_t >() );
 		
-		VkEvent &	event = iter->second.Get< Event_t >().ptr;
+		auto&	event = iter->second.Get< Event_t >();
 
-		if ( not event )
+		if ( not event.ptr )
 		{
 			VkEventCreateInfo	event_info	= {};
 
 			event_info.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO;
 			event_info.flags = 0;
 
-			VK_CHECK( vkCreateEvent( GetVkDevice(), &event_info, null, OUT &event ) );
+			VK_CHECK( vkCreateEvent( GetVkDevice(), &event_info, null, OUT &event.ptr ) );
+
+			GetDevice()->SetObjectName( uint64_t(event.ptr), event.name, EGpuObject::Event );
 		}
 
-		msg.result.Set( event );
+		msg.result.Set( event.ptr );
 		return true;
 	}
 	
@@ -459,7 +470,9 @@ namespace PlatformVK
 
 		VK_CALL( vkCreateSemaphore( GetVkDevice(), &sem_info, null, OUT &semaphore ) );
 
-		_syncs.Add( _counter, SyncUnion_t{ Semaphore_t(semaphore) } );
+		GetDevice()->SetObjectName( uint64_t(semaphore), msg.name, EGpuObject::Semaphore );
+
+		_syncs.Add( _counter, SyncUnion_t{Semaphore_t(semaphore, msg.name.Empty() ? "Semaphore" : msg.name)} );
 
 		msg.result.Set( GpuSemaphoreId(_counter) );
 		return true;
@@ -480,8 +493,10 @@ namespace PlatformVK
 		{
 			CHECK_ERR( iter->second.Is< Semaphore_t >() );
 			
-			if ( dev != VK_NULL_HANDLE ) {
-				vkDestroySemaphore( dev, iter->second.Get< Semaphore_t >().ptr, null );
+			auto&	sem = iter->second.Get< Semaphore_t >().ptr;
+
+			if ( sem and dev ) {
+				vkDestroySemaphore( dev, sem, null );
 			}		
 			_syncs.EraseByIter( iter );
 		}

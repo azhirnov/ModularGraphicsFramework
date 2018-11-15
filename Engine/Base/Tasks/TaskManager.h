@@ -19,12 +19,12 @@ namespace Base
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::AddTaskSchedulerToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::PushAsyncMessage
-										> >;
+										>;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
 		using AsyncPushFunc_t		= ModuleMsg::AddTaskSchedulerToManager::Func_t;
@@ -40,14 +40,13 @@ namespace Base
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
 	// variables
 	private:
 		TaskThreads_t	_threads;
-		OS::Mutex		_lock;
+		Mutex			_lock;
 
 
 	// methods

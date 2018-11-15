@@ -48,7 +48,6 @@ namespace Scene
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -81,7 +80,6 @@ namespace Scene
 
 
 
-	const TypeIdList	VRSurface::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	VRSurface::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 	
 /*
@@ -90,7 +88,7 @@ namespace Scene
 =================================================
 */
 	VRSurface::VRSurface (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::RenderSurface &ci) :
-		BaseSceneModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes )
+		BaseSceneModule( gs, ModuleConfig{ id, UMax }, &_eventTypes )
 	{
 		SetDebugName( "Scene.VRSurface" );
 
@@ -107,7 +105,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &VRSurface::_OnManagerChanged );
 		_SubscribeOnMsg( this, &VRSurface::_GetScenePrivateClasses );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( ci.scene, SceneRendererModuleID, true );
 	}
@@ -227,7 +225,7 @@ namespace Scene
 */
 	bool VRSurface::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg( ModuleMsg::Delete{} );
+		Send( ModuleMsg::Delete{} );
 		return true;
 	}
 //-----------------------------------------------------------------------------

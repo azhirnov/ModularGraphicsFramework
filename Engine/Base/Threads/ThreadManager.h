@@ -20,12 +20,12 @@ namespace Base
 		SHARED_POINTER( ParallelThreadImpl );
 		SHARED_POINTER( ThreadManager );
 
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::AddThreadToManager,
 											ModuleMsg::RemoveFromManager
 											//ModuleMsg::FindThread
-										> >;
+										>;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 		
 		using TaskMsgList_t			= MessageListFrom< ModuleMsg::Update, ModuleMsg::PushAsyncMessage >;
@@ -46,7 +46,6 @@ namespace Base
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -54,7 +53,7 @@ namespace Base
 	private:
 		Threads_t				_threads;
 		ParallelThreadImplPtr	_currentThread;
-		OS::Mutex				_lock;
+		Mutex					_lock;
 
 
 	// methods

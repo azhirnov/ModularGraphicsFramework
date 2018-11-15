@@ -17,35 +17,6 @@ namespace PlatformTools
 
 	class WindowHelper final : public Noninstancable
 	{
-	// types
-	public:
-		struct WinAPIWindow
-		{
-		// types
-			using HWND_t	= DeferredTypeFrom<void*>;
-			using HMODULE_t	= DeferredTypeFrom<void*>;
-
-		// variables
-			HWND_t		window;
-			HMODULE_t	instance;
-
-		// methods
-			WinAPIWindow (void *inst, void *wnd);
-		};
-
-		struct AndroidWindow
-		{
-		// types
-			using AWindow_t	= DeferredTypeFrom<void*>;
-
-		// variables
-			AWindow_t	window;
-
-		// methods
-			AndroidWindow (void *wnd);
-		};
-
-
 	// methods
 	public:
 		ND_ static ModulePtr  FindWinAPIPlatform (GlobalSystemsRef gs);
@@ -60,12 +31,58 @@ namespace PlatformTools
 		//template <typename MsgList, typename EventList>
 		//static ModulePtr  FindWindowMsgEvent (GlobalSystemsRef gs);
 		
-#		ifdef PLATFORM_WINDOWS
+
+#	ifdef PLATFORM_WINDOWS
+		struct WinAPIWindow
+		{
+		// types
+			using HWND_t	= DeferredTypeFrom<void*>;
+			using HMODULE_t	= DeferredTypeFrom<void*>;
+
+		// variables
+			HWND_t		window;
+			HMODULE_t	instance;
+
+		// methods
+			WinAPIWindow ();
+		};
+
 		ND_ static bool GetWindowHandle (const ModulePtr &window, const Function<bool (const WinAPIWindow &)> &func);
-#		endif
-#		ifdef PLATFORM_ANDROID
+#	endif
+
+#	ifdef PLATFORM_ANDROID
+		struct AndroidWindow
+		{
+		// types
+			using AWindow_t	= DeferredTypeFrom<void*>;
+
+		// variables
+			AWindow_t	window;
+
+		// methods
+			AndroidWindow ();
+		};
+
 		ND_ static bool GetWindowHandle (const ModulePtr &window, const Function<bool (const AndroidWindow &)> &func);
-#		endif
+#	endif
+
+#	ifdef PLATFORM_LINUX
+		struct XlibWindow
+		{
+		// types
+			using Display_t	= DeferredTypeFrom<void*>;
+			using Window_t	= DeferredTypeFrom<void*>;
+
+		// variables
+			Display_t	display;
+			Window_t	window;
+
+		// methods
+			XlibWindow ();
+		};
+
+		ND_ static bool GetWindowHandle (const ModulePtr &window, const Function<bool (const XlibWindow &)> &func);
+#	endif
 	};
 
 

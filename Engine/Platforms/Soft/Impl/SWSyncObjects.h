@@ -22,12 +22,14 @@ namespace PlatformSW
 	{
 	// variables
 	private:
-		bool		_signaled;
-		bool		_enqueued;
+		StaticString<64>	_name;
+		bool				_signaled;
+		bool				_enqueued;
 
 	// methods
 	public:
-		SWFence () : _signaled{false}, _enqueued{false}
+		explicit SWFence (StringCRef name) :
+			_name{name}, _signaled{false}, _enqueued{false}
 		{}
 
 		void Enqueue ()
@@ -61,7 +63,15 @@ namespace PlatformSW
 	//
 	class SWEvent final : public RefCountedObject<>
 	{
+	// variables
+	private:
+		StaticString<64>	_name;
 		// TODO
+
+	// methods
+	public:
+		explicit SWEvent (StringCRef name) : _name{name}
+		{}
 	};
 //-----------------------------------------------------------------------------
 
@@ -74,15 +84,17 @@ namespace PlatformSW
 	{
 	// variables
 	private:
-		bool		_locked;	// in vulkan this is a mutex
-		//bool		_enqueued;
+		StaticString<64>	_name;
+		bool				_locked;	// in vulkan this is a mutex
+		//bool				_enqueued;
 
 	// methods
 	public:
-		SWSemaphore () : _locked{false} //, _enqueued{false}
+		explicit SWSemaphore (StringCRef name) :
+			_name{name}, _locked{false} //, _enqueued{false}
 		{}
 		
-		bool TryLock (EPipelineStage::bits stage)	// TODO: use 'stage'
+		bool TryLock (EPipelineStage::bits)	// TODO: use 'stage'
 		{
 			if ( not _locked )
 			{

@@ -38,10 +38,10 @@ namespace PlatformTools
 		ND_ static ulong3	ConvertSize (EImage::type imgType, const ulong4 &size);
 		ND_ static uint3	ConvertSize (EImage::type imgType, const uint4 &size);
 		
-		ND_ static BytesUL	GetImageSize (EPixelFormat::type format, EImage::type type, const ulong4 &dim, BytesU xAlign, BytesU xyAlign);
+		ND_ static BytesU	GetImageSize (EPixelFormat::type format, EImage::type type, const ulong4 &dim, BytesU xAlign, BytesU xyAlign);
 		ND_ static BytesU	GetImageSize (EPixelFormat::type format, EImage::type type, const uint4 &dim, BytesU xAlign, BytesU xyAlign);
 
-		ND_ static BytesUL	GetImageSize (EPixelFormat::type format, EImage::type type, const ulong3 &size, BytesU xAlign, BytesU xyAlign);
+		ND_ static BytesU	GetImageSize (EPixelFormat::type format, EImage::type type, const ulong3 &size, BytesU xAlign, BytesU xyAlign);
 		ND_ static BytesU	GetImageSize (EPixelFormat::type format, EImage::type type, const uint3 &size, BytesU xAlign, BytesU xyAlign);
 		
 		ND_ static bool		IsValidDescription (const ImageDescription &descr);

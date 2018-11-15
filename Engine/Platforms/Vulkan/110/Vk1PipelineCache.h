@@ -43,7 +43,6 @@ namespace PlatformVK
 		Array< vk::VkSpecializationInfo >				_tempSpecialization;
 		Array< vk::VkVertexInputBindingDescription >	_tempVertexBinding;
 		Array< vk::VkVertexInputAttributeDescription >	_tempVertexAttribs;
-		Array< vk::VkDescriptorSetLayoutBinding >		_tempDescriptionBindings;
 		Viewports_t										_tempViewports;
 		Scissors_t										_tempScissors;
 		Vk1DynamicStates								_tempDynamicStates;

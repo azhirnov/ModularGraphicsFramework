@@ -22,13 +22,10 @@ namespace Scene
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >
-										::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager
-										> >;
+										>;
 		
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											OSMsg::WindowCreated,
@@ -49,7 +46,6 @@ namespace Scene
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -79,7 +75,6 @@ namespace Scene
 
 
 	
-	const TypeIdList	SceneManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SceneManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -88,7 +83,7 @@ namespace Scene
 =================================================
 */
 	SceneManager::SceneManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::SceneManager &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_settings{ ci.settings },	_vrSettings{ ci.vrSettings }
 	{
 		SetDebugName( "SceneManager" );
@@ -105,7 +100,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &SceneManager::_AddToManager );
 		_SubscribeOnMsg( this, &SceneManager::_RemoveFromManager );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 	}
 	
 /*
@@ -115,7 +110,7 @@ namespace Scene
 */
 	SceneManager::~SceneManager ()
 	{
-		LOG( "SceneManager finalized", ELog::Debug );
+		//LOG( "SceneManager finalized", ELog::Debug );
 
 		ASSERT( _threads.Empty() );
 	}
@@ -205,10 +200,9 @@ namespace Scene
 
 		if ( not gpu_thread )
 		{
-			GpuMsg::GetGraphicsModules	req_ids;
-			gpu_context->Send( req_ids );
+			auto	graphics_ids = gpu_context->Request( GpuMsg::GetGraphicsModules{} ).graphics;
 
-			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( req_ids.graphics->thread, GlobalSystems(), CreateInfo::GpuThread{ _settings, gpu_context }, OUT gpu_thread ) );
+			CHECK_LINKING( GlobalSystems()->modulesFactory->Create( graphics_ids.thread, GlobalSystems(), CreateInfo::GpuThread{ _settings, gpu_context }, OUT gpu_thread ) );
 			GlobalSystems()->parallelThread->Send( ModuleMsg::AttachModule{ gpu_thread });
 			gpu_thread->Send( msg );
 		}

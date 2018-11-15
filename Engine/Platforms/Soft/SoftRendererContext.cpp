@@ -29,11 +29,11 @@ namespace Platforms
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											GpuMsg::GetGraphicsModules
-										> >;
+										>;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
 		using SWThreads_t			= Set< ModulePtr >;
@@ -41,7 +41,7 @@ namespace Platforms
 		using SWThreadMsgList_t		= MessageListFrom<
 											GpuMsg::ThreadBeginFrame,
 											GpuMsg::ThreadEndFrame,
-											GpuMsg::SubmitComputeQueueCommands,
+											GpuMsg::GetDeviceProperties,
 											GpuMsg::GetSWDeviceInfo
 										>;
 		using SWThreadEventList_t	= MessageListFrom< GpuMsg::DeviceCreated, GpuMsg::DeviceBeforeDestroy >;
@@ -49,7 +49,6 @@ namespace Platforms
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		
@@ -76,7 +75,6 @@ namespace Platforms
 
 
 	
-	const TypeIdList	SoftRendererContext::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SoftRendererContext::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -85,7 +83,7 @@ namespace Platforms
 =================================================
 */
 	SoftRendererContext::SoftRendererContext (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_createInfo( ci )
 	{
 		SetDebugName( "SoftRendererContext" );
@@ -104,7 +102,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &SoftRendererContext::_RemoveFromManager );
 		_SubscribeOnMsg( this, &SoftRendererContext::_GetGraphicsModules );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 	}
 	
 /*
@@ -114,7 +112,7 @@ namespace Platforms
 */
 	SoftRendererContext::~SoftRendererContext ()
 	{
-		LOG( "SoftRendererContext finalized", ELog::Debug );
+		//LOG( "SoftRendererContext finalized", ELog::Debug );
 
 		ASSERT( _threads.Empty() );
 	}
@@ -127,7 +125,7 @@ namespace Platforms
 	bool SoftRendererContext::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
 		CHECK_ERR( msg.module );
-		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< SWThreadMsgList_t >() );
+		CHECK_ERR( msg.module->SupportsAllMessages< SWThreadMsgList_t >() );
 		CHECK_ERR( msg.module->GetSupportedEvents().HasAllTypes< SWThreadEventList_t >() );
 		ASSERT( not _threads.IsExist( msg.module ) );
 
@@ -162,8 +160,8 @@ namespace Platforms
 */	
 	bool SoftRendererContext::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg.compute.Set( SoftRendererObjectsConstructor::GetComputeModules() );
-		msg.graphics.Set( SoftRendererObjectsConstructor::GetGraphicsModules() );
+		msg.result.Set({ SoftRendererObjectsConstructor::GetComputeModules(),
+						 SoftRendererObjectsConstructor::GetGraphicsModules() });
 		return true;
 	}
 //-----------------------------------------------------------------------------

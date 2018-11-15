@@ -29,9 +29,8 @@ namespace PlatformGL
 											GpuMsg::CmdEnd,
 											GpuMsg::CmdBlitGLFramebuffers,
 											GpuMsg::SetCommandBufferDependency,
-											GpuMsg::GetCommandBufferState > >
-										::Append< GpuMsg::DefaultComputeCommands_t >
-										::Append< GpuMsg::DefaultGraphicsCommands_t >;
+											GpuMsg::GetCommandBufferState
+										> >;
 
 		using SupportedEvents_t		= GL4BaseModule::SupportedEvents_t;
 
@@ -54,7 +53,6 @@ namespace PlatformGL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -115,6 +113,7 @@ namespace PlatformGL
 		bool _CmdCopyBufferToImage (const GpuMsg::CmdCopyBufferToImage &);
 		bool _CmdCopyImageToBuffer (const GpuMsg::CmdCopyImageToBuffer &);
 		bool _CmdBlitImage (const GpuMsg::CmdBlitImage &);
+		bool _CmdResolveImage (const GpuMsg::CmdResolveImage &);
 		bool _CmdBlitGLFramebuffers (const GpuMsg::CmdBlitGLFramebuffers &);
 		bool _CmdUpdateBuffer (const GpuMsg::CmdUpdateBuffer &);
 		bool _CmdFillBuffer (const GpuMsg::CmdFillBuffer &);
@@ -127,12 +126,16 @@ namespace PlatformGL
 		bool _CmdDebugMarker (const GpuMsg::CmdDebugMarker &);
 		bool _CmdPushDebugGroup (const GpuMsg::CmdPushDebugGroup &);
 		bool _CmdPopDebugGroup (const GpuMsg::CmdPopDebugGroup &);
+		bool _CmdBeginQuery (const GpuMsg::CmdBeginQuery &);
+		bool _CmdEndQuery (const GpuMsg::CmdEndQuery &);
+		bool _CmdCopyQueryPoolResults (const GpuMsg::CmdCopyQueryPoolResults &);
+		bool _CmdWriteTimestamp (const GpuMsg::CmdWriteTimestamp &);
+		bool _CmdResetQueryPool (const GpuMsg::CmdResetQueryPool &);
 	};
 //-----------------------------------------------------------------------------
 
 
 	
-	const TypeIdList	GL4CommandBuilder::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	GL4CommandBuilder::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -141,7 +144,7 @@ namespace PlatformGL
 =================================================
 */
 	GL4CommandBuilder::GL4CommandBuilder (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuCommandBuilder &ci) :
-		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		GL4BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_scope( EScope::None )
 	{
 		SetDebugName( "GL4CommandBuilder" );
@@ -194,6 +197,7 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdCopyBufferToImage );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdCopyImageToBuffer );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdBlitImage );
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdResolveImage );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdBlitGLFramebuffers );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdUpdateBuffer );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdFillBuffer );
@@ -206,8 +210,13 @@ namespace PlatformGL
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdDebugMarker );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdPushDebugGroup );
 		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdPopDebugGroup );
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdBeginQuery );
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdEndQuery );
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdCopyQueryPoolResults );
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdWriteTimestamp );
+		_SubscribeOnMsg( this, &GL4CommandBuilder::_CmdResetQueryPool );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -301,7 +310,7 @@ namespace PlatformGL
 		// use target command buffer
 		if ( msg.targetCmdBuffer )
 		{
-			CHECK_ERR( msg.targetCmdBuffer->GetSupportedMessages().HasAllTypes< CmdBufferMsg_t >() );
+			CHECK_ERR( msg.targetCmdBuffer->SupportsAllMessages< CmdBufferMsg_t >() );
 
 			_cmdBuffer = msg.targetCmdBuffer;
 		}
@@ -316,6 +325,8 @@ namespace PlatformGL
 							},
 							OUT _cmdBuffer ) );
 
+			_cmdBuffer->SetDebugName( String(GetDebugName()) << "_Buffer" );
+
 			CHECK_ERR( _Attach( "", _cmdBuffer ) );
 		}
 
@@ -323,9 +334,7 @@ namespace PlatformGL
 		_cmdBuffer->Send( GpuMsg::SetCommandBufferState{ ERecordingState::Recording });
 		
 		// check buffer state
-		GpuMsg::GetCommandBufferState	req_state;
-		_cmdBuffer->Send( req_state );
-		CHECK_ERR( *req_state.result == ERecordingState::Recording );
+		CHECK_ERR( _cmdBuffer->Request(GpuMsg::GetCommandBufferState{}) == ERecordingState::Recording );
 		
 		_scope = EScope::Command;
 		return true;
@@ -540,10 +549,7 @@ namespace PlatformGL
 		CHECK_ERR( _scope == EScope::RenderPass );
 		CHECK_ERR( msg.pipeline );
 		
-		GpuMsg::GetGraphicsPipelineDescription	req_descr;
-		msg.pipeline->Send( req_descr );
-		
-		_dynamicStates = req_descr.result->dynamicStates;
+		_dynamicStates = msg.pipeline->Request(GpuMsg::GetGraphicsPipelineDescription{}).dynamicStates;
 
 		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
@@ -589,7 +595,7 @@ namespace PlatformGL
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope == EScope::RenderPass );
-		CHECK_ERR( msg.indexBuffer );
+		CHECK_ERR( msg.buffer );
 		
 		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;
@@ -803,6 +809,21 @@ namespace PlatformGL
 	
 /*
 =================================================
+	_CmdResolveImage
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdResolveImage (const GpuMsg::CmdResolveImage &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( msg.srcImage and msg.dstImage );
+		
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
+		return true;
+	}
+
+/*
+=================================================
 	_CmdBlitGLFramebuffers
 =================================================
 */
@@ -970,6 +991,81 @@ namespace PlatformGL
 	{
 		CHECK_ERR( _cmdBuffer );
 		CHECK_ERR( _scope != EScope::None );
+		
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdBeginQuery
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdBeginQuery (const GpuMsg::CmdBeginQuery &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
+		CHECK_ERR( msg.queryPool );
+		
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdEndQuery
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdEndQuery (const GpuMsg::CmdEndQuery &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command or _scope == EScope::RenderPass );
+		CHECK_ERR( msg.queryPool );
+		
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdCopyQueryPoolResults
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdCopyQueryPoolResults (const GpuMsg::CmdCopyQueryPoolResults &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( msg.queryPool and msg.dstBuffer );
+		
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdWriteTimestamp
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdWriteTimestamp (const GpuMsg::CmdWriteTimestamp &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( msg.queryPool );
+		
+		_commands.PushBack({ msg, __FILE__, __LINE__ });
+		return true;
+	}
+	
+/*
+=================================================
+	_CmdResetQueryPool
+=================================================
+*/
+	bool GL4CommandBuilder::_CmdResetQueryPool (const GpuMsg::CmdResetQueryPool &msg)
+	{
+		CHECK_ERR( _cmdBuffer );
+		CHECK_ERR( _scope == EScope::Command );
+		CHECK_ERR( msg.queryPool );
 		
 		_commands.PushBack({ msg, __FILE__, __LINE__ });
 		return true;

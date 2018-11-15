@@ -13,7 +13,7 @@ namespace Platforms
 	// Mipmap Level
 	//
 	
-	struct MipmapLevel : CompileTime::PODStruct
+	struct MipmapLevel final : CompileTime::PODStruct
 	{
 	// types
 	private:
@@ -27,18 +27,17 @@ namespace Platforms
 
 	// methods
 	public:
-		MipmapLevel (GX_DEFCTOR) : _value(0)
-		{}
+		constexpr MipmapLevel (GX_DEFCTOR) : _value(0) {}
 
-		explicit
-		MipmapLevel (uint value) : _value(value)
-		{}
+		explicit constexpr MipmapLevel (uint value) : _value(value) {}
 
-		ND_ uint Get () const		{ return _value; }
+		ND_ constexpr uint Get () const		{ return _value; }
 
 		_GX_DIM_CMP_OPERATORS_SELF( _value )
 	};
 
+	
+	ND_ inline constexpr MipmapLevel operator "" _mipmap (unsigned long long value)		{ return MipmapLevel( uint(value) ); }
 
 
 	//

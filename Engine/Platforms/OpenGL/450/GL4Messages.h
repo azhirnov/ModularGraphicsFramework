@@ -19,7 +19,7 @@ namespace GpuMsg
 	//
 	// Get Device Info
 	//
-	struct GetGLDeviceInfo : _MessageBase_
+	struct GetGLDeviceInfo : _MsgBase_
 	{
 	};
 
@@ -27,7 +27,7 @@ namespace GpuMsg
 	//
 	// Sync Client With Device
 	//
-	struct SyncGLClientWithDevice : _MessageBase_
+	struct SyncGLClientWithDevice : _MsgBase_
 	{
 	// variables
 		Platforms::GpuFenceId	fenceId;	// if null then wait untill all commands complete
@@ -41,7 +41,7 @@ namespace GpuMsg
 	//
 	// Get GPU Buffer ID
 	//
-	struct GetGLBufferID : _MessageBase_
+	struct GetGLBufferID : _MsgBase_
 	{
 		Out< gl::GLuint >		result;
 	};
@@ -50,7 +50,7 @@ namespace GpuMsg
 	//
 	// Get GPU Framebuffer ID
 	//
-	struct GetGLFramebufferID : _MessageBase_
+	struct GetGLFramebufferID : _MsgBase_
 	{
 		Out< gl::GLuint >		result;
 	};
@@ -59,7 +59,7 @@ namespace GpuMsg
 	//
 	// Blit Framebuffers
 	//
-	struct CmdBlitGLFramebuffers : _MessageBase_
+	struct CmdBlitGLFramebuffers : _MsgBase_
 	{
 	// types
 		using EImageAspect	= Platforms::EImageAspect;
@@ -100,7 +100,7 @@ namespace GpuMsg
 	//
 	// Get GPU Render Pass ID
 	//
-	struct GetGLRenderPassID : _MessageBase_
+	struct GetGLRenderPassID : _MsgBase_
 	{
 	// types
 		enum class EClearValue {
@@ -136,7 +136,7 @@ namespace GpuMsg
 	//
 	// Get GPU Sampler ID
 	//
-	struct GetGLSamplerID : _MessageBase_
+	struct GetGLSamplerID : _MsgBase_
 	{
 		Out< gl::GLuint >		result;
 	};
@@ -145,7 +145,7 @@ namespace GpuMsg
 	//
 	// Get GPU Image ID
 	//
-	struct GetGLImageID : _MessageBase_
+	struct GetGLImageID : _MsgBase_
 	{
 		Out< gl::GLuint >		result;
 	};
@@ -154,7 +154,7 @@ namespace GpuMsg
 	//
 	// Create GPU Image View
 	//
-	struct CreateGLImageView : _MessageBase_
+	struct CreateGLImageView : _MsgBase_
 	{
 	// variables
 		Platforms::ImageViewDescription		viewDescr;
@@ -169,7 +169,7 @@ namespace GpuMsg
 	//
 	// Get GPU Shader Module IDs
 	//
-	struct GetGLShaderModuleIDs : _MessageBase_
+	struct GetGLShaderModuleIDs : _MsgBase_
 	{
 	// types
 		struct ShaderModule : CompileTime::PODStruct
@@ -188,7 +188,7 @@ namespace GpuMsg
 	//
 	// Get Graphics Pipeline ID
 	//
-	struct GetGLGraphicsPipelineID : _MessageBase_
+	struct GetGLGraphicsPipelineID : _MsgBase_
 	{
 	// types
 		using Programs_t	= StaticArray< gl::GLuint, Platforms::EShader::_Count >;
@@ -206,7 +206,7 @@ namespace GpuMsg
 	//
 	// Get Compute Pipeline ID
 	//
-	struct GetGLComputePipelineID : _MessageBase_
+	struct GetGLComputePipelineID : _MsgBase_
 	{
 	// types
 		struct PipelineIDs {
@@ -222,7 +222,7 @@ namespace GpuMsg
 	//
 	// Get Pipeline Layout Push Constants Mapping
 	//
-	struct GetGLPipelineLayoutPushConstants : _MessageBase_
+	struct GetGLPipelineLayoutPushConstants : _MsgBase_
 	{
 	// types
 		using EShader	= Platforms::EShader;
@@ -247,7 +247,7 @@ namespace GpuMsg
 	//
 	// GPU Pipeline Resource Table ID (uniforms)
 	//
-	struct GLPipelineResourceTableApply : _MessageBase_
+	struct GLPipelineResourceTableApply : _MsgBase_
 	{
 	// types
 		using Programs_t	= StaticArray< gl::GLuint, Platforms::EShader::_Count >;
@@ -279,11 +279,11 @@ namespace GpuMsg
 	//
 	// Fence Sync
 	//
-	struct GLFenceSync : _MessageBase_
+	struct GLFenceSync : _MsgBase_
 	{
 	// variables
-		Platforms::GpuFenceId	fenceId;
-		Out< gl::GLsync >		result;
+		Platforms::GpuFenceId		fenceId;
+		Out_opt< gl::GLsync >		result;
 		
 	// methods
 		explicit GLFenceSync (Platforms::GpuFenceId id) : fenceId{id} {}
@@ -293,7 +293,7 @@ namespace GpuMsg
 	//
 	// Event
 	//
-	struct GetGLEvent : _MessageBase_
+	struct GetGLEvent : _MsgBase_
 	{
 	// variables
 		Platforms::GpuEventId	eventId;
@@ -307,18 +307,18 @@ namespace GpuMsg
 	//
 	// Semaphore
 	//
-	struct GLSemaphoreEnqueue : _MessageBase_
+	struct GLSemaphoreEnqueue : _MsgBase_
 	{
 	// variables
 		Platforms::GpuSemaphoreId	semId;
-		Out< gl::GLsync >			result;
+		Out_opt< gl::GLsync >		result;
 		
 	// methods
 		explicit GLSemaphoreEnqueue (Platforms::GpuSemaphoreId id) : semId{id} {}
 	};
 
 
-	struct GetGLSemaphore : _MessageBase_
+	struct GetGLSemaphore : _MsgBase_
 	{
 	// variables
 		Platforms::GpuSemaphoreId	semId;
@@ -329,7 +329,7 @@ namespace GpuMsg
 	};
 
 
-	struct WaitGLSemaphore : _MessageBase_
+	struct WaitGLSemaphore : _MsgBase_
 	{
 	// variables
 		Platforms::GpuSemaphoreId	semId;
@@ -342,7 +342,7 @@ namespace GpuMsg
 	//
 	// Flush Queue
 	//
-	struct GLFlushQueue : _MessageBase_
+	struct GLFlushQueue : _MsgBase_
 	{
 	};
 
@@ -350,13 +350,13 @@ namespace GpuMsg
 	//
 	// Update Buffer Command
 	//
-	struct GLCmdUpdateBuffer : _MessageBase_
+	struct GLCmdUpdateBuffer : _MsgBase_
 	{
 	// variables
 		ModulePtr		dstBuffer;
-		BytesUL			dstOffset;
-		BytesUL			size;
-		BytesUL			srcOffset;
+		BytesU			dstOffset;
+		BytesU			size;
+		BytesU			srcOffset;
 
 	// methods
 		GLCmdUpdateBuffer (const CmdUpdateBuffer &cmd, BytesU offset) :
@@ -368,7 +368,7 @@ namespace GpuMsg
 	//
 	// Push Constants Command
 	//
-	struct GLCmdPushConstants : _MessageBase_
+	struct GLCmdPushConstants : _MsgBase_
 	{
 	// types
 		using EShader = Platforms::EShader;
@@ -376,9 +376,9 @@ namespace GpuMsg
 	// variables
 		ModulePtr		pipelineLayout;
 		EShader::bits	stages;
-		BytesUL			dstOffset;
-		BytesUL			size;
-		BytesUL			srcOffset;
+		BytesU			dstOffset;
+		BytesU			size;
+		BytesU			srcOffset;
 
 	// methods
 		GLCmdPushConstants (const CmdPushConstants &cmd, BytesU offset) :
@@ -387,11 +387,50 @@ namespace GpuMsg
 		{}
 	};
 
+
+	//
+	// Get Occlusion/Timestamp Query ID
+	//
+	struct GetGLQueryID : _MsgBase_
+	{
+	// types
+		struct Data {
+			gl::GLuint		id;
+			gl::GLenum		target;
+		};
+
+	// variables
+		gl::GLenum			target	= 0;
+		uint				index	= 0;
+		Out< Data >			result;
+
+	// methods
+		GetGLQueryID (gl::GLenum target, uint index) : target{target}, index{index} {}
+	};
+
+
+	//
+	// Get Pipeline Statistic Queries
+	//
+	struct GetGLPipelineStatisticQueries : _MsgBase_
+	{
+	// types
+		using Data		= GetGLQueryID::Data;
+		using Queries_t	= FixedSizeArray< Data, Platforms::EPipelineStatistic::_Count >;
+
+	// variables
+		uint				index	= 0;
+		Out< Queries_t >	result;
+
+	// methods
+		explicit GetGLPipelineStatisticQueries (uint index) : index{index} {}
+	};
+
 	
 	//
 	// OpenGL Commands
 	//
-	struct SetGLCommandBufferQueue : _MessageBase_
+	struct SetGLCommandBufferQueue : _MsgBase_
 	{
 	// types
 		using Data_t	= Union< CmdSetViewport,
@@ -423,6 +462,7 @@ namespace GpuMsg
 								CmdCopyBufferToImage,
 								CmdCopyImageToBuffer,
 								CmdBlitImage,
+								CmdResolveImage,
 								CmdBlitGLFramebuffers,
 								GLCmdUpdateBuffer,
 								CmdFillBuffer,
@@ -433,7 +473,12 @@ namespace GpuMsg
 								GLCmdPushConstants,
 								CmdDebugMarker,
 								CmdPushDebugGroup,
-								CmdPopDebugGroup >;
+								CmdPopDebugGroup,
+								CmdBeginQuery,
+								CmdEndQuery,
+								CmdCopyQueryPoolResults,
+								CmdWriteTimestamp,
+								CmdResetQueryPool >;
 
 		struct Command
 		{
@@ -473,7 +518,7 @@ namespace GpuMsg
 	//
 	// Execute GL Command Buffer
 	//
-	struct ExecuteGLCommandBuffer : _MessageBase_
+	struct ExecuteGLCommandBuffer : _MsgBase_
 	{};
 
 

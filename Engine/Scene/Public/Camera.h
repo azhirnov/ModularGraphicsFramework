@@ -61,7 +61,7 @@ namespace SceneMsg
 	//
 	// Bind Keys to Actions
 	//
-	struct CameraBindKeys : _MessageBase_
+	struct CameraBindKeys : _MsgBase_
 	{
 	};
 
@@ -69,7 +69,7 @@ namespace SceneMsg
 	//
 	// Set / Get settings
 	//
-	struct CameraUpdateSettings : _MessageBase_
+	struct CameraUpdateSettings : _MsgBase_
 	{
 	// variables
 		Scene::CameraSettings			settings;
@@ -79,7 +79,7 @@ namespace SceneMsg
 	};
 
 
-	struct CameraGetSettings : _MessageBase_
+	struct CameraGetSettings : _MsgBase_
 	{
 		Out< Scene::CameraSettings >	result;
 	};
@@ -88,7 +88,7 @@ namespace SceneMsg
 	//
 	// Get Current State
 	//
-	struct CameraGetState : _MessageBase_
+	struct CameraGetState : _MsgBase_
 	{
 	// types
 		using Frustum_t		= GXMath::Frustum<float>;
@@ -122,7 +122,7 @@ namespace SceneMsg
 	//
 	// Camera Request Update
 	//
-	struct CameraRequestUpdate : _MessageBase_
+	struct CameraRequestUpdate : _MsgBase_
 	{
 	// types
 		using State_t			= CameraGetState::State;

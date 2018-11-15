@@ -25,20 +25,20 @@ namespace ResPack
 		public:
 			explicit Pipeline (StringCRef name) : ComputePipeline(name) {}
 
-			EShaderSrcFormat::type &	GetShaderFormat ()			{ return shaderFormat; }
-			ShaderModule &				GetShader ()				{ return shader; }
-			GXMath::uint3 &				GetLocalGroup ()			{ return localGroupSize; }
+			EShaderFormat::type &	GetShaderFormat ()			{ return shaderFormat; }
+			ShaderModule &			GetShader ()				{ return shader; }
+			GXMath::uint3 &			GetLocalGroup ()			{ return localGroupSize; }
 		};
 		SHARED_POINTER( Pipeline );
 
 
 	// variables
 	private:
-		PipelinePtr					_pipeline;
+		PipelinePtr				_pipeline;
 
-		EShaderSrcFormat::type		_shaderFormat	= EShaderSrcFormat::GLSL;
-		ShaderModule				_compute;
-		GXMath::uint3				_localGroup;
+		EShaderFormat::type		_shaderFormat	= EShaderFormat::DefaultSrc;
+		ShaderModule			_compute;
+		GXMath::uint3			_localGroup;
 
 
 	// methods

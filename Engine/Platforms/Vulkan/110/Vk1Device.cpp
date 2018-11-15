@@ -38,8 +38,7 @@ namespace PlatformVK
 		_colorFormat( VK_FORMAT_UNDEFINED ),
 		_colorSpace( VK_COLOR_SPACE_MAX_ENUM_KHR ),
 		_depthStencilFormat( VK_FORMAT_UNDEFINED ),
-		_queue( VK_NULL_HANDLE ),
-		_queueIndex( UMax ),
+		_queueFamilyIndex( UMax ),
 		_queueFamily(),
 		_currentImageIndex( UMax ),
 		_debugCallback( VK_NULL_HANDLE ),
@@ -111,8 +110,10 @@ namespace PlatformVK
 		uint32_t	count = 0;
 		VK_CALL( vkEnumerateInstanceLayerProperties( OUT &count, null ) );
 
-		if (count == 0)
+		if ( count == 0 ) {
+			_instanceLayers << VkLayerProperties{};
 			return true;
+		}
 
 		_instanceLayers.Resize( count );
 		VK_CALL( vkEnumerateInstanceLayerProperties( OUT &count, OUT _instanceLayers.ptr() ) );
@@ -135,12 +136,19 @@ namespace PlatformVK
 		uint32_t	count = 0;
 		VK_CALL( vkEnumerateInstanceExtensionProperties( null, OUT &count, null ) );
 
-		if ( count == 0 )
-			return false;
+		if ( count == 0 ) {
+			_instanceExtensions << "";
+			return true;
+		}
 
-		_instanceExtensions.Resize( count );
-		VK_CALL( vkEnumerateInstanceExtensionProperties( null, OUT &count, OUT _instanceExtensions.ptr() ) );
+		Array< VkExtensionProperties >		inst_ext;
+		inst_ext.Resize( count );
 
+		VK_CALL( vkEnumerateInstanceExtensionProperties( null, OUT &count, OUT inst_ext.ptr() ) );
+
+		for (auto& ext : inst_ext) {
+			_instanceExtensions.Add( StringCRef(ext.extensionName) );
+		}
 		return true;
 	}
 
@@ -180,13 +188,27 @@ namespace PlatformVK
 		instance_create_info.pApplicationInfo			= &app_info;
 
 		instance_create_info.enabledExtensionCount		= uint32_t(instance_extensions.Count());
-		instance_create_info.ppEnabledExtensionNames	= instance_extensions.ptr();
+		instance_create_info.ppEnabledExtensionNames	= instance_extensions.RawPtr();
 		
-		instance_create_info.enabledLayerCount			= uint32_t(layers.Count());
-		instance_create_info.ppEnabledLayerNames		= layers.ptr();
+		//instance_create_info.enabledLayerCount			= uint32_t(instance_layers.Count());
+		//instance_create_info.ppEnabledLayerNames		= instance_layers.RawPtr();
 
 
 		VK_CHECK( vkCreateInstance( &instance_create_info, null, OUT &_instance ) );
+
+
+		// update instance extensions
+		{
+			_instanceExtensions.Clear();
+
+			for (auto& ie : instance_extensions) {
+				_instanceExtensions << ie;
+			}
+
+			if ( _instanceExtensions.Empty() )
+				_instanceExtensions << "";
+		}
+
 		return true;
 	}
 	
@@ -248,13 +270,7 @@ namespace PlatformVK
 	{
 		_LoadInstanceExtensions();
 
-		// TODO: optimize search
-		FOR( i, _instanceExtensions )
-		{
-			if ( name.EqualsIC( _instanceExtensions[i].extensionName ) )
-				return true;
-		}
-		return false;
+		return _instanceExtensions.IsExist( name );
 	}
 
 /*
@@ -321,9 +337,9 @@ namespace PlatformVK
 
 		FOR( i, devices )
 		{
-			VkPhysicalDeviceProperties			prop;
-			VkPhysicalDeviceFeatures			feat;
-			VkPhysicalDeviceMemoryProperties	mem_prop;
+			VkPhysicalDeviceProperties			prop	 = {};
+			VkPhysicalDeviceFeatures			feat	 = {};
+			VkPhysicalDeviceMemoryProperties	mem_prop = {};
 			DeviceInfo							info;
 
 			vkGetPhysicalDeviceProperties( devices[i], OUT &prop );
@@ -357,24 +373,14 @@ namespace PlatformVK
 			info.integratedGPU	= prop.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
 			info.isGPU			= (prop.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU or
 								   prop.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU);
-			info.isCPU			= prop.deviceType == VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU;
+			info.isCPU			= prop.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU;
 			info.maxInvocations	= prop.limits.maxComputeWorkGroupInvocations;
 
 			info.supportsTesselation	= feat.tessellationShader;
 			info.supportsGeometryShader	= feat.geometryShader;
 
-			for (uint32_t j = 0; j < mem_prop.memoryTypeCount; ++j)
-			{
-				if ( mem_prop.memoryTypes[j].propertyFlags == VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT )
-				{
-					uint32_t idx = mem_prop.memoryTypes[j].heapIndex;
-
-					ASSERT( !!(mem_prop.memoryHeaps[idx].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) );
-					
-					info.globalMemory += BytesUL( mem_prop.memoryHeaps[idx].size );
-					mem_prop.memoryHeaps[idx].size = 0;
-				}
-			}
+			info.globalMemory		= _CalcTotalMemory( mem_prop );
+			info.computeSharedMem	= BytesU(prop.limits.maxComputeSharedMemorySize);
 
 			deviceInfo.PushBack( RVREF(info) );
 		}
@@ -386,7 +392,7 @@ namespace PlatformVK
 	CreatePhysicalDevice
 =================================================
 */
-	bool Vk1Device::CreatePhysicalDevice (vk::VkPhysicalDevice id)
+	bool Vk1Device::CreatePhysicalDevice (VkPhysicalDevice id)
 	{
 		CHECK_ERR( IsInstanceCreated() );
 		
@@ -399,84 +405,6 @@ namespace PlatformVK
 		vkGetPhysicalDeviceMemoryProperties( _physicalDevice, OUT &_deviceMemoryProperties );
 
 		_UpdateProperties();
-		return true;
-	}
-	
-/*
-=================================================
-	ChoosePhysicalDevice
-=================================================
-*/
-	bool Vk1Device::ChoosePhysicalDevice (StringCRef deviceName)
-	{
-		CHECK_ERR( IsInstanceCreated() );
-		
-		_LoadFunctions();
-
-		uint32_t					count				= 0;
-
-		usize						name_match_idx		= UMax;
-		usize						high_version_idx	= UMax;
-		usize						best_gpu_idx		= UMax;
-
-		uint32_t					version				= 0;
-		VkPhysicalDeviceType		gpu_type			= VK_PHYSICAL_DEVICE_TYPE_OTHER;
-		Array< VkPhysicalDevice >	devices;
-
-		VK_CALL( vkEnumeratePhysicalDevices( _instance, OUT &count, null ) );
-		CHECK_ERR( count > 0 );
-
-		devices.Resize( count );
-		VK_CALL( vkEnumeratePhysicalDevices( _instance, OUT &count, OUT devices.ptr() ) );
-
-		FOR( i, devices )
-		{
-			VkPhysicalDeviceProperties	prop;
-
-			vkGetPhysicalDeviceProperties( devices[i], OUT &prop );
-
-			// select higher version
-			if ( prop.apiVersion > version )
-			{
-				version			 = prop.apiVersion;
-				high_version_idx = i;
-			}
-
-			// select best GPU device
-			if ( (prop.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU or
-				  prop.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) and
-				 prop.deviceType > gpu_type )
-			{
-				gpu_type	 = prop.deviceType;
-				best_gpu_idx = i;
-			}
-
-			if ( deviceName.Empty() )
-				continue;
-
-			if ( name_match_idx == UMax and
-				 StringCRef( prop.deviceName ).HasSubStringIC( deviceName ) )
-			{
-				name_match_idx = i;
-			}
-		}
-
-		if ( name_match_idx != UMax )
-			_physicalDevice = devices[name_match_idx];
-		else
-		if ( best_gpu_idx != UMax )
-			_physicalDevice = devices[best_gpu_idx];
-		else
-		if ( high_version_idx != UMax )
-			_physicalDevice = devices[high_version_idx];
-		else
-			_physicalDevice = devices[0];
-
-
-		vkGetPhysicalDeviceProperties( _physicalDevice, OUT &_deviceProperties );
-		vkGetPhysicalDeviceFeatures( _physicalDevice, OUT &_deviceFeatures );
-		vkGetPhysicalDeviceMemoryProperties( _physicalDevice, OUT &_deviceMemoryProperties );
-
 		return true;
 	}
 	
@@ -498,6 +426,31 @@ namespace PlatformVK
 		RETURN_ERR( "unknown physical device type!" );
 	}
 	
+/*
+=================================================
+	_CalcTotalMemory
+=================================================
+*/
+	BytesU Vk1Device::_CalcTotalMemory (VkPhysicalDeviceMemoryProperties memProps)
+	{
+		BytesU	total;
+
+		for (uint32_t j = 0; j < memProps.memoryTypeCount; ++j)
+		{
+			if ( EnumEq( memProps.memoryTypes[j].propertyFlags, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT ) )
+			{
+				const uint32_t idx = memProps.memoryTypes[j].heapIndex;
+
+				if ( EnumEq( memProps.memoryHeaps[idx].flags, VK_MEMORY_HEAP_DEVICE_LOCAL_BIT ) )
+				{
+					total += BytesU( memProps.memoryHeaps[idx].size );
+					memProps.memoryHeaps[idx].size = 0;
+				}
+			}
+		}
+		return total;
+	}
+
 /*
 =================================================
 	_UpdateProperties
@@ -532,21 +485,31 @@ namespace PlatformVK
 		String	str;
 
 		str << "Vulkan info\n---------------------";
-		str << "\nversion:             " << api_ver.major <<'.'<< api_ver.minor <<'.'<< api_ver.patch;
-		str << "\ndevice name:         " << _deviceProperties.deviceName;
-		str << "\ndevice type:         " << _DeviceTypeToString( _deviceProperties.deviceType );
+		str << "\nversion:                 " << api_ver.major <<'.'<< api_ver.minor <<'.'<< api_ver.patch;
+		str << "\ndevice name:             " << _deviceProperties.deviceName;
+		str << "\ndevice type:             " << _DeviceTypeToString( _deviceProperties.deviceType );
+		str << "\nglobal memory:           " << ToString( _CalcTotalMemory( _deviceMemoryProperties ) );
 
-		str << "\npush constants:      " << ToString( BytesU(_deviceProperties.limits.maxPushConstantsSize) );
-		str << "\nuniform buf size:    " << ToString( BytesU(_deviceProperties.limits.maxUniformBufferRange) );
-		str << "\nstorage buf size:    " << ToString( BytesU(_deviceProperties.limits.maxStorageBufferRange) );
-		str << "\nmax allocations:     " << _deviceProperties.limits.maxMemoryAllocationCount;
-		str << "\nper stage resources: " << _deviceProperties.limits.maxPerStageResources;
+		str << "\npush constants:          " << ToString( BytesU(_deviceProperties.limits.maxPushConstantsSize) );
+		str << "\nuniform buf size:        " << ToString( BytesU(_deviceProperties.limits.maxUniformBufferRange) );
+		str << "\nstorage buf size:        " << ToString( BytesU(_deviceProperties.limits.maxStorageBufferRange) );
+		str << "\nmax mem allocations:     " << _deviceProperties.limits.maxMemoryAllocationCount;
+		str << "\nmax sampler allocations: " << _deviceProperties.limits.maxSamplerAllocationCount;
+		str << "\nper stage resources:     " << _deviceProperties.limits.maxPerStageResources;
+		
+		str << "\nmax color attachments:   " << _deviceProperties.limits.maxColorAttachments;
+		str << "\nmax viewports:           " << _deviceProperties.limits.maxViewports;
+		str << "\nmax anisotropy:          " << _deviceProperties.limits.maxSamplerAnisotropy;
+		str << "\nmax tess gen level:      " << _deviceProperties.limits.maxTessellationGenerationLevel;
+		str << "\nmax patch vertices:      " << _deviceProperties.limits.maxTessellationPatchSize;
+		str << "\nmax attribs:             " << _deviceProperties.limits.maxVertexInputAttributes;
+		str << "\nmax vb bindings:         " << _deviceProperties.limits.maxVertexInputBindings;
 
 		// compute
-		str << "\ncompute shared mem:  " << ToString( BytesU(_deviceProperties.limits.maxComputeSharedMemorySize) );
-		str << "\ncompute invocations: " << _deviceProperties.limits.maxComputeWorkGroupInvocations;
-		str << "\ncompute local size:  " << ToString( ReferenceCast<uint3>(_deviceProperties.limits.maxComputeWorkGroupSize) );
-		str << "\ncompute work groups: " << ToString( ReferenceCast<uint3>(_deviceProperties.limits.maxComputeWorkGroupCount) );
+		str << "\ncompute shared mem:      " << ToString( BytesU(_deviceProperties.limits.maxComputeSharedMemorySize) );
+		str << "\ncompute invocations:     " << _deviceProperties.limits.maxComputeWorkGroupInvocations;
+		str << "\ncompute local size:      " << ToString( ReferenceCast<uint3>(_deviceProperties.limits.maxComputeWorkGroupSize) );
+		str << "\ncompute work groups:     " << ToString( ReferenceCast<uint3>(_deviceProperties.limits.maxComputeWorkGroupCount) );
 
 		str << "\n---------------------";
 
@@ -571,11 +534,12 @@ namespace PlatformVK
 		Array< VkDeviceQueueCreateInfo >	queue_infos;
 		Array< const char * >				device_extensions	= enabledExtensions;
 		VkDeviceCreateInfo					device_info			= {};
-		
-		_queueFamily = queueFamilies;
-		_queueIndex  = UMax;
 
-		CHECK_ERR( _GetQueueCreateInfos( OUT queue_infos, INOUT _queueFamily, OUT _queueIndex ) );
+		queue_infos.PushBack({});
+		CHECK_ERR( _GetQueueCreateInfo( OUT queue_infos.Back(), queueFamilies ) );
+		
+		_queueFamily		= queueFamilies;
+		_queueFamilyIndex	= queue_infos.Back().queueFamilyIndex;
 
 		if ( _queueFamily[ EQueueFamily::Present ] )
 			device_extensions << VK_KHR_SWAPCHAIN_EXTENSION_NAME;
@@ -592,7 +556,7 @@ namespace PlatformVK
 		if ( not device_extensions.Empty() )
 		{
 			device_info.enabledExtensionCount	= uint32_t(device_extensions.Count());
-			device_info.ppEnabledExtensionNames	= device_extensions.ptr();
+			device_info.ppEnabledExtensionNames	= device_extensions.RawPtr();
 		}
 
 		VK_CHECK( vkCreateDevice( _physicalDevice, &device_info, null, OUT &_logicalDevice ) );
@@ -602,6 +566,20 @@ namespace PlatformVK
 
 		// reload function pointers for current device
 		_LoadFunctions();
+
+
+		// update device extensions
+		{
+			_deviceExtensions.Clear();
+
+			for (auto& de : device_extensions) {
+				_deviceExtensions << de;
+			}
+
+			if ( _deviceExtensions.Empty() )
+				_deviceExtensions << "";
+		}
+
 
 		// write extensions to log
 		{
@@ -613,17 +591,18 @@ namespace PlatformVK
 			log << "\nVulkan instance extensions:";
 
 			FOR( i, _instanceExtensions ) {
-				log << (i ? ", " : "") << ((i&3) ? "" : "\n") << _instanceExtensions[i].extensionName;
+				log << (i ? ", " : "") << ((i&3) ? "" : "\n") << _instanceExtensions[i];
 			}
 			log << "\nVulkan device extensions:";
 
 			FOR( i, _deviceExtensions ) {
-				log << (i ? ", " : "") << ((i&3) ? "" : "\n") << _deviceExtensions[i].extensionName;
+				log << (i ? ", " : "") << ((i&3) ? "" : "\n") << _deviceExtensions[i];
 			}
 			log << "\n------------------------";
 
 			LOG( log, ELog::Info | ELog::SpoilerFlag );
 		}
+
 		return true;
 	}
 	
@@ -639,11 +618,12 @@ namespace PlatformVK
 
 		CHECK_ERR( IsInstanceCreated() );
 		CHECK_ERR( not IsSwapchainCreated() );
-		CHECK_ERR( not IsQueueCreated() );
 		
 		vkDestroyDevice( _logicalDevice, null );
 
-		_logicalDevice = VK_NULL_HANDLE;
+		_logicalDevice		= VK_NULL_HANDLE;
+		_queueFamilyIndex	= UMax;
+		_queueFamily		= EQueueFamily::bits();
 
 		// unload function pointers that spcified for destroyed device
 		_LoadFunctions();
@@ -670,7 +650,8 @@ namespace PlatformVK
 	CreateSwapchain
 =================================================
 */
-	bool Vk1Device::CreateSwapchain (const uint2 &size, bool vsync, uint32_t imageArrayLayers, EPixelFormat::type depthStencilFormat, MultiSamples samples)
+	bool Vk1Device::CreateSwapchain (const uint2 &size, bool vsync, uint32_t imageArrayLayers, EPixelFormat::type depthStencilFormat, MultiSamples samples,
+									 EImageUsage::bits colorImageUsage, EImageUsage::bits depthStencilImageUsage)
 	{
 		CHECK_ERR( HasPhyiscalDevice() );
 		CHECK_ERR( IsDeviceCreated() );
@@ -694,14 +675,14 @@ namespace PlatformVK
 		swapchain_info.pQueueFamilyIndices		= null;
 		swapchain_info.oldSwapchain				= old_swapchain;
 		swapchain_info.clipped					= VK_TRUE;
-		swapchain_info.compositeAlpha			= VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;	// TODO
 		
 		_GetSurfaceImageCount( OUT swapchain_info.minImageCount, surf_caps );
 		_GetSurfaceTransform( OUT swapchain_info.preTransform, surf_caps );
-		_GetSwapChainExtent( OUT swapchain_info.imageExtent, surf_caps );
-		_GetPresentMode( OUT swapchain_info.presentMode, vsync, surf_caps );
+		_GetSwapChainExtent( INOUT swapchain_info.imageExtent, surf_caps );
+		_GetPresentMode( OUT swapchain_info.presentMode, vsync );
 		_GetSharingMode( OUT swapchain_info.imageSharingMode );
-		_GetImageUsage( OUT swapchain_info.imageUsage );
+		CHECK_ERR( _GetImageUsage( OUT swapchain_info.imageUsage, swapchain_info.presentMode, colorImageUsage, surf_caps ) );
+		CHECK_ERR( _GetCompositeAlpha( OUT swapchain_info.compositeAlpha, surf_caps ) );
 
 		VK_CHECK( vkCreateSwapchainKHR( _logicalDevice, &swapchain_info, null, OUT &_swapchain ) );
 
@@ -714,14 +695,42 @@ namespace PlatformVK
 		_DeleteFramebuffers();
 
 		// create dependent resources
-		CHECK_ERR( _CreateColorAttachment( samples ) );
-		CHECK_ERR( _CreateDepthStencilAttachment( depthStencilFormat ) );
+		CHECK_ERR( _CreateColorAttachment( samples, Vk1EnumRevert( swapchain_info.imageUsage ) ) );
+		CHECK_ERR( _CreateDepthStencilAttachment( depthStencilFormat, depthStencilImageUsage ) );
 		CHECK_ERR( _CreateRenderPass() );
 		CHECK_ERR( _CreateFramebuffers() );
 
 		return true;
 	}
 	
+/*
+=================================================
+	_GetCompositeAlpha
+=================================================
+*/
+	bool Vk1Device::_GetCompositeAlpha (OUT VkCompositeAlphaFlagBitsKHR &compositeAlpha, const VkSurfaceCapabilitiesKHR &surfaceCaps) const
+	{
+		const VkCompositeAlphaFlagBitsKHR		composite_alpha_flags[] = {
+			VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+			VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+			VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
+			VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
+		};
+		
+		compositeAlpha = VK_COMPOSITE_ALPHA_FLAG_BITS_MAX_ENUM_KHR;
+
+		for (auto& flag : composite_alpha_flags)
+		{
+			if ( EnumEq( surfaceCaps.supportedCompositeAlpha, flag ) )
+			{
+				compositeAlpha = flag;
+				return true;
+			}
+		}
+
+		RETURN_ERR( "no suitable composite alpha flags found!" );
+	}
+
 /*
 =================================================
 	RecreateSwapchain
@@ -863,7 +872,7 @@ namespace PlatformVK
 			{
 				flags |= EQueueFamily::Protected;
 			}
-
+			
 			if ( (flags & family) == family )
 			{
 				index = uint32_t(i);
@@ -878,24 +887,20 @@ namespace PlatformVK
 	
 /*
 =================================================
-	_GetQueueCreateInfos
+	_GetQueueCreateInfo
 =================================================
 */
-	bool Vk1Device::_GetQueueCreateInfos (OUT Array<VkDeviceQueueCreateInfo> &queueCreateInfos,
-										  INOUT EQueueFamily::bits &queueFamily,
-										  OUT uint32_t &queueIndex) const
+	bool Vk1Device::_GetQueueCreateInfo (OUT VkDeviceQueueCreateInfo &queueCreateInfo, EQueueFamily::bits queueFamily) const
 	{
-		static const float	default_queue_priority	= 1.0f;	// high priority
+		uint32_t	queue_index = 0;
+		CHECK_ERR( _ChooseQueueIndex( INOUT queueFamily, OUT queue_index ) );
 
-		CHECK_ERR( _ChooseQueueIndex( INOUT queueFamily, OUT queueIndex ) );
+		ZeroMem( queueCreateInfo );
+		queueCreateInfo.sType				= VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex	= queue_index;
+		queueCreateInfo.queueCount			= 2;
+		queueCreateInfo.pQueuePriorities	= &DEFAULT_QUEUE_PRIORITY;
 
-		VkDeviceQueueCreateInfo		queue_info = {};
-		queue_info.sType			= VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		queue_info.queueFamilyIndex	= queueIndex;
-		queue_info.queueCount		= 1;
-		queue_info.pQueuePriorities	= &default_queue_priority;
-
-		queueCreateInfos.PushBack( queue_info );
 		return true;
 	}
 
@@ -903,7 +908,7 @@ namespace PlatformVK
 =================================================
 	CreateQueue
 =================================================
-*/
+*
 	bool Vk1Device::CreateQueue ()
 	{
 		CHECK_ERR( IsDeviceCreated() );
@@ -917,7 +922,7 @@ namespace PlatformVK
 =================================================
 	DestroyQueue
 =================================================
-*/
+*
 	void Vk1Device::DestroyQueue ()
 	{
 		_queue			= VK_NULL_HANDLE;
@@ -965,12 +970,13 @@ namespace PlatformVK
 	EndFrame
 =================================================
 */
-	bool Vk1Device::EndFrame (VkSemaphore renderFinished)
+	bool Vk1Device::EndFrame (vk::VkQueue queue, VkSemaphore renderFinished)
 	{
 		CHECK_ERR( IsSwapchainCreated() );
 		CHECK_ERR( IsFrameStarted() );
 		
-		VkSwapchainKHR		swap_chains[]	= { _swapchain };
+		VkSwapchainKHR		swap_chains[]		= { _swapchain };
+		VkSemaphore			wait_semaphores[]	= { renderFinished };
 
 		VkPresentInfoKHR	present_info = {};
 		present_info.sType				= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -980,14 +986,13 @@ namespace PlatformVK
 
 		if ( renderFinished != VK_NULL_HANDLE )
 		{
-			VkSemaphore		wait_semaphores[]	= { renderFinished };
 			present_info.waitSemaphoreCount		= uint32_t(CountOf( wait_semaphores ));
 			present_info.pWaitSemaphores		= wait_semaphores;
 		}
 
-		VK_CHECK( vkQueuePresentKHR( GetQueue(), &present_info ) );
+		VK_CHECK( vkQueuePresentKHR( queue, &present_info ) );
 		
-		_currentImageIndex		= UMax;
+		_currentImageIndex	= UMax;
 		return true;
 	}
 
@@ -1006,7 +1011,7 @@ namespace PlatformVK
 	_GetSwapChainExtent
 =================================================
 */
-	void Vk1Device::_GetSwapChainExtent (OUT VkExtent2D &extent, const VkSurfaceCapabilitiesKHR &surfaceCaps) const
+	void Vk1Device::_GetSwapChainExtent (INOUT VkExtent2D &extent, const VkSurfaceCapabilitiesKHR &surfaceCaps) const
 	{
 		if ( surfaceCaps.currentExtent.width  == UMax and
 			 surfaceCaps.currentExtent.height == UMax )
@@ -1025,8 +1030,7 @@ namespace PlatformVK
 	_GetPresentMode
 =================================================
 */
-	void Vk1Device::_GetPresentMode (OUT VkPresentModeKHR &presentMode, bool vsync,
-									 const VkSurfaceCapabilitiesKHR &surfaceCaps) const
+	void Vk1Device::_GetPresentMode (OUT VkPresentModeKHR &presentMode, bool vsync) const
 	{
 		uint32_t					count		= 0;
 		Array< VkPresentModeKHR >	present_modes;
@@ -1096,18 +1100,85 @@ namespace PlatformVK
 	_GetImageUsage
 =================================================
 */
-	void Vk1Device::_GetImageUsage (OUT VkImageUsageFlags &imageUsage) const
+	bool Vk1Device::_GetImageUsage (OUT VkImageUsageFlags &imageUsage, VkPresentModeKHR presentMode,
+									EImageUsage::bits requiredUsage, const VkSurfaceCapabilitiesKHR &surfaceCaps) const
 	{
-		imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		if ( presentMode == VK_PRESENT_MODE_IMMEDIATE_KHR	or
+			 presentMode == VK_PRESENT_MODE_MAILBOX_KHR		or
+			 presentMode == VK_PRESENT_MODE_FIFO_KHR		or
+			 presentMode == VK_PRESENT_MODE_FIFO_RELAXED_KHR )
+		{
+			imageUsage = surfaceCaps.supportedUsageFlags & Vk1Enum( requiredUsage );
+		}
+		else
+		if ( presentMode == VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR	or
+			 presentMode == VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR )
+		{
+			VkPhysicalDeviceSurfaceInfo2KHR	surf_info = {};
+			surf_info.sType		= VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SURFACE_INFO_2_KHR;
+			surf_info.surface	= _surface;
 
-		VkFormatProperties	format_props;
+			VkSurfaceCapabilities2KHR	surf_caps2;
+			VK_CALL( vkGetPhysicalDeviceSurfaceCapabilities2KHR( _physicalDevice, &surf_info, OUT &surf_caps2 ) );
+
+			for (VkBaseInStructure const *iter = reinterpret_cast<VkBaseInStructure const *>(&surf_caps2);
+				 iter != null;)
+			{
+				if ( iter->sType == VK_STRUCTURE_TYPE_SHARED_PRESENT_SURFACE_CAPABILITIES_KHR )
+				{
+					imageUsage = reinterpret_cast<VkSharedPresentSurfaceCapabilitiesKHR const*>(iter)->sharedPresentSupportedUsageFlags & Vk1Enum( requiredUsage );
+					break;
+				}
+			}
+		}
+		else
+		{
+			RETURN_ERR( "unsupported presentMode, can't choose imageUsage!" );
+		}
+
+		ASSERT( EnumEq( imageUsage, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT ) );
+		imageUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		
+
+		// validation:
+		VkFormatProperties	format_props;
 		vkGetPhysicalDeviceFormatProperties( _physicalDevice, _colorFormat, OUT &format_props );
 
-		if ( format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT )
+		CHECK_ERR( EnumEq( format_props.optimalTilingFeatures, VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT ) );
+		ASSERT( EnumEq( format_props.optimalTilingFeatures, VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BLEND_BIT ) );
+		
+		if ( EnumEq( imageUsage, VK_IMAGE_USAGE_TRANSFER_SRC_BIT ) and
+			 (not EnumEq( format_props.optimalTilingFeatures, VK_FORMAT_FEATURE_TRANSFER_SRC_BIT ) or
+			  not EnumEq( format_props.optimalTilingFeatures, VK_FORMAT_FEATURE_BLIT_DST_BIT )) )
 		{
-			imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+			imageUsage &= ~VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		}
+		
+		if ( EnumEq( imageUsage, VK_IMAGE_USAGE_TRANSFER_DST_BIT ) and
+			 not EnumEq( format_props.optimalTilingFeatures, VK_FORMAT_FEATURE_TRANSFER_DST_BIT ) )
+		{
+			imageUsage &= ~VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		}
+		
+		if ( EnumEq( imageUsage, VK_IMAGE_USAGE_STORAGE_BIT ) and
+			 not EnumEq( format_props.optimalTilingFeatures, VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT ) )
+		{
+			imageUsage &= ~VK_IMAGE_USAGE_STORAGE_BIT;
+		}
+
+		if ( EnumEq( imageUsage, VK_IMAGE_USAGE_SAMPLED_BIT ) and
+			 not EnumEq( format_props.optimalTilingFeatures, VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT ) )
+		{
+			imageUsage &= ~VK_IMAGE_USAGE_SAMPLED_BIT;
+		}
+
+		if ( EnumEq( imageUsage, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ) and
+			 not EnumEq( format_props.optimalTilingFeatures, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT ) )
+		{
+			imageUsage &= ~VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		}
+
+		return true;
 	}
 	
 /*
@@ -1148,7 +1219,7 @@ namespace PlatformVK
 	_CreateColorAttachment
 =================================================
 */
-	bool Vk1Device::_CreateColorAttachment (MultiSamples samples)
+	bool Vk1Device::_CreateColorAttachment (MultiSamples samples, EImageUsage::bits usage)
 	{
 		using VkImages_t = FixedSizeArray< VkImage, MAX_SWAPCHAIN_SIZE >;
 
@@ -1168,20 +1239,16 @@ namespace PlatformVK
 		descr.format	= _colorPixelFormat;
 		descr.imageType	= EImage::Tex2D;
 		descr.samples	= samples;
-		descr.usage		|= EImageUsage::All;		// TODO: get from swapchain_info
+		descr.usage		= usage;
 
 		FOR( i, _imageBuffers )
 		{
 			auto&		buf = _imageBuffers[i];
 
-			ModulePtr	img = New< Vk1SwapchainImage >( GlobalSystems(), CreateInfo::GpuImage{ descr } );
-			ModuleUtils::Initialize({ img });
+			buf.module = New< Vk1SwapchainImage >( GlobalSystems(), CreateInfo::GpuImage{ descr } );
+			ModuleUtils::Initialize({ buf.module });
 
-			GpuMsg::SetVkSwapchainImage		msg{ images[i] };
-			img->Send( msg );
-
-			buf.module	= img;
-			buf.view	= *msg.result;
+			buf.view = buf.module->Request( GpuMsg::SetVkSwapchainImage{ images[i] });
 		}
 		return true;
 	}
@@ -1191,7 +1258,7 @@ namespace PlatformVK
 	_CreateDepthStencilAttachment
 =================================================
 */
-	bool Vk1Device::_CreateDepthStencilAttachment (EPixelFormat::type depthStencilFormat)
+	bool Vk1Device::_CreateDepthStencilAttachment (EPixelFormat::type depthStencilFormat, EImageUsage::bits usage)
 	{
 		if ( depthStencilFormat == EPixelFormat::Unknown )
 		{
@@ -1207,7 +1274,7 @@ namespace PlatformVK
 											EImage::Tex2D,
 											uint4( _surfaceSize, 0, 0 ),
 											depthStencilFormat,
-											EImageUsage::DepthStencilAttachment | EImageUsage::TransferSrc | EImageUsage::TransferDst
+											EImageUsage::DepthStencilAttachment | usage
 										},
 										EGpuMemory::LocalInGPU,
 										EMemoryAccess::GpuReadWrite
@@ -1313,8 +1380,8 @@ namespace PlatformVK
 			return true;
 
 		ASSERT( _depthStencilView != VK_NULL_HANDLE ?
-					_depthStencilPixelFormat != EPixelFormat::Unknown :
-					_depthStencilPixelFormat == EPixelFormat::Unknown );
+				_depthStencilPixelFormat != EPixelFormat::Unknown :
+				_depthStencilPixelFormat == EPixelFormat::Unknown );
 
 		ModulePtr	module;
 		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
@@ -1342,9 +1409,6 @@ namespace PlatformVK
 		CHECK_ERR( _renderPass );
 
 		_framebuffers.Resize( _imageBuffers.Count() );
-		
-		GpuMsg::GetVkRenderPassID	req_id;
-		_renderPass->Send( req_id );
 
 		FOR( i, _framebuffers )
 		{
@@ -1491,11 +1555,19 @@ namespace PlatformVK
 		uint32_t	count = 0;
 		VK_CALL( vkEnumerateDeviceExtensionProperties( _physicalDevice, null, OUT &count, null ) );
 
-		if ( count == 0 )
+		if ( count == 0 ) {
+			_deviceExtensions << "";
 			return true;
+		}
 
-		_deviceExtensions.Resize( count );
-		VK_CHECK( vkEnumerateDeviceExtensionProperties( _physicalDevice, null, OUT &count, OUT _deviceExtensions.ptr() ) );
+		Array< VkExtensionProperties >	dev_ext;
+		dev_ext.Resize( count );
+
+		VK_CHECK( vkEnumerateDeviceExtensionProperties( _physicalDevice, null, OUT &count, OUT dev_ext.ptr() ) );
+
+		for (auto& ext : dev_ext) {
+			_deviceExtensions.Add( StringCRef(ext.extensionName) );
+		}
 
 		return true;
 	}
@@ -1509,12 +1581,7 @@ namespace PlatformVK
 	{
 		_LoadDeviceExtensions();
 
-		FOR( i, _deviceExtensions )
-		{
-			if ( name.EqualsIC( _deviceExtensions[i].extensionName ) )
-				return true;
-		}
-		return false;
+		return _deviceExtensions.IsExist( name );
 	}
 
 /*

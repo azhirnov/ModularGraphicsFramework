@@ -23,6 +23,10 @@ namespace Platforms
 		};
 
 		GX_ENUM_BITFIELD( EImageAspect );
+
+		static constexpr bits	DepthStencil = bits() | Depth | Stencil;
+
+		static String ToString (bits values);
 	};
 
 
@@ -64,7 +68,10 @@ namespace Platforms
 
 		static constexpr bits	Default	= bits() | Graphics | Compute | Transfer | Present;
 		static constexpr bits	All		= bits().SetAll();
+
+		static String  ToString (bits values);
 	};
+
 
 }	// Platforms
 }	// Engine

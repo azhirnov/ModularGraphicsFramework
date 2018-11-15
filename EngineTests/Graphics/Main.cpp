@@ -13,11 +13,11 @@ int main ()
 	Logger::GetInstance()->Open( "log", false );
 	
 	CHECK( OS::FileSystem::FindAndSetCurrentDir( "EngineTests/Graphics" ) );
-
-	#ifdef GRAPHICS_API_VULKAN
+	
+	#ifdef GRAPHICS_API_OPENGL
 	{
 		GApp	app;
-		app.Initialize( "VK 1.0"_GAPI );
+		app.Initialize( "GL 4.5"_GAPI );
 
 		// main loop
 		for (; app.Update();) {}
@@ -26,11 +26,11 @@ int main ()
 	}
 	GetMainSystemInstance()->Send( ModuleMsg::Delete{} );
 	#endif
-	
-	#ifdef GRAPHICS_API_OPENGL
+
+	#ifdef GRAPHICS_API_VULKAN
 	{
 		GApp	app;
-		app.Initialize( "GL 4.5"_GAPI );
+		app.Initialize( "VK 1.0"_GAPI );
 
 		// main loop
 		for (; app.Update();) {}

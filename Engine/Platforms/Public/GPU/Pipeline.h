@@ -36,9 +36,9 @@ namespace Platforms
 		RenderState						renderState;
 		EPipelineDynamicState::bits		dynamicStates;
 		FragmentOutputState				fragOutput;
-		PipelineLayoutDescription		layout;
 		uint							patchControlPoints;
 		uint							subpass;
+		bool							earlyFragmentTests;
 		// TODO: viewports
 		// TODO: specialization constants
 
@@ -47,11 +47,13 @@ namespace Platforms
 
 		GraphicsPipelineDescription (const VertexInputState &vertexInput,
 									 const RenderState &renderState,
-									 const PipelineLayoutDescription &layout,
 									 EPipelineDynamicState::bits dynamicStates,
 									 const FragmentOutputState &fragOutput,
+									 bool earlyFragmentTests = true,
 									 uint patchControlPoints = 0,
 									 uint subpass = 0);
+
+		DEBUG_ONLY( ND_ String ToString () const; )
 	};
 
 
@@ -66,16 +68,13 @@ namespace Platforms
 		using SpecializationConstants_t	= GraphicsPipelineDescription::SpecializationConstants_t;
 
 	// variables
-		PipelineLayoutDescription		layout;
-		uint3							localGroupSize;
+		uint3			localGroupSize;
 		// TODO: specialization constants
 
 	// methods
 		ComputePipelineDescription (GX_DEFCTOR);
 
-		explicit
-		ComputePipelineDescription (const PipelineLayoutDescription &layout,
-								    const uint3 &localGroupSize);
+		explicit ComputePipelineDescription (const uint3 &localGroupSize);
 	};
 
 
@@ -90,72 +89,35 @@ namespace Platforms
 		struct ShaderSource
 		{
 		// types
-			struct ESource { enum type {
-				GLSL,
-				GLSL_Bin,
-				SPIRV,
-				SPIRV_Asm,
-				OpenCL,
-				OpenCL_Asm,
-				SoftRenderer,
-				HLSL,
-				HLSL_Bin,
-				_Count
-			}; };
+			using SWInvoke_t	= void (*) (const SWShaderLang::Impl::SWShaderHelper &);
+			using Data_t		= Union< String, BinaryArray, Array<uint>, SWInvoke_t >;
+			using Sources_t		= Map< EShaderLangFormat::type, Data_t >;
+			using RFilePtr		= GXFile::RFilePtr;
 
-			using SWInvoke	= void (*) (const SWShaderLang::Impl::SWShaderHelper &);
-			using Data		= Union< uint, String, BinaryArray, Array<uint>, SWInvoke >;
-			using Sources	= StaticArray< Data, ESource::_Count >;
-			using RFilePtr	= GXFile::RFilePtr;
-			
 		// variables
-			Sources		src;
+			Sources_t		_sources;
 
 		// methods
 			ShaderSource () {}
 
-			// GLSL source
-			void StringGLSL (StringCRef data);
-			bool FileGLSL (const RFilePtr &file);
-			ND_ StringCRef  GetGLSL () const;
+			void AddSource (EShaderLangFormat::type fmt, String &&src);
+			void AddBinary (EShaderLangFormat::type fmt, BinArrayCRef bin);
+			void AddSpirv (EShaderLangFormat::type fmt, ArrayCRef<uint> bin);
+			void AddInvocable (EShaderLangFormat::type fmt, SWInvoke_t ptr);
 
-			// GLSL binary
-			//void ArrayGLSLBin (BinArrayCRef data);
-			//bool FileGLSLBin (const RFilePtr &file);
-			//BinArrayCRef GetGLSLBin () const;
+			bool AddSource (EShaderLangFormat::type fmt, const RFilePtr &file);
+			bool AddBinary (EShaderLangFormat::type fmt, const RFilePtr &file);
+			bool AddSpirv (EShaderLangFormat::type fmt, const RFilePtr &file);
 
-			// CL source
-			void StringCL (StringCRef data);
-			bool FileCL (const RFilePtr &file);
-			ND_ StringCRef  GetCL () const;
+			ND_ StringCRef GetString (EShaderLangFormat::type fmt) const;
+			ND_ BinArrayCRef GetBinary (EShaderLangFormat::type fmt) const;
+			ND_ ArrayCRef<uint> GetSpirv (EShaderLangFormat::type fmt) const;
+			ND_ SWInvoke_t GetInvocable (EShaderLangFormat::type fmt) const;
 
-			// CL binary
-			void StringCLAsm (StringCRef data);
-			bool FileCLAsm (const RFilePtr &file);
-			ND_ StringCRef  GetCLAsm () const;
-
-			// SPIRV binary
-			void ArraySPIRV (ArrayCRef<uint> data);
-			bool FileSPIRV (const RFilePtr &file);
-			ND_ ArrayCRef<uint>  GetSPIRV () const;
-
-			// SPIRV assembly
-			void StringSpirvAsm (StringCRef data);
-			StringCRef	GetSpirvAsm () const;
-
-			// HLSL Source
-			void StringHLSL (StringCRef data);
-			ND_ StringCRef GetHLSL () const;
-
-			// HLSL Binary
-			void StringBinHLSL (BinArrayCRef data);
-			ND_ BinArrayCRef GetHLSLBin () const;
-
-			// Software
-			void FuncSW (const SWInvoke &func);
-			ND_ SWInvoke  GetSW () const;
+			ND_ bool IsExists (EShaderLangFormat::type fmt) const;
+			ND_ bool Empty () const									{ return _sources.Empty(); }
 		};
-
+		
 		using Sources = StaticArray< ShaderSource, EShader::_Count >;
 
 
@@ -196,11 +158,22 @@ namespace CreateInfo
 	struct GraphicsPipeline
 	{
 	// types
-		using Description	= Platforms::GraphicsPipelineDescription;
+		using Description_t	= Platforms::GraphicsPipelineDescription;
+		using Layout_t		= Platforms::PipelineLayoutDescription;
 
 	// variables
-		ModulePtr		gpuThread;			// can be null
-		Description		descr;
+		ModulePtr			gpuThread;		// can be null
+		Description_t		descr;
+		Layout_t			layout;
+
+	// methods
+		GraphicsPipeline () {}
+		
+		GraphicsPipeline (const Description_t &descr, const Layout_t &layout) :
+			descr{descr}, layout{layout} {}
+		
+		GraphicsPipeline (const ModulePtr &gpuThread, const Description_t &descr, const Layout_t &layout) :
+			gpuThread{gpuThread}, descr{descr}, layout{layout} {}
 	};
 
 
@@ -210,11 +183,22 @@ namespace CreateInfo
 	struct ComputePipeline
 	{
 	// types
-		using Description	= Platforms::ComputePipelineDescription;
+		using Description_t	= Platforms::ComputePipelineDescription;
+		using Layout_t		= Platforms::PipelineLayoutDescription;
 		
 	// variables
-		ModulePtr		gpuThread;			// can be null
-		Description		descr;
+		ModulePtr			gpuThread;		// can be null
+		Description_t		descr;
+		Layout_t			layout;
+
+	// methods
+		ComputePipeline () {}
+
+		ComputePipeline (const Description_t &descr, const Layout_t &layout) :
+			descr{descr}, layout{layout} {}
+		
+		ComputePipeline (const ModulePtr &gpuThread, const Description_t &descr, const Layout_t &layout) :
+			gpuThread{gpuThread}, descr{descr}, layout{layout} {}
 	};
 
 
@@ -224,10 +208,15 @@ namespace CreateInfo
 	struct PipelineTemplate
 	{
 	// types
-		using Description	= Platforms::PipelineTemplateDescription;
+		using Description_t	= Platforms::PipelineTemplateDescription;
 
 	// variables
-		Description		descr;
+		Description_t		descr;
+
+	// methods
+		PipelineTemplate () {}
+		PipelineTemplate (Description_t &&desc) : descr{RVREF(desc)} {}
+		PipelineTemplate (const Description_t &desc) : descr{desc} {}
 	};
 
 
@@ -240,7 +229,7 @@ namespace CreateInfo
 		ModulePtr		gpuThread;			// can be null
 
 	// methods
-		//PipelineResourceTable () {}
+		PipelineResourceTable () {}
 	};
 
 }	// CreateInfo
@@ -251,7 +240,7 @@ namespace GpuMsg
 	//
 	// Get Graphics Pipeline Description
 	//
-	struct GetGraphicsPipelineDescription : _MessageBase_
+	struct GetGraphicsPipelineDescription : _MsgBase_
 	{
 		Out< Platforms::GraphicsPipelineDescription >	result;
 	};
@@ -260,7 +249,7 @@ namespace GpuMsg
 	//
 	// Get Compute Pipeline Description
 	//
-	struct GetComputePipelineDescription : _MessageBase_
+	struct GetComputePipelineDescription : _MsgBase_
 	{
 		Out< Platforms::ComputePipelineDescription >	result;
 	};
@@ -269,7 +258,7 @@ namespace GpuMsg
 	//
 	// Get Pipeline Layout Description
 	//
-	struct GetPipelineLayoutDescription : _MessageBase_
+	struct GetPipelineLayoutDescription : _MsgBase_
 	{
 		Out< Platforms::PipelineLayoutDescription >		result;
 	};
@@ -281,14 +270,11 @@ namespace GpuMsg
 	struct PipelineAttachBuffer : ModuleMsg::AttachModule
 	{
 	// variables
-		BytesUL		offset;
-		BytesUL		size;
+		BytesU		offset;
+		BytesU		size;
 
 	// methods
-		PipelineAttachBuffer (StringCRef name, const ModulePtr &mod, Bytes<uint> size, Bytes<uint> off = Uninitialized) :
-			AttachModule{name, mod}, offset{BytesUL(off)}, size{BytesUL(size)} {}
-
-		PipelineAttachBuffer (StringCRef name, const ModulePtr &mod, Bytes<ulong> size, Bytes<ulong> off = Uninitialized) :
+		PipelineAttachBuffer (StringCRef name, const ModulePtr &mod, BytesU off, BytesU size) :
 			AttachModule{name, mod}, offset{off}, size{size} {}
 	};
 
@@ -348,38 +334,13 @@ namespace GpuMsg
 	//
 	// Request Pipeline information
 	//
-	struct GetPipelineTemplateInfo : _MessageBase_
+	struct GetPipelineTemplateInfo : _MsgBase_
 	{
 	// types
-		struct EGraphicsAPI {
-			enum type {
-				OpenGL_210,
-				OpenGL_330,
-				OpenGL_450,
-
-				OpenGLES_200,
-				OpenGLES_320,
-
-				DirectX_11,
-				DirectX_12,
-
-				Vulkan_10,
-				Vulkan_11,
-
-				OpenCL_120,
-				OpenCL_210,
-
-				Soft,
-			};
-
-			GX_ENUM_BITFIELD( type );
-		};
-
 		using EShader	= Platforms::EShader;
 
 		struct Info {
-			EGraphicsAPI::bits		apiVersions;
-			EShader::bits			shaders;
+			EShader::bits		shaders;
 		};
 
 	// variables
@@ -390,16 +351,20 @@ namespace GpuMsg
 	//
 	// Create GraphicsPipelineDescription from PipelineTemplate
 	//
-	struct CreateGraphicsPipelineDescription : _MessageBase_
+	struct CreateGraphicsPipelineDescription : _MsgBase_
 	{
 	// types
 		using SpecializationConstants_t	= Platforms::GraphicsPipelineDescription::SpecializationConstants_t;
+		struct Result {
+			Platforms::GraphicsPipelineDescription	descr;
+			Platforms::PipelineLayoutDescription	layout;
+		};
 
 	// variables
-		Platforms::VertexInputState						vertexInput;
-		SpecializationConstants_t						constants;	// optional
-		Platforms::EPrimitive::type						topology	= Uninitialized;
-		Out< Platforms::GraphicsPipelineDescription >	result;
+		Platforms::VertexInputState		vertexInput;
+		SpecializationConstants_t		constants;	// optional
+		Platforms::EPrimitive::type		topology	= Uninitialized;
+		Out< Result >					result;
 
 	// methods
 		CreateGraphicsPipelineDescription (const Platforms::VertexInputState &vertexInput, Platforms::EPrimitive::type topology) :
@@ -410,15 +375,19 @@ namespace GpuMsg
 	//
 	// Create ComputePipelineDescription from PipelineTemplate
 	//
-	struct CreateComputePipelineDescription : _MessageBase_
+	struct CreateComputePipelineDescription : _MsgBase_
 	{
 	// types
 		using SpecializationConstants_t	= Platforms::ComputePipelineDescription::SpecializationConstants_t;
+		struct Result {
+			Platforms::ComputePipelineDescription	descr;
+			Platforms::PipelineLayoutDescription	layout;
+		};
 
 	// variables
-		Optional< uint3 >								localGroupSize;
-		SpecializationConstants_t						constants;	// optional
-		Out< Platforms::ComputePipelineDescription >	result;
+		Optional< uint3 >			localGroupSize;
+		SpecializationConstants_t	constants;	// optional
+		Out< Result >				result;
 
 	// methods
 		CreateComputePipelineDescription () {}
@@ -429,7 +398,7 @@ namespace GpuMsg
 	//
 	// Create GraphicsPipeline Module from PipelineTemplate
 	//
-	struct CreateGraphicsPipeline : _MessageBase_
+	struct CreateGraphicsPipeline : _MsgBase_
 	{
 	// types
 		using SpecializationConstants_t	= Platforms::GraphicsPipelineDescription::SpecializationConstants_t;
@@ -461,7 +430,7 @@ namespace GpuMsg
 	//
 	// Create ComputePipeline Module from PipelineTemplate
 	//
-	struct CreateComputePipeline : _MessageBase_
+	struct CreateComputePipeline : _MsgBase_
 	{
 	// types
 		using SpecializationConstants_t	= Platforms::ComputePipelineDescription::SpecializationConstants_t;

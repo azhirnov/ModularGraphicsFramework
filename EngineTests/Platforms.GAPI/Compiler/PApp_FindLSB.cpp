@@ -55,7 +55,7 @@ bool PApp::_Test_FindLSB ()
 					OUT resource_table ) );
 	
 	resource_table->Send( ModuleMsg::AttachModule{ "pipeline", pipeline });
-	resource_table->Send( GpuMsg::PipelineAttachBuffer{ "ssb", buffer, buf_size, 0_b });
+	resource_table->Send( GpuMsg::PipelineAttachBuffer{ "ssb", buffer, 0_b, buf_size });
 
 	ModuleUtils::Initialize({ cmd_buffer, buffer, pipeline, resource_table });
 
@@ -72,7 +72,7 @@ bool PApp::_Test_FindLSB ()
 
 
 	// submit and sync
-	gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
+	gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
 
 	syncManager->Send( GpuMsg::ClientWaitFence{ *fence_ctor.result });
 

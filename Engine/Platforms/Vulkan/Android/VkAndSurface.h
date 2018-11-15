@@ -6,12 +6,12 @@
 
 #if defined( GRAPHICS_API_VULKAN ) and defined( PLATFORM_ANDROID )
 
+#include "Engine/Platforms/Public/Tools/WindowHelper.h"
+
 namespace Engine
 {
 namespace PlatformVK
 {
-	using namespace Engine::Platforms;
-
 
 	//
 	// Vulkan Android Surface
@@ -29,7 +29,7 @@ namespace PlatformVK
 		VkAndSurface ();
 		~VkAndSurface ();
 
-		bool Create (vk::VkInstance instance, const AWindow_t &windowHandle, OUT vk::VkSurfaceKHR &surface);
+		bool Create (vk::VkInstance instance, const PlatformTools::WindowHelper::WinAPIWindow &, OUT vk::VkSurfaceKHR &surface);
 		void Destroy ();
 		void RequestExtensions (INOUT Array<const char*> &ext);
 	};

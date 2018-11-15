@@ -42,8 +42,7 @@ namespace PlatformVR
 											GpuMsg::GetGraphicsModules,
 											GpuMsg::ThreadBeginFrame,
 											GpuMsg::ThreadEndFrame,
-											GpuMsg::SubmitGraphicsQueueCommands,
-											GpuMsg::SubmitComputeQueueCommands,
+											GpuMsg::SubmitCommands,
 											GpuMsg::GetGraphicsSettings
 										>;
 
@@ -59,10 +58,7 @@ namespace PlatformVR
 											CompileTime::TypeListEnd
 										>;
 
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Compose,
-											ModuleMsg::Update
-										> >::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
@@ -70,9 +66,8 @@ namespace PlatformVR
 											GpuMsg::GetVRDeviceInfo,
 											GpuMsg::ThreadBeginVRFrame,
 											GpuMsg::ThreadEndVRFrame
-										> >
-										::Append< GThreadMsgList_t >
-										::Append< PrivateMsgList_t >;
+										>::Append< GThreadMsgList_t >
+										 ::Append< PrivateMsgList_t >;
 
 		using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
 											GpuMsg::ThreadBeginVRFrame,
@@ -111,7 +106,6 @@ namespace PlatformVR
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -186,7 +180,6 @@ namespace PlatformVR
 //-----------------------------------------------------------------------------
 
 
-	const TypeIdList	EmulatorVRThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	EmulatorVRThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 	static constexpr float3	eyeOffset{ 0.0f, 0.5f, 0.0f };
@@ -197,7 +190,7 @@ namespace PlatformVR
 =================================================
 */
 	EmulatorVRThread::EmulatorVRThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::VRThread &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_settings( ci.settings ),		_eyeTextureDimension( ci.eyeTextureDimension ),
 		_gpuThread( ci.gpuThread ),		_frameIndex( 0 ),				_lastFrameIndex( 0 ),
 		_isCreated( false ),			_isFrameStarted( false ),		_isOpenGL( false )
@@ -240,7 +233,7 @@ namespace PlatformVR
 */
 	EmulatorVRThread::~EmulatorVRThread ()
 	{
-		LOG( "EmulatorVRThread finalized", ELog::Debug );
+		//LOG( "EmulatorVRThread finalized", ELog::Debug );
 	}
 	
 /*
@@ -298,7 +291,7 @@ namespace PlatformVR
 		_gpuThread->Subscribe( this, &EmulatorVRThread::_GpuDeviceBeforeDestroy );
 
 		CHECK( _CopySubscriptions< GThreadMsgList_t >( _gpuThread ) );
-		CHECK( _CopySubscriptions< PrivateMsgList_t >( _gpuThread, true ) );
+		CHECK( _CopySubscriptions< PrivateMsgList_t >( _gpuThread ) );
 
 		CHECK_ERR( Module::_Link_Impl( msg ) );
 
@@ -430,7 +423,7 @@ namespace PlatformVR
 		
 
 		// submit frame rendering commands
-		GpuMsg::SubmitGraphicsQueueCommands		submit;
+		GpuMsg::SubmitCommands		submit;
 		submit.commands			= msg.commands;
 		submit.waitSemaphores	= msg.waitSemaphores;
 		submit.signalSemaphores	<< per_frame.mainFrameRendered;
@@ -680,7 +673,7 @@ namespace PlatformVR
 
 			ModulePtr	framebuffer;
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-										req_ids.graphics->framebuffer,
+										req_ids.result->graphics.framebuffer,
 										GlobalSystems(),
 										CreateInfo::GpuFramebuffer{ _eyeTextureDimension },
 										OUT framebuffer ) );
@@ -689,7 +682,7 @@ namespace PlatformVR
 			{
 				ModulePtr	color_image;
 				CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-											req_ids.graphics->image,
+											req_ids.result->graphics.image,
 											GlobalSystems(),
 											CreateInfo::GpuImage{
 												ImageDescription{
@@ -697,7 +690,7 @@ namespace PlatformVR
 													uint4( _eyeTextureDimension, 0, 0 ),
 													req_settings.result->colorFmt,
 													EImageUsage::ColorAttachment | EImageUsage::TransferSrc | EImageUsage::TransferDst,
-													MipmapLevel(1),
+													1_mipmap,
 													req_settings.result->samples
 												},
 												EGpuMemory::LocalInGPU,
@@ -713,7 +706,7 @@ namespace PlatformVR
 			{
 				ModulePtr	depth_image;
 				CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-											req_ids.graphics->image,
+											req_ids.result->graphics.image,
 											GlobalSystems(),
 											CreateInfo::GpuImage{
 												ImageDescription{
@@ -721,7 +714,7 @@ namespace PlatformVR
 													uint4( _eyeTextureDimension, 0, 0 ),
 													req_settings.result->depthStencilFmt,
 													EImageUsage::DepthStencilAttachment | EImageUsage::TransferSrc | EImageUsage::TransferDst,
-													MipmapLevel(1),
+													1_mipmap,
 													req_settings.result->samples
 												},
 												EGpuMemory::LocalInGPU,
@@ -742,7 +735,7 @@ namespace PlatformVR
 		CHECK_ERR( _Attach( "right_eye_fb", _framebuffers[1].framebuffer ) );
 
 		#ifdef GRAPHICS_API_OPENGL
-		_isOpenGL = _framebuffers[0].framebuffer->GetSupportedMessages().HasType< GpuMsg::GetGLFramebufferID >();
+		_isOpenGL = _framebuffers[0].framebuffer->SupportsAnyMessage< CompileTime::TypeListFrom< GpuMsg::GetGLFramebufferID >>();
 		#endif
 
 		_renderPass = _framebuffers[0].framebuffer->GetModuleByMsg< MessageListFrom<GpuMsg::GetRenderPassDescription> >();
@@ -762,7 +755,7 @@ namespace PlatformVR
 		_gpuThread->Send( req_ids );
 
 		CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-									req_ids.graphics->commandBuilder,
+									req_ids.result->graphics.commandBuilder,
 									GlobalSystems(),
 									CreateInfo::GpuCommandBuilder{},
 									OUT _builder ) );

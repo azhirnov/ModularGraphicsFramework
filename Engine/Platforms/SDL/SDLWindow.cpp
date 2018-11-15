@@ -24,19 +24,14 @@ namespace PlatformSDL
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Link,
-											ModuleMsg::Compose
-										> >
-										::Append< MessageListFrom<
-											ModuleMsg::OnManagerChanged,
+		using SupportedMessages_t	= MessageListFrom<
 											OSMsg::WindowSetDescription,
 											OSMsg::WindowGetDescription,
 											OSMsg::OnSDLPlatformCreated,
 											OSMsg::GetSDLWindowHandle,
 											OSMsg::GetDisplays,
 											OSMsg::GetOSModules
-										> >;
+										>;
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Update,
 											ModuleMsg::Delete,
@@ -55,7 +50,6 @@ namespace PlatformSDL
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -66,6 +60,7 @@ namespace PlatformSDL
 
 		WindowDesc			_windowDesc;
 		Ptr<SDL_Window>		_wnd;
+		uint				_wndID;
 
 		TimeProfilerD		_timer;
 
@@ -110,7 +105,6 @@ namespace PlatformSDL
 
 
 
-	const TypeIdList	SDLWindow::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SDLWindow::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -119,10 +113,9 @@ namespace PlatformSDL
 =================================================
 */
 	SDLWindow::SDLWindow (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::Window &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
-		_createInfo( ci ),
-		_requestQuit( false ),
-		_looping( false )
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
+		_createInfo{ ci },			_wndID{ UMax },
+		_requestQuit{ false },		_looping{ false }
 	{
 		SetDebugName( "SDLWindow" );
 
@@ -142,7 +135,7 @@ namespace PlatformSDL
 		_SubscribeOnMsg( this, &SDLWindow::_GetDisplays );
 		_SubscribeOnMsg( this, &SDLWindow::_GetOSModules );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( null, SDLPlatformModuleID, false );
 	}
@@ -154,7 +147,7 @@ namespace PlatformSDL
 */
 	SDLWindow::~SDLWindow ()
 	{
-		LOG( "SDLWindow finalized", ELog::Debug );
+		//LOG( "SDLWindow finalized", ELog::Debug );
 
 		CHECK( not _IsCreated() );
 		ASSERT( not _looping );
@@ -479,6 +472,8 @@ namespace PlatformSDL
 											 _windowDesc.surfaceSize.x, _windowDesc.surfaceSize.y,
 											 flags )) != null );
 
+		_wndID = SDL_GetWindowID( _wnd );
+
 		SDL_SetWindowData( _wnd, "mgf", this );
 
 		return true;
@@ -527,16 +522,36 @@ namespace PlatformSDL
 
 		while ( SDL_PollEvent( OUT &msg.event ) )
 		{
+			// check for events from different window
+			bool	other_wnd = false;
+
+			switch ( msg.event.type )
+			{
+				case SDL_WINDOWEVENT :		other_wnd = (msg.event.window.windowID != _wndID);	break;
+				case SDL_KEYDOWN :
+				case SDL_KEYUP :			other_wnd = (msg.event.key.windowID != _wndID);		break;
+				case SDL_TEXTEDITING :		other_wnd = (msg.event.edit.windowID != _wndID);	break;
+				case SDL_TEXTINPUT :		other_wnd = (msg.event.text.windowID != _wndID);	break;
+				case SDL_MOUSEMOTION :		other_wnd = (msg.event.motion.windowID != _wndID);	break;
+				case SDL_MOUSEBUTTONDOWN :
+				case SDL_MOUSEBUTTONUP :	other_wnd = (msg.event.button.windowID != _wndID);	break;
+				case SDL_MOUSEWHEEL :		other_wnd = (msg.event.wheel.windowID != _wndID);	break;
+			}
+
+			if ( other_wnd )
+			{
+				SDL_PushEvent( &msg.event );
+				return;
+			}
+
 			switch ( msg.event.type )
 			{
 				// quit //
 				case SDL_QUIT :
 				case SDL_APP_TERMINATING :
 				{
-					_requestQuit = true;
-
-					_Destroy();
-					return;
+					TODO( "" );
+					break;
 				}
 
 
@@ -592,6 +607,14 @@ namespace PlatformSDL
 							_UpdateDescription();
 							_SendEvent( OSMsg::WindowDescriptionChanged{ _windowDesc });
 							break;
+						}
+						// close
+						case SDL_WINDOWEVENT_CLOSE :
+						{
+							_requestQuit = true;
+
+							_Destroy();
+							return;
 						}
 					}
 					break;

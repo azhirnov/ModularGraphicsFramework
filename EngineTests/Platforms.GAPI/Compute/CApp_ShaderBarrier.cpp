@@ -5,9 +5,6 @@
 
 bool CApp::_Test_ShaderBarrier ()
 {
-	using Region		= GpuMsg::CmdCopyImage::Region;
-	using ImageLayers	= GpuMsg::CmdCopyImage::ImageLayers;
-	
 	CreateInfo::PipelineTemplate	pt_ci;
 	Pipelines::Create_shaderbarrier( OUT pt_ci.descr );
 
@@ -56,7 +53,7 @@ bool CApp::_Test_ShaderBarrier ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuImage{
 						ImageDescription{ EImage::Tex2D, uint4(img_dim), EPixelFormat::RGBA32F, EImageUsage::TransferDst | EImageUsage::Storage },
-						EGpuMemory::LocalInGPU,
+						EGpuMemory::LocalInGPU | EGpuMemory::Dedicated,
 						EMemoryAccess::GpuReadWrite },
 					OUT src_image ) );
 	
@@ -66,7 +63,7 @@ bool CApp::_Test_ShaderBarrier ()
 					gpuThread->GlobalSystems(),
 					CreateInfo::GpuImage{
 						ImageDescription{ EImage::Tex2D, uint4(img_dim), EPixelFormat::RGBA32F, EImageUsage::TransferDst | EImageUsage::TransferSrc | EImageUsage::Storage },
-						EGpuMemory::LocalInGPU,
+						EGpuMemory::LocalInGPU | EGpuMemory::Dedicated,
 						EMemoryAccess::GpuReadWrite },
 					OUT dst_image ) );
 
@@ -122,7 +119,7 @@ bool CApp::_Test_ShaderBarrier ()
 	// write data to staging image
 	GpuMsg::WriteToImageMemory	write_cmd{ BinArrayCRef::From(image_data), uint3(), uint3(img_dim), req_src_layout.result->rowPitch };
 	staging_src_image->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL(image_data.Size()) );
+	CHECK_ERR( *write_cmd.wasWritten == image_data.Size() );
 
 
 	// build command buffer
@@ -148,8 +145,8 @@ bool CApp::_Test_ShaderBarrier ()
 
 		cmdBuilder->Send( GpuMsg::CmdCopyImage{}.SetSource( staging_src_image, EImageLayout::TransferSrcOptimal )
 												.SetDestination( src_image, EImageLayout::TransferDstOptimal )
-												.AddRegion( ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 }, uint3(),
-															ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 }, uint3(),
+												.AddRegion( ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 }, uint3(),
+															ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 }, uint3(),
 															uint3(img_dim, 1) ));
 	}
 
@@ -196,9 +193,17 @@ bool CApp::_Test_ShaderBarrier ()
 
 		cmdBuilder->Send( GpuMsg::CmdCopyImage{}.SetSource( dst_image, EImageLayout::TransferSrcOptimal )
 												.SetDestination( staging_dst_image, EImageLayout::TransferDstOptimal )
-												.AddRegion( ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 }, uint3(),
-															ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 }, uint3(),
+												.AddRegion( ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 }, uint3(),
+															ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 }, uint3(),
 															uint3(img_dim, 1) ));
+
+		cmdBuilder->Send( GpuMsg::CmdPipelineBarrier{ EPipelineStage::Transfer, EPipelineStage::Host }
+							.AddImage({	staging_dst_image,
+										EPipelineAccess::TransferWrite,
+										EPipelineAccess::HostRead,
+										EImageLayout::TransferDstOptimal,
+										EImageLayout::General,
+										EImageAspect::Color }) );
 	}
 
 	GpuMsg::CmdEnd	cmd_end;
@@ -206,7 +211,7 @@ bool CApp::_Test_ShaderBarrier ()
 
 
 	// submit and sync
-	gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
+	gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
 
 	syncManager->Send( GpuMsg::ClientWaitFence{ *fence_ctor.result });
 

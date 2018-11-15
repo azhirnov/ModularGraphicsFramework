@@ -493,6 +493,7 @@ namespace Platforms
 
 		static constexpr bool HasDepth			(type value);
 		static constexpr bool HasStencil		(type value);
+		static constexpr bool HasDepthOrStencil	(type value);
 
 		static constexpr bool IsFloat			(type value);
 		static constexpr bool IsIntNorm			(type value);	// snorm or unorm
@@ -501,9 +502,9 @@ namespace Platforms
 
 		static constexpr uint ColorChannelsCount (type value);
 
-		static StringCRef			ToString		(type value);
-		static BitsVec<usize, 4>	BitsPerChannel	(type value);
-		static BitsU				BitPerPixel		(type value);
+		static StringCRef		ToString		(type value);
+		static Vec<BitsU, 4>	BitsPerChannel	(type value);
+		static BitsU			BitPerPixel		(type value);
 	};
 	
 
@@ -654,15 +655,15 @@ namespace Platforms
 		return not EnumEq( value, _vtypeinfo::_NORM ) and not EnumEq( value, _vtypeinfo::_UNSIGNED ) and IsFloat( value );
 	}
 
-	ND_ inline BitsVec<usize, 4>  EPixelFormat::BitsPerChannel (type value)
+	ND_ inline Vec<BitsU, 4>  EPixelFormat::BitsPerChannel (type value)
 	{
 		if ( value == Unknown ) {
-			return BitsVec<usize, 4>();
+			return Vec<BitsU, 4>();
 		}
 
 		if ( IsCompressed( value ) ) {
 			TODO( "" );
-			return BitsVec<usize, 4>( 1_bit );
+			return Vec<BitsU, 4>( 1_bit );
 		}
 		
 		usize4	size;
@@ -698,7 +699,7 @@ namespace Platforms
 			}
 		}
 
-		return BitsVec<usize, 4>( size );
+		return Vec<BitsU, 4>( size );
 	}
 		
 
@@ -750,6 +751,12 @@ namespace Platforms
 	ND_ inline constexpr bool EPixelFormat::HasStencil (type value)
 	{
 		return IsStencil( value ) or IsDepthStencil( value );
+	}
+	
+
+	ND_ inline constexpr bool EPixelFormat::HasDepthOrStencil (type value)
+	{
+		return IsDepth( value ) or IsStencil( value ) or IsDepthStencil( value );
 	}
 	
 

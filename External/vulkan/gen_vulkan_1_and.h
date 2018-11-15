@@ -71,9 +71,9 @@ typedef VkResult (VKAPI_PTR *PFN_vkGetMemoryAndroidHardwareBufferANDROID)(VkDevi
 #endif
 
 
-#define VK1_OS_FUNCTIONS( _buildFunc_ ) \
-	_buildFunc_( VkResult, vkCreateAndroidSurfaceKHR, ( VkInstance instance , const VkAndroidSurfaceCreateInfoKHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSurfaceKHR * pSurface ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetAndroidHardwareBufferPropertiesANDROID, ( VkDevice device , const struct AHardwareBuffer * buffer , VkAndroidHardwareBufferPropertiesANDROID * pProperties ) , VK_RESULT_MAX_ENUM ) \
-	_buildFunc_( VkResult, vkGetMemoryAndroidHardwareBufferANDROID, ( VkDevice device , const VkMemoryGetAndroidHardwareBufferInfoANDROID * pInfo , struct AHardwareBuffer * * pBuffer ) , VK_RESULT_MAX_ENUM ) \
+#define VK1_ANDROID_FUNCTIONS( _buildFunc_ ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkCreateAndroidSurfaceKHR, ( VkInstance instance , const VkAndroidSurfaceCreateInfoKHR * pCreateInfo , const VkAllocationCallbacks * pAllocator , VkSurfaceKHR * pSurface ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetAndroidHardwareBufferPropertiesANDROID, ( VkDevice device , const struct AHardwareBuffer * buffer , VkAndroidHardwareBufferPropertiesANDROID * pProperties ) , VK_RESULT_MAX_ENUM ) \
+	_buildFunc_( [[nodiscard]] VkResult, vkGetMemoryAndroidHardwareBufferANDROID, ( VkDevice device , const VkMemoryGetAndroidHardwareBufferInfoANDROID * pInfo , struct AHardwareBuffer * * pBuffer ) , VK_RESULT_MAX_ENUM ) \
 
 

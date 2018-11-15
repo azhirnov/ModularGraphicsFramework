@@ -17,19 +17,18 @@ namespace Scene
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											ModuleMsg::OnManagerChanged,
 											SceneMsg::GetScenePrivateClasses
-										> >;
+										>;
 		
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -56,7 +55,6 @@ namespace Scene
 
 
 	
-	const TypeIdList	SceneMainThread::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	SceneMainThread::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -65,7 +63,7 @@ namespace Scene
 =================================================
 */
 	SceneMainThread::SceneMainThread (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::SceneMain &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes )
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes )
 	{
 		SetDebugName( "SceneMainThread" );
 		
@@ -84,7 +82,7 @@ namespace Scene
 		_SubscribeOnMsg( this, &SceneMainThread::_OnManagerChanged_Empty );
 		_SubscribeOnMsg( this, &SceneMainThread::_GetScenePrivateClasses );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( null, SceneManagerModuleID, false );
 	}

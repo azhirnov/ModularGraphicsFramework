@@ -333,7 +333,7 @@ namespace PipelineCompiler
 	_OnCompilationFailed
 =================================================
 */
-	bool ShaderCompiler::_OnCompilationFailed (EShader::type, EShaderSrcFormat::type, ArrayCRef<StringCRef> source,
+	bool ShaderCompiler::_OnCompilationFailed (EShader::type, EShaderFormat::type, ArrayCRef<StringCRef> source,
 											   const ShaderIncluder &includer, INOUT String &log) const
 	{
 		// glslang errors format:
@@ -532,78 +532,77 @@ namespace PipelineCompiler
 */
 	bool ShaderCompiler::_GLSLangParse (const Config &cfg, const _ShaderData &shaderData, StringCRef baseFolder, OUT String &log, OUT _GLSLangResult &result) const
 	{
-		log.Clear();
+		using namespace glslang;
+
+		EShClient					client			= EShClientOpenGL;
+		EshTargetClientVersion		client_version	= EShTargetOpenGL_450;
+
+		EShTargetLanguage			target			= EShTargetNone;
+		EShTargetLanguageVersion	target_version	= EShTargetLanguageVersion(0);
 		
-		glslang::EShClient					client			= glslang::EShClientOpenGL;
-		glslang::EshTargetClientVersion		client_version	= glslang::EShTargetOpenGL_450;
+		uint						version			= 0;
+		uint						sh_version		= 450;		// TODO
+		EProfile					sh_profile		= ENoProfile;
+		EShSource					sh_source;
 
-		glslang::EShTargetLanguage			target			= glslang::EShTargetNone;
-		glslang::EShTargetLanguageVersion	target_version	= glslang::EShTargetLanguageVersion(0);
-
-		uint								version			= 0;
-		glslang::EShSource					sh_source;
-
-		bool								is_vulkan		= false;
-
-		switch ( cfg.source )
+		switch ( EShaderFormat::GetAPI( cfg.source ) )
 		{
-			case EShaderSrcFormat::GXSL :
-				sh_source = glslang::EShSourceGxsl;
-				version	  = GLSL_VERSION;
+			case EShaderFormat::OpenGL :
+				sh_source		= EShSourceGlsl;
+				version			= EShaderFormat::GetVersion( cfg.source );
+				sh_profile		= version >= 330 ? ECoreProfile : ENoProfile;
 				break;
 
-			case EShaderSrcFormat::GLSL :
-				sh_source = glslang::EShSourceGlsl;
-				version	  = GLSL_VERSION;
-				break;
-				
-			case EShaderSrcFormat::GXSL_Vulkan :
-				sh_source = glslang::EShSourceGxsl;
-				version	  = GLSL_VERSION;
-				is_vulkan = true;
+			case EShaderFormat::OpenGLES :
+				sh_source		= EShSourceGlsl;
+				version			= EShaderFormat::GetVersion( cfg.source );
+				sh_profile		= EEsProfile;
 				break;
 
-			case EShaderSrcFormat::GLSL_Vulkan :
-				sh_source = glslang::EShSourceGlsl;
-				version	  = GLSL_VERSION;
-				is_vulkan = true;
+			case EShaderFormat::DirectX :
+				sh_source		= EShSourceHlsl;
+				version			= EShaderFormat::GetVersion( cfg.source );
+				sh_profile		= ENoProfile;	// TODO
 				break;
 
-			case EShaderSrcFormat::GLSL_ES_2 :
-				sh_source = glslang::EShSourceGlsl;
-				version   = 200;
+			case EShaderFormat::GX_API :
+				sh_source		= EShSourceGxsl;
+				version			= EShaderFormat::GetVersion( cfg.source );
+				sh_profile		= ECoreProfile;
 				break;
 
-			case EShaderSrcFormat::GLSL_ES_3 :
-				sh_source = glslang::EShSourceGlsl;
-				version   = GLSL_ES_VERSION;
-				break;
-
-			case EShaderSrcFormat::HLSL :
-				sh_source = glslang::EShSourceHlsl;
-				version   = HLSL_VERSION;
+			case EShaderFormat::Vulkan :
+				sh_source		= EShSourceGlsl;
+				version			= EShaderFormat::GetVersion( cfg.source );
+				sh_profile		= ECoreProfile;
 				break;
 
 			default :
 				RETURN_ERR( "unsupported shader format" );
 		}
 
-		switch ( cfg.target )
+		switch ( EShaderFormat::GetAPI( cfg.target ) )
 		{
-			case EShaderDstFormat::SPIRV_Source :
-			case EShaderDstFormat::SPIRV_Binary :
+			case EShaderFormat::Vulkan :
+			case EShaderFormat::GX_API :
 			{
-				version			= VULKAN_VERSION;
-				client			= is_vulkan ? glslang::EShClientVulkan : glslang::EShClientOpenGL;
-				client_version	= is_vulkan ?
-										(VULKAN_VERSION == 110 ? glslang::EShTargetVulkan_1_1 : glslang::EShTargetVulkan_1_0) :
-										glslang::EShTargetOpenGL_450;
-				target			= glslang::EshTargetSpv;
-				target_version	= SPIRV_VERSION == 130 ? glslang::EShTargetSpv_1_3 : glslang::EShTargetSpv_1_0;
+				version			= EShaderFormat::GetAPI( cfg.source ) == EShaderFormat::GX_API ?
+									SPIRV_VERSION :
+									EShaderFormat::GetVersion( cfg.target );
+				client			= EShClientVulkan;
+				client_version	= (version == 110 ? EShTargetVulkan_1_1 : EShTargetVulkan_1_0);
+				target			= EshTargetSpv;
+				target_version	= (version == 110 ? EShTargetSpv_1_3 : EShTargetSpv_1_0);
 				break;
 			}
-			case EShaderDstFormat::GLSL_Source :
-			default :
+
+			case EShaderFormat::OpenGL :
+				if ( EShaderFormat::GetFormat( cfg.target ) == EShaderFormat::SPIRV or
+					 EShaderFormat::GetFormat( cfg.target ) == EShaderFormat::Assembler )
+				{
+					target			= EshTargetSpv;
+					target_version	= EShTargetSpv_1_0;
+				}
 				break;
 		}
 
@@ -612,37 +611,34 @@ namespace PipelineCompiler
 		TBuiltInResource	resources;	_GenerateResources( OUT resources );
 		EShLanguage			stage		= ConvertShaderType( shaderData.type );
 		auto&				shader		= result.shader;
-		bool				has_version	= false;
-		const String		version_str	= "#version "_str << GLSL_VERSION << " core\n";
 
-		shader = new glslang::TShader( stage );
-
-		for (auto& src : shaderData.src)
-		{
+		for (auto& src : shaderData.src) {
 			sources << (src.Empty() ? "" : src.cstr());
-
-			if ( src.HasSubString( "#version" ) )
-				has_version |= true;
-		}
-		
-		// add version
-		if ( not has_version ) {
-			sources.PushFront( version_str.cstr() );
 		}
 
 		// parse shader
 		const char *	entry_point	= shaderData.entry.Empty() ? "main" : shaderData.entry.cstr();
 		ShaderIncluder	includer	{ baseFolder };
 
+		shader = new TShader( stage );
 		shader->setStrings( sources.ptr(), int(sources.Count()) );
 		shader->setEntryPoint( entry_point );
 		shader->setEnvInput( sh_source, stage, client, version );
 		shader->setEnvClient( client, client_version );
 		shader->setEnvTarget( target, target_version );
+		
+		shader->setAutoMapLocations( true );
+		shader->setAutoMapBindings( true );
+
+		// for '#include' in shader
 		shader->getIntermediate()->addRequestedExtension( "GL_GOOGLE_include_directive" );
 		shader->getIntermediate()->addRequestedExtension( "GL_GOOGLE_cpp_style_line_directive" );
 
-		if ( not shader->parse( &resources, GLSL_VERSION, false, messages, includer ) )
+		// for vulkan compatibility
+		shader->getIntermediate()->addRequestedExtension( "GL_ARB_separate_shader_objects" );
+		shader->getIntermediate()->addRequestedExtension( "GL_ARB_shading_language_420pack" );
+
+		if ( not shader->parse( &resources, sh_version, sh_profile, false, true, messages, includer ) )
 		{
 			log << shader->getInfoLog();
 			_OnCompilationFailed( shaderData.type, cfg.source, shaderData.src, includer, INOUT log );
@@ -669,6 +665,8 @@ namespace PipelineCompiler
 									const Config &cfg, OUT String &log, OUT BinaryArray &result)
 	{
 		CHECK_ERR( not source.Empty() and not entryPoint.Empty() );
+		CHECK_ERR( EShaderFormat::IsValid( cfg.source ) );
+		CHECK_ERR( EShaderFormat::IsValid( cfg.target ) );
 
 		log.Clear();
 		result.Clear();
@@ -678,17 +676,81 @@ namespace PipelineCompiler
 		data.src	= source;
 		data.type	= shaderType;
 
-		switch ( cfg.target )
+		switch ( EShaderFormat::GetApiFormat( cfg.target ) )
 		{
-			case EShaderDstFormat::GLSL_Source :
-			//case EShaderDstFormat::GLSL_VulkanSource :
-			//case EShaderDstFormat::GLSL_ES_Source :
+			case EShaderFormat::ESSL :
+			case EShaderFormat::ESSL_Bin :
+			case EShaderFormat::GLSL :
+			case EShaderFormat::GLSL_Bin :
+			case EShaderFormat::GXSL :
+			case EShaderFormat::VKSL :
 			{
-				switch ( cfg.source )
+				CHECK_ERR( _TranslateToGLSL( data, baseFolder, cfg, OUT log, OUT result ) );
+				break;
+			}
+
+			case EShaderFormat::VK_SPIRV :
+			case EShaderFormat::VK_SPIRV_Asm :
+			case EShaderFormat::GL_SPIRV :
+			case EShaderFormat::GL_SPIRV_Asm :
+			case EShaderFormat::ES_SPIRV :
+			case EShaderFormat::ES_SPIRV_Asm :
+			case EShaderFormat::CL_SPIRV :
+			{
+				CHECK_ERR( _TranslateToSPV( data, baseFolder, cfg, OUT log, OUT result ) );
+				break;
+			}
+				
+			case EShaderFormat::CL_Src :
+			case EShaderFormat::CL_Asm :
+			{
+				CHECK_ERR( _TranslateToCL( data, baseFolder, cfg, OUT log, OUT result ) );
+				break;
+			}
+
+			case EShaderFormat::Software | EShaderFormat::CPP_Invocable :
+			{
+				CHECK_ERR( _TranslateToCPP( data, baseFolder, cfg, OUT log, OUT result ) );
+				break;
+			}
+
+			case EShaderFormat::HLSL :
+			case EShaderFormat::HLSL_BC :
+			case EShaderFormat::HLSL_IL :
+			{
+				CHECK_ERR( _TranslateToHLSL( data, baseFolder, cfg, OUT log, OUT result ) );
+				break;
+			}
+
+			case EShaderFormat::Metal :
+			case EShaderFormat::CUDA :
+			default :
+				RETURN_ERR( "unsupported shader compilation target!" );
+		}
+
+		return true;
+	}
+	
+/*
+=================================================
+	_TranslateToGLSL
+=================================================
+*/
+	bool ShaderCompiler::_TranslateToGLSL (const _ShaderData &data, StringCRef baseFolder, const Config &cfg, OUT String &log, OUT BinaryArray &result)
+	{
+		log << "Translate " << EShaderFormat::ToString( cfg.source ) << " to " << EShaderFormat::ToString( cfg.target ) << '\n';
+
+		switch ( EShaderFormat::GetApiFormat( cfg.target ) )
+		{
+			case EShaderFormat::ESSL :
+			case EShaderFormat::GLSL :
+			case EShaderFormat::VKSL :
+			{
+				switch ( EShaderFormat::GetApiFormat( cfg.source ) )
 				{
-					case EShaderSrcFormat::GLSL :
-					//case EShaderSrcFormat::GLSL_ES_2 :
-					//case EShaderSrcFormat::GLSL_ES_3 :
+					case EShaderFormat::ESSL :
+					case EShaderFormat::GLSL :
+					case EShaderFormat::VKSL :
 					{
 						ASSERT( not cfg.optimize and "not supported" );
 
@@ -697,7 +759,7 @@ namespace PipelineCompiler
 						else
 							return _CopySource( data, OUT result );
 					}
-					case EShaderSrcFormat::GXSL :
+					case EShaderFormat::GXSL :
 					{
 						_GLSLangResult	glslang_data;
 
@@ -706,34 +768,20 @@ namespace PipelineCompiler
 						CHECK_COMP( _TranslateGXSLtoGLSL( cfg, glslang_data, OUT log, OUT result ) );
 						return true;
 					}
-					//case EShaderSrcFormat::GLSL_Vulkan :
-					case EShaderSrcFormat::GXSL_Vulkan :
-					{
-						_GLSLangResult	glslang_data;
-						Config			cfg2 = cfg;
-						
-						cfg2.target = EShaderDstFormat::SPIRV_Source;
-						CHECK_COMP( _GLSLangParse( cfg2, data, baseFolder, OUT log, OUT glslang_data ) );
-						CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
-						
-						cfg2.target = cfg.target;
-						CHECK_COMP( _TranslateGXSLtoGLSL( cfg2, glslang_data, OUT log, OUT result ) );
-						return true;
-					}
 					default :
 						RETURN_ERR( "unsupported combination!" );
 				}
 			}
 
-			case EShaderDstFormat::GLSL_Binary :
-			//case EShaderDstFormat::GLSL_ES_Binary :
+			case EShaderFormat::GLSL_Bin :
+			case EShaderFormat::ESSL_Bin :
 			{
 				Config		cfg2	= cfg;
 				cfg2.skipExternals	= false;
-				cfg2.target			= EShaderDstFormat::GLSL_Source;
+				cfg2.target			= EShaderFormat::IntermediateSrc;
 
 				BinaryArray	temp;
-				CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
+				CHECK_COMP( _TranslateToGLSL( data, baseFolder, cfg2, OUT log, OUT temp ) );
 
 				_ShaderData	data2 = data;
 				data2.src.Clear();
@@ -741,171 +789,58 @@ namespace PipelineCompiler
 				data2.entry = "main";
 
 				cfg2		= cfg;
-				cfg2.source	= (cfg.target == EShaderDstFormat::GLSL_Binary ? EShaderSrcFormat::GLSL : EShaderSrcFormat::GLSL_ES_3);
+				cfg2.source	= EShaderFormat::IntermediateSrc;
 
 				CHECK_COMP( _CompileGLSL( cfg2, data2, OUT log, OUT result ) );
 				return true;
 			}
+		}
 
-			case EShaderDstFormat::SPIRV_Binary :
-			case EShaderDstFormat::SPIRV_Source :
-			{
-				Config		cfg2	= cfg;
-				cfg2.optimize		= false;
-				cfg2.skipExternals	= false;
-				cfg2.target			= EShaderDstFormat::GLSL_Source;
-				cfg2.typeReplacer	= Uninitialized;
+		RETURN_ERR( "not supported" );
+	}
+		
+/*
+=================================================
+	_TranslateToHLSL
+=================================================
+*/
+	bool ShaderCompiler::_TranslateToHLSL (const _ShaderData &data, StringCRef baseFolder, const Config &cfg, OUT String &log, OUT BinaryArray &result)
+	{
+		log << "Translate " << EShaderFormat::ToString( cfg.source ) << " to " << EShaderFormat::ToString( cfg.target ) << '\n';
 
-				BinaryArray	temp;
-				CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
-				
-				_ShaderData	data2 = data;
-				data2.src.Clear();
-				data2.src << StringCRef::From( temp );
-				data2.entry = "main";
-
-				cfg2		= cfg;
-				cfg2.source	= EShaderSrcFormat::GLSL;
-
-				_GLSLangResult	glslang_data;
-				CHECK_COMP( _GLSLangParse( cfg2, data2, baseFolder, OUT log, OUT glslang_data ) );
-				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
-
-				cfg2.typeReplacer = Uninitialized;
-				CHECK_COMP( _CompileSPIRV( cfg2, glslang_data, OUT log, OUT result ) );
-
-				return true;
-			}
-				
-			case EShaderDstFormat::CL_Source :
+		switch ( EShaderFormat::GetApiFormat( cfg.target ) )
+		{
+			case EShaderFormat::HLSL :
 			{
 				Config		cfg2	= cfg;
 				_ShaderData	data2	= data;
 				BinaryArray	temp;
 
-				switch ( cfg.source )
+				switch ( EShaderFormat::GetApiFormat( cfg.source ) )
 				{
-					case EShaderSrcFormat::CL :
+					case EShaderFormat::HLSL :
 						CHECK_COMP( not cfg.typeReplacer );
 						return _CopySource( data, OUT result );
 
-					case EShaderSrcFormat::GXSL :
-					case EShaderSrcFormat::GXSL_Vulkan :
+					case EShaderFormat::GXSL :
+					case EShaderFormat::GLSL :
 						break;
 
+					// try to translate from any language to GLSL
 					default :
 					{
 						cfg2.skipExternals	= false;
-						cfg2.target			= EShaderDstFormat::GLSL_Source;
+						cfg2.target			= EShaderFormat::IntermediateSrc;
 						cfg2.typeReplacer	= Uninitialized;
 
-						CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
+						CHECK_COMP( _TranslateToGLSL( data, baseFolder, cfg2, OUT log, OUT temp ) );
 
 						data2.src.Clear();
 						data2.src << StringCRef::From( temp );
 						data2.entry = "main";
 
 						cfg2				= cfg;
-						cfg2.source			= EShaderSrcFormat::GLSL;
-						cfg2.typeReplacer	= cfg.typeReplacer;
-					}
-				}
-
-				_GLSLangResult	glslang_data;
-				CHECK_COMP( _GLSLangParse( cfg2, data2, baseFolder, OUT log, OUT glslang_data ) );
-				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
-				CHECK_COMP( _TranslateGXSLtoCL( cfg2, glslang_data, OUT log, OUT result ) );
-				return true;
-			}
-
-			case EShaderDstFormat::CL_Binary :
-			{
-				BinaryArray	temp;
-				_ShaderData	data2 = data;
-				Config		cfg2  = cfg;
-
-				cfg2.skipExternals	= false;
-				cfg2.target			= EShaderDstFormat::CL_Source;
-
-				CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
-
-				data2.src.Clear();
-				data2.src << StringCRef::From( temp );
-				data2.entry = "main";
-
-				cfg2				= cfg;
-				cfg2.source			= EShaderSrcFormat::CL;
-				cfg2.typeReplacer	= Uninitialized;
-
-				CHECK_COMP( _CompileCL( cfg2, data2, OUT log, OUT result ) );
-				return true;
-			}
-
-			case EShaderDstFormat::CPP_Module :
-			{
-				Config		cfg2	= cfg;
-				_ShaderData	data2	= data;
-				BinaryArray	temp;
-
-				switch ( cfg.source )
-				{
-					case EShaderSrcFormat::GXSL :
-					case EShaderSrcFormat::GXSL_Vulkan :
-						break;
-
-					default :
-					{
-						cfg2.skipExternals	= false;
-						cfg2.target			= EShaderDstFormat::GLSL_Source;
-						cfg2.typeReplacer	= Uninitialized;
-
-						CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
-
-						data2.src.Clear();
-						data2.src << StringCRef::From( temp );
-						data2.entry = "main";
-
-						cfg2				= cfg;
-						cfg2.source			= EShaderSrcFormat::GLSL;
-						cfg2.typeReplacer	= cfg.typeReplacer;
-					}
-				}
-				
-				_GLSLangResult	glslang_data;
-				CHECK_COMP( _GLSLangParse( cfg2, data2, baseFolder, OUT log, OUT glslang_data ) );
-				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
-				CHECK_COMP( _TranslateGXSLtoCPP( cfg2, glslang_data, OUT log, OUT result ) );
-				return true;
-			}
-				
-			case EShaderDstFormat::HLSL_Source :
-			{
-				Config		cfg2	= cfg;
-				_ShaderData	data2	= data;
-				BinaryArray	temp;
-
-				switch ( cfg.source )
-				{
-					case EShaderSrcFormat::GLSL :
-					case EShaderSrcFormat::GLSL_Vulkan :
-					case EShaderSrcFormat::GXSL :
-					case EShaderSrcFormat::GXSL_Vulkan :
-						break;
-
-					default :
-					{
-						cfg2.skipExternals	= false;
-						cfg2.target			= EShaderDstFormat::GLSL_Source;
-						cfg2.typeReplacer	= Uninitialized;
-
-						CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
-
-						data2.src.Clear();
-						data2.src << StringCRef::From( temp );
-						data2.entry = "main";
-
-						cfg2				= cfg;
-						cfg2.source			= EShaderSrcFormat::GLSL;
+						cfg2.source			= EShaderFormat::IntermediateSrc;
 						cfg2.typeReplacer	= cfg.typeReplacer;
 					}
 				}
@@ -917,46 +852,288 @@ namespace PipelineCompiler
 				return true;
 			}
 
-			case EShaderDstFormat::HLSL_Binary :
+			case EShaderFormat::HLSL_BC :
+			case EShaderFormat::HLSL_IL :	// TODO
 			{
 				_ShaderData	data2 = data;
 				Config		cfg2  = cfg;
 				BinaryArray	temp;
 				
-				switch ( cfg.source )
+				if ( cfg.source == EShaderFormat::HLSL_11_BC )
 				{
-					case EShaderSrcFormat::HLSL :
+					CHECK_COMP( not cfg.typeReplacer );
+					return _CopySource( data, OUT result );
+				}
+				else
+				if ( cfg.source == EShaderFormat::HLSL_11 )
+				{
+					// skip
+				}
+				else
+				// try to translate from any language to HLSL
+				{
+					cfg2.skipExternals	= false;
+					cfg2.target			= EShaderFormat::HLSL_11;
+
+					CHECK_COMP( _TranslateToHLSL( data, baseFolder, cfg2, OUT log, OUT temp ) );
+
+					data2.src.Clear();
+					data2.src << StringCRef::From( temp );
+					data2.entry = "main";
+
+					cfg2				= cfg;
+					cfg2.source			= EShaderFormat::HLSL_11;
+					cfg2.typeReplacer	= Uninitialized;
+				}
+
+				CHECK_COMP( _CompileHLSL( cfg2, data2, OUT log, OUT result ) );
+				return true;
+			}
+		}
+
+		RETURN_ERR( "not supported" );
+	}
+		
+/*
+=================================================
+	_TranslateToSPV
+=================================================
+*/
+	bool ShaderCompiler::_TranslateToSPV (const _ShaderData &data, StringCRef baseFolder, const Config &cfg, OUT String &log, OUT BinaryArray &result)
+	{
+		log << "Translate " << EShaderFormat::ToString( cfg.source ) << " to " << EShaderFormat::ToString( cfg.target ) << '\n';
+
+		switch ( EShaderFormat::GetApiFormat( cfg.target ) )
+		{
+			case EShaderFormat::VK_SPIRV :
+			case EShaderFormat::GL_SPIRV :
+			{
+				Config		cfg2	= cfg;
+				_ShaderData	data2	= data;
+				BinaryArray	temp;
+				
+				switch ( EShaderFormat::GetApiFormat( cfg.source ) )
+				{
+					case EShaderFormat::VK_SPIRV :
+					case EShaderFormat::GL_SPIRV :
+						CHECK_COMP( not cfg.typeReplacer );
+						return _CopySource( data, OUT result );
+
+					case EShaderFormat::VK_SPIRV_Asm :
+					case EShaderFormat::GL_SPIRV_Asm :
+						CHECK_COMP( not cfg.typeReplacer );
+						CHECK_COMP( data.src.Count() == 1 );
+						return _CompileSPIRVAsm( cfg, data.src.Front(), OUT log, OUT result );
+
+					case EShaderFormat::HLSL :
+						RETURN_ERR( "not supported, yet" );
+
+					case EShaderFormat::GLSL :
+					case EShaderFormat::VKSL :
+					case EShaderFormat::GXSL :
+						break;
+
+					/*case EShaderFormat::GXSL :
+					{
+						cfg2.optimize		= false;
+						cfg2.skipExternals	= false;
+						cfg2.target			= EShaderFormat::GLSL_450;
+						cfg2.typeReplacer	= Uninitialized;
+
+						CHECK_COMP( _TranslateToGLSL( data, baseFolder, cfg2, OUT log, OUT temp ) );
+
+						data2 = data;
+						data2.src.Clear();
+						data2.src << StringCRef::From( temp );
+						data2.entry = "main";
+
+						cfg2		= cfg;
+						cfg2.source	= (cfg.source == EShaderFormat::GXSL_Vulkan ? EShaderFormat::GLSL_Vulkan : EShaderFormat::GLSL);
+						break;
+					}*/
+
+					default :
+						RETURN_ERR( "not supported" );
+				}
+				
+				_GLSLangResult	glslang_data;
+				CHECK_COMP( _GLSLangParse( cfg2, data2, baseFolder, OUT log, OUT glslang_data ) );
+				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
+
+				cfg2.typeReplacer = Uninitialized;
+				CHECK_COMP( _CompileGLSLtoSPIRV( cfg2, glslang_data, OUT log, OUT result ) );
+
+				return true;
+			}
+			
+			case EShaderFormat::VK_SPIRV_Asm :
+			case EShaderFormat::GL_SPIRV_Asm :
+			{
+				switch ( EShaderFormat::GetApiFormat( cfg.source ) )
+				{
+					case EShaderFormat::VK_SPIRV_Asm :
+					case EShaderFormat::GL_SPIRV_Asm :
+						CHECK_COMP( not cfg.typeReplacer );
+						return _CopySource( data, OUT result );
+					
+					case EShaderFormat::VK_SPIRV :
+					case EShaderFormat::GL_SPIRV :
+						CHECK_COMP( not cfg.typeReplacer );
+						return _DisasambleSPIRV( cfg, ArrayCRef<uint>::From( data.src.Front() ), OUT log, OUT result );
+					
+					case EShaderFormat::GLSL :
+					case EShaderFormat::GXSL :
+					case EShaderFormat::VKSL :
+					{
+						Config		cfg2	= cfg;
+						BinaryArray	temp;
+
+						cfg2.target = EShaderFormat::GetApiVersion( cfg.target ) | EShaderFormat::SPIRV;
+
+						CHECK_ERR( _TranslateToSPV( data, baseFolder, cfg2, OUT log, OUT temp ) );
+						
+						cfg2.typeReplacer	= Uninitialized;
+						cfg2.source			= cfg2.target;
+						cfg2.target			= cfg.target;
+						return _DisasambleSPIRV( cfg2, ArrayCRef<uint>::From( temp ), OUT log, OUT result );
+					}
+
+					default :
+						RETURN_ERR( "not supported" );
+				}
+			}
+		}
+
+		RETURN_ERR( "not supported" );
+	}
+		
+/*
+=================================================
+	_TranslateToCL
+=================================================
+*/
+	bool ShaderCompiler::_TranslateToCL (const _ShaderData &data, StringCRef baseFolder, const Config &cfg, OUT String &log, OUT BinaryArray &result)
+	{
+		log << "Translate " << EShaderFormat::ToString( cfg.source ) << " to " << EShaderFormat::ToString( cfg.target ) << '\n';
+
+		switch ( EShaderFormat::GetApiFormat( cfg.target ) )
+		{
+			case EShaderFormat::CL_Src :
+			{
+				Config		cfg2	= cfg;
+				_ShaderData	data2	= data;
+				BinaryArray	temp;
+				
+				switch ( EShaderFormat::GetApiFormat( cfg.source ) )
+				{
+					case EShaderFormat::CL_Src :
+						CHECK_COMP( not cfg.typeReplacer );
+						return _CopySource( data, OUT result );
+
+					case EShaderFormat::GLSL :
+					case EShaderFormat::GXSL :
+					case EShaderFormat::VKSL :
 						break;
 
 					default :
 					{
 						cfg2.skipExternals	= false;
-						cfg2.target			= EShaderDstFormat::HLSL_Source;
+						cfg2.target			= EShaderFormat::IntermediateSrc;
+						cfg2.typeReplacer	= Uninitialized;
 
-						CHECK_COMP( Translate( shaderType, source, entryPoint, baseFolder, cfg2, OUT log, OUT temp ) );
+						CHECK_COMP( _TranslateToGLSL( data, baseFolder, cfg2, OUT log, OUT temp ) );
 
 						data2.src.Clear();
 						data2.src << StringCRef::From( temp );
 						data2.entry = "main";
 
 						cfg2				= cfg;
-						cfg2.source			= EShaderSrcFormat::HLSL;
-						cfg2.typeReplacer	= Uninitialized;
+						cfg2.source			= EShaderFormat::IntermediateSrc;
+						cfg2.typeReplacer	= cfg.typeReplacer;
 					}
 				}
 
-				CHECK_COMP( _CompileHLSL( cfg2, data2, OUT log, OUT result ) );
+				_GLSLangResult	glslang_data;
+				CHECK_COMP( _GLSLangParse( cfg2, data2, baseFolder, OUT log, OUT glslang_data ) );
+				CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
+				CHECK_COMP( _TranslateGXSLtoCL( cfg2, glslang_data, OUT log, OUT result ) );
 				return true;
 			}
 
-			case EShaderDstFormat::Metal_Source :
-			case EShaderDstFormat::Metal_Binary :
-			default :
-				RETURN_ERR( "unsupported shader compilation target!" );
+			case EShaderFormat::CL_Asm :
+			{
+				BinaryArray	temp;
+				_ShaderData	data2 = data;
+				Config		cfg2  = cfg;
+
+				cfg2.skipExternals	= false;
+				cfg2.target			= EShaderFormat::CL_Src;
+
+				CHECK_COMP( _TranslateToCL( data, baseFolder, cfg2, OUT log, OUT temp ) );
+
+				data2.src.Clear();
+				data2.src << StringCRef::From( temp );
+				data2.entry = "main";
+
+				cfg2				= cfg;
+				cfg2.source			= EShaderFormat::CL_Src;
+				cfg2.typeReplacer	= Uninitialized;
+
+				CHECK_COMP( _CompileCL( cfg2, data2, OUT log, OUT result ) );
+				return true;
+			}
 		}
-		return true;
+
+		RETURN_ERR( "not supported" );
 	}
 	
+/*
+=================================================
+	_TranslateToCPP
+=================================================
+*/
+	bool ShaderCompiler::_TranslateToCPP (const _ShaderData &data, StringCRef baseFolder, const Config &cfg, OUT String &log, OUT BinaryArray &result)
+	{
+		log << "Translate " << EShaderFormat::ToString( cfg.source ) << " to " << EShaderFormat::ToString( cfg.target ) << '\n';
+
+		CHECK_ERR( cfg.target == EShaderFormat::Soft_100_Exe );
+
+		Config		cfg2	= cfg;
+		_ShaderData	data2	= data;
+		BinaryArray	temp;
+
+		switch ( EShaderFormat::GetApiFormat( cfg.source ) )
+		{
+			case EShaderFormat::GLSL :
+			case EShaderFormat::GXSL :
+			case EShaderFormat::VKSL :
+				break;
+
+			default :
+			{
+				cfg2.skipExternals	= false;
+				cfg2.target			= EShaderFormat::IntermediateSrc;
+				cfg2.typeReplacer	= Uninitialized;
+
+				CHECK_COMP( _TranslateToGLSL( data, baseFolder, cfg2, OUT log, OUT temp ) );
+
+				data2.src.Clear();
+				data2.src << StringCRef::From( temp );
+				data2.entry = "main";
+
+				cfg2				= cfg;
+				cfg2.source			= EShaderFormat::IntermediateSrc;
+				cfg2.typeReplacer	= cfg.typeReplacer;
+			}
+		}
+				
+		_GLSLangResult	glslang_data;
+		CHECK_COMP( _GLSLangParse( cfg2, data2, baseFolder, OUT log, OUT glslang_data ) );
+		CHECK_COMP( _ReplaceTypes( glslang_data, cfg2 ) );
+		CHECK_COMP( _TranslateGXSLtoCPP( cfg2, glslang_data, OUT log, OUT result ) );
+		return true;
+	}
+
 /*
 =================================================
 	_CopySource
@@ -982,17 +1159,18 @@ namespace PipelineCompiler
 	Validate
 =================================================
 */
-	bool ShaderCompiler::Validate (EShaderDstFormat::type shaderFmt, EShader::type shaderType, BinArrayCRef data)
+	bool ShaderCompiler::Validate (EShaderFormat::type shaderFmt, EShader::type shaderType, BinArrayCRef data)
 	{
-		switch ( shaderFmt )
+		switch ( EShaderFormat::GetApiFormat( shaderFmt ) )
 		{
-			case EShaderDstFormat::GLSL_Source :	return _ValidateGLSLSource( shaderType, StringCRef::From( data ) );
-			case EShaderDstFormat::GLSL_Binary :	return _ValidateGLSLBinary( shaderType, data );
-			case EShaderDstFormat::CL_Source :		return _ValidateCLSource( shaderType, StringCRef::From( data ) );
-			case EShaderDstFormat::CL_Binary :		return _ValidateCLBinary( shaderType, data );
-			case EShaderDstFormat::HLSL_Source :	return _ValidateHLSLSource( shaderType, StringCRef::From( data ) );
-			case EShaderDstFormat::HLSL_Binary :	return _ValidateHLSLBinary( shaderType, data );
-			case EShaderDstFormat::SPIRV_Binary :	return _ValidateSPIRV( shaderType, data );
+			case EShaderFormat::GLSL :			return _ValidateGLSLSource( shaderType, StringCRef::From( data ) );
+			case EShaderFormat::GLSL_Bin :		return _ValidateGLSLBinary( shaderType, data );
+			case EShaderFormat::CL_Src :		return _ValidateCLSource( shaderType, StringCRef::From( data ) );
+			case EShaderFormat::CL_Asm :		return _ValidateCLBinary( shaderType, data );
+			case EShaderFormat::HLSL :			return _ValidateHLSLSource( shaderType, StringCRef::From( data ) );
+			case EShaderFormat::HLSL_BC :		return _ValidateHLSLBinary( shaderType, data );
+			case EShaderFormat::VK_SPIRV_Asm :
+			case EShaderFormat::GL_SPIRV_Asm :	return _ValidateSPIRV( shaderType, shaderFmt, data );
 		}
 		return true;
 	}

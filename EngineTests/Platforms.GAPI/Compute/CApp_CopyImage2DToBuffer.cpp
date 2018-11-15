@@ -4,8 +4,7 @@
 
 bool CApp::_Test_CopyImage2DToBuffer ()
 {
-	using ImageLayers	= GpuMsg::CmdCopyImageToBuffer::ImageLayers;
-	using Pixel			= ubyte4;
+	using Pixel		= ubyte4;
 
 	const uint2		img_dim		{125, 125};
 	const uint2		img2_dim	= img_dim * 2;
@@ -20,7 +19,7 @@ bool CApp::_Test_CopyImage2DToBuffer ()
 	
 	const uint		img_align		= 1;
 	const BytesU	buf_align		= 4_b;
-	const BytesUL	buf_row_pitch	= BytesUL(AlignToLarge( img2_dim.x * sizeof(Pixel), buf_align ));
+	const BytesU	buf_row_pitch	= BytesU(AlignToLarge( img2_dim.x * sizeof(Pixel), buf_align ));
 	const uint		buf_row_length	= uint(buf_row_pitch / sizeof(Pixel));
 	const usize		buf_size		= usize(buf_row_pitch * img2_dim.y);
 
@@ -73,7 +72,7 @@ bool CApp::_Test_CopyImage2DToBuffer ()
 	// write data to image
 	GpuMsg::WriteToImageMemory	write_cmd{ image_data, uint3(), uint3(img_dim), req_layout.result->rowPitch };
 	src_image->Send( write_cmd );
-	CHECK_ERR( *write_cmd.wasWritten == BytesUL(image_data.Size()) );
+	CHECK_ERR( *write_cmd.wasWritten == image_data.Size() );
 
 
 	// build command buffer
@@ -94,14 +93,14 @@ bool CApp::_Test_CopyImage2DToBuffer ()
 									 0_b, BytesU(buf_size) }) );
 
 	cmdBuilder->Send( GpuMsg::CmdCopyImageToBuffer{ src_image, EImageLayout::TransferSrcOptimal, dst_buffer }
-						.AddRegion( BytesUL(dst_off1.x * sizeof(Pixel) + dst_off1.y * buf_row_pitch),
+						.AddRegion( BytesU(dst_off1.x * sizeof(Pixel) + dst_off1.y * buf_row_pitch),
 									buf_row_length, img2_dim.y,
-									ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 },
+									ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 },
 									src_off1,
 									size1 )
-						.AddRegion( BytesUL(dst_off2.x * sizeof(Pixel) + dst_off2.y * buf_row_pitch),
+						.AddRegion( BytesU(dst_off2.x * sizeof(Pixel) + dst_off2.y * buf_row_pitch),
 									buf_row_length, img2_dim.y,
-									ImageLayers{ EImageAspect::Color, MipmapLevel(0), ImageLayer(0), 1 },
+									ImageRange{ EImageAspect::Color, 0_mipmap, 0_layer, 1 },
 									src_off2,
 									size2 ));
 	
@@ -110,7 +109,7 @@ bool CApp::_Test_CopyImage2DToBuffer ()
 
 
 	// submit and sync
-	gpuThread->Send( GpuMsg::SubmitComputeQueueCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
+	gpuThread->Send( GpuMsg::SubmitCommands{ *cmd_end.result }.SetFence( *fence_ctor.result ));
 
 	syncManager->Send( GpuMsg::ClientWaitFence{ *fence_ctor.result });
 

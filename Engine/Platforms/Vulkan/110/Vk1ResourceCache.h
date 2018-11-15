@@ -12,6 +12,7 @@
 #include "Engine/Platforms/Public/GPU/Pipeline.h"
 #include "Engine/Platforms/Public/GPU/Framebuffer.h"
 #include "Engine/Platforms/Public/GPU/RenderPass.h"
+#include "Engine/Platforms/Public/GPU/Query.h"
 #include "Engine/Base/Modules/MessageCache.h"
 #include "Core/STL/CompileTime/CompileTimeDebug.h"
 
@@ -36,6 +37,7 @@ namespace PlatformVK
 		using CmdBufferCache_t		= MessageCache< GpuMsg::GetVkCommandBufferID >;
 		using ResTableCache_t		= MessageCache< GpuMsg::GetVkPipelineLayoutID, GpuMsg::GetVkPipelineResourceTableID >;
 		using RenderPassCache_t		= MessageCache< GpuMsg::GetVkRenderPassID, GpuMsg::GetRenderPassDescription >;
+		using QueryPoolCache_t		= MessageCache< GpuMsg::GetVkQueryPoolID, GpuMsg::GetQueryPoolDescription >;
 
 
 	// variables
@@ -48,6 +50,7 @@ namespace PlatformVK
 		CPipelineCache_t	_cpipelineCache;
 		CmdBufferCache_t	_cmdBufferCache;
 		ResTableCache_t		_resTableCache;
+		QueryPoolCache_t	_queryPoolCache;
 
 
 	// methods
@@ -94,6 +97,11 @@ namespace PlatformVK
 			return _renderPassCache.Get( mod );
 		}
 
+		ND_ QueryPoolCache_t::CacheData_t const&  GetQueryPoolID (const ModulePtr &mod) const
+		{
+			return _queryPoolCache.Get( mod );
+		}
+
 		void Erase (const ModulePtr &mod)
 		{
 			_imageCache.Erase( mod );
@@ -104,6 +112,7 @@ namespace PlatformVK
 			_cpipelineCache.Erase( mod );
 			_cmdBufferCache.Erase( mod );
 			_resTableCache.Erase( mod );
+			_queryPoolCache.Erase( mod );
 		}
 	};
 

@@ -135,7 +135,7 @@ namespace GpuMsg
 	//
 	// Get Sampler Description
 	//
-	struct GetSamplerDescription : _MessageBase_
+	struct GetSamplerDescription : _MsgBase_
 	{
 		Out< Platforms::SamplerDescription >		result;
 	};

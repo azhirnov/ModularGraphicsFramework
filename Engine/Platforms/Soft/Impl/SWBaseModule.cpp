@@ -17,9 +17,8 @@ namespace PlatformSW
 */
 	SWBaseModule::SWBaseModule   (const GlobalSystemsRef gs,
 								  const ModuleConfig &config,
-								  const TypeIdList *msgTypes,
 								  const TypeIdList *eventTypes) :
-		Module( gs, config, msgTypes, eventTypes )
+		Module( gs, config, eventTypes )
 	{
 	}
 	
@@ -56,7 +55,7 @@ namespace PlatformSW
 */
 	bool SWBaseModule::_DeviceBeforeDestroy (const GpuMsg::DeviceBeforeDestroy &)
 	{
-		_SendMsg( ModuleMsg::Delete{} );
+		Send( ModuleMsg::Delete{} );
 
 		_swDevice = null;
 		return true;

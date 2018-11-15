@@ -85,7 +85,7 @@ namespace PipelineCompiler
 		}
 
 		// mark place for c++ source
-		if ( constCfg.target[ EShaderDstFormat::CPP_Module ] )
+		if ( constCfg.targets.IsExist( EShaderFormat::Soft_100_Exe ) )
 		{
 			src << ser->Comment( "C++ shader" );
 		}
@@ -97,7 +97,7 @@ namespace PipelineCompiler
 		src << ser->DeclFunction( "void", "Create_"_str << Name(), {{"PipelineTemplateDescription&", "descr"}} );
 		src << ser->BeginScope();
 		src << ser->AssignVariable( "\tdescr", "PipelineTemplateDescription()" );
-		src << ser->ToString( "\tdescr.supportedShaders", EShader::Compute ) << '\n';
+		src << ser->ToString( "\tdescr.supportedShaders", EShader::bits() | EShader::Compute ) << '\n';
 		src << ser->ToString( "\tdescr.localGroupSize", localGroupSize );
 
 		CHECK_ERR( _ConvertLayout( "\tdescr.layout", INOUT src, ser ) );
@@ -121,21 +121,18 @@ namespace PipelineCompiler
 	{
 		CHECK_ERR( shader.IsEnabled() );
 
-		CompiledShader	compiled;
+		CompiledShader_t	compiled;
 		CHECK_ERR( _CompileShader( shader, cfg, OUT compiled ) );
 
-		String	name = "\t" + ser->CallFunction( "descr.Compute", Uninitialized );
-
-		src << ser->ShaderSrcGLSL( name, compiled.glsl )
-			<< ser->ShaderBinGLSL( name, compiled.glslBinary )
-			<< ser->ShaderBinSPIRV( name, compiled.spirv )
-			<< ser->ShaderSrcSPIRV( name, compiled.spirvAsm )
-			<< ser->ShaderSrcCL( name, compiled.cl )
-			<< ser->ShaderBinCL( name, compiled.clAsm )
-			<< ser->ShaderSrcHLSL( name, compiled.hlsl )
-			<< ser->ShaderBinHLSL( name, compiled.hlslBinary );
+		const String	name = "\t" + ser->CallFunction( "descr.Compute", Uninitialized );
 		
-		if ( not compiled.cpp.Empty() )
+		for (auto& comp : compiled)
+		{
+			if ( comp.first != EShaderFormat::Soft_100_Exe )
+				src << ser->ShaderToString( comp.first, name, comp.second );
+		}
+		
+		if ( cfg.targets.IsExist( EShaderFormat::Soft_100_Exe ) )
 		{
 			usize	pos;
 			if ( src.Find( "C++ shader", OUT pos ) )
@@ -144,7 +141,7 @@ namespace PipelineCompiler
 
 				const String	func_name = "sw_"_str << Name() << "_comp";
 
-				src.Insert( ser->ShaderSrcCPP_Impl( name, compiled.cpp, func_name ), pos );
+				src.Insert( ser->ShaderSrcCPP_Impl( name, compiled( EShaderFormat::Soft_100_Exe ), func_name ), pos );
 
 				src << ser->ShaderSrcCPP( name, func_name );
 			}

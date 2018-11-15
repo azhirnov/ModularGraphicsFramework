@@ -34,8 +34,10 @@ SApp::~SApp ()
 	Initialize
 =================================================
 */
-bool SApp::Initialize (GAPI::type api, GAPI::type sharedApi, StringCRef dev)
+bool SApp::Initialize (GAPI::type api, GAPI::type sharedApi, StringCRef dev, bool debug)
 {
+	debugContext = debug;
+
 	CHECK_ERR( _CreateMainGPU( api, dev ) );
 
 	sharedGpu.api = sharedApi;
@@ -59,16 +61,14 @@ bool SApp::_CreateMainGPU (GAPI::type api, StringCRef dev)
 	ComputeSettings	settings;
 	settings.version	= api;
 	settings.device		= dev;
-	settings.isDebug	= true;
+	settings.isDebug	= debugContext;
 
 	{
 		ModulePtr	context;
 		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ settings }, OUT context ) );
 		ms->Send( ModuleMsg::AttachModule{ context });
-
-		GpuMsg::GetGraphicsModules	req_ids;
-		context->Send( req_ids );
-		gpuIDs = *req_ids.compute;
+		
+		gpuIDs = context->Request( GpuMsg::GetGraphicsModules{} ).compute;
 	}
 
 	auto		thread	= ms->GlobalSystems()->parallelThread;
@@ -118,15 +118,13 @@ bool SApp::_CreateSharedGPU (GAPI::type api, StringCRef dev)
 	ComputeSettings	settings;
 	settings.version	= api;
 	settings.device		= dev;
-	settings.isDebug	= true;
+	settings.isDebug	= debugContext;
 	
 	ModulePtr	context;
 	CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ settings }, OUT context ) );
 	ms->Send( ModuleMsg::AttachModule{ context });
 
-	GpuMsg::GetGraphicsModules	req_ids;
-	context->Send( req_ids );
-	sharedGpu.gpuIDs = *req_ids.compute;
+	sharedGpu.gpuIDs = context->Request( GpuMsg::GetGraphicsModules{} ).compute;
 
 	ModulePtr	gthread;
 	CHECK_ERR( factory->Create(

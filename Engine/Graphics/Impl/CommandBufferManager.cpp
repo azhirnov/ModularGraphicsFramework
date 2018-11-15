@@ -27,7 +27,7 @@ namespace Graphics
 										::Append< GpuMsg::DefaultComputeCommands_t >
 										::Append< GpuMsg::DefaultGraphicsCommands_t >;
 		
-		using SupportedMessages_t	= GraphicsBaseModule::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											GraphicsMsg::CmdBegin,
 											GraphicsMsg::CmdEnd,
 											GraphicsMsg::CmdBeginFrame,
@@ -37,8 +37,8 @@ namespace Graphics
 											GraphicsMsg::CmdAppend,
 											GraphicsMsg::CmdGetCurrentState,
 											GraphicsMsg::CmdAddFrameDependency,
-											GraphicsMsg::SubscribeOnFrameCompleted > >
-										::Append< CmdBufferMsgList_t >;
+											GraphicsMsg::SubscribeOnFrameCompleted
+										>;
 
 		using SupportedEvents_t		= GraphicsBaseModule::SupportedEvents_t::Append< MessageListFrom<
 											GraphicsMsg::OnCmdBeginFrame,
@@ -78,7 +78,6 @@ namespace Graphics
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -140,7 +139,6 @@ namespace Graphics
 //-----------------------------------------------------------------------------
 
 
-	const TypeIdList	CommandBufferManager::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	CommandBufferManager::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -149,7 +147,7 @@ namespace Graphics
 =================================================
 */
 	CommandBufferManager::CommandBufferManager (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::CommandBufferManager &ci) :
-		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		GraphicsBaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_bufferChainLength{ Max( 2u, ci.bufferChainLength ) },		_bufferIndex{ 0 },
 		_scope{ EScope::None },										_frameIndex{ 0 },
 		_isVRCompatible{ false },									_isVRFrame{ false }
@@ -180,6 +178,8 @@ namespace Graphics
 		_SubscribeOnMsg( this, &CommandBufferManager::_Scope_CmdEnd );
 		_SubscribeOnMsg( this, &CommandBufferManager::_Scope_CmdBeginRenderPass );
 		_SubscribeOnMsg( this, &CommandBufferManager::_Scope_CmdEndRenderPass );
+		
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGpuThread( ci.gpuThread ), UntypedID_t(0), true );
 
@@ -212,8 +212,8 @@ namespace Graphics
 		GpuMsg::GetGraphicsModules	req_ids;
 		CHECK( _GetManager()->Send( req_ids ) );
 
-		_cmdBufferId	= req_ids.graphics->commandBuffer;
-		_isVRCompatible	= _GetManager()->GetSupportedMessages().HasAllTypes< VRThreadMsgList_t >();
+		_cmdBufferId	= req_ids.result->graphics.commandBuffer;
+		_isVRCompatible	= _GetManager()->SupportsAllMessages< VRThreadMsgList_t >();
 
 
 		// create builder
@@ -222,7 +222,7 @@ namespace Graphics
 		if ( not _builder )
 		{
 			CHECK_ERR( GlobalSystems()->modulesFactory->Create(
-										req_ids.graphics->commandBuilder,
+										req_ids.result->graphics.commandBuilder,
 										GlobalSystems(),
 										CreateInfo::GpuCommandBuilder{ _GetManager() },
 										OUT _builder ) );
@@ -251,14 +251,6 @@ namespace Graphics
 		GpuMsg::GetDeviceInfo	req_dev;
 		_GetManager()->Send( req_dev );
 		CHECK_COMPOSING( _syncManager = req_dev.result->syncManager );
-
-		for (auto& frame : _perFrame)
-		{
-			GpuMsg::CreateFence		req_fence;
-			CHECK( _syncManager->Send( req_fence ) );
-
-			frame.fence = *req_fence.result;
-		}
 		
 		_SendForEachAttachments( msg );
 		
@@ -346,14 +338,13 @@ namespace Graphics
 		// wait until executing will be completed
 		{
 			auto&	per_frame	= _perFrame[ _bufferIndex ];
-			usize	cmd_count	= per_frame.commands.Count() + per_frame.externalBuffers.Count();
+			//usize	cmd_count	= per_frame.commands.Count() + per_frame.externalBuffers.Count();
 
-			if ( cmd_count > 0 and per_frame.waitFences.Count() > 0 )
-			{
+			if ( per_frame.fence != GpuFenceId::Unknown )
 				per_frame.waitFences.PushFront( per_frame.fence );
 
-				CHECK( _syncManager->Send( GpuMsg::ClientWaitFence{ per_frame.waitFences }) );
-			}
+			if ( per_frame.waitFences.Count() > 0 )
+				_syncManager->Send( GpuMsg::ClientWaitFence{ per_frame.waitFences });
 
 			GpuMsg::SetCommandBufferState	completed_state{ GpuMsg::SetCommandBufferState::EState::Completed };
 
@@ -417,6 +408,10 @@ namespace Graphics
 
 		_tempBuffers.Append( per_frame.commands );
 		_tempBuffers.Append( per_frame.externalBuffers );
+		
+		if ( per_frame.fence == GpuFenceId::Unknown ) {
+			per_frame.fence = _syncManager->Request( GpuMsg::CreateFence{} );
+		}
 
 		GpuMsg::ThreadEndFrame	end;
 		end.fence		= per_frame.fence;

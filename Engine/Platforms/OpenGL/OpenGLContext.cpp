@@ -28,11 +28,11 @@ namespace Platforms
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::AddToManager,
 											ModuleMsg::RemoveFromManager,
 											GpuMsg::GetGraphicsModules
-										> >;
+										>;
 		using SupportedEvents_t		= Module::SupportedEvents_t;
 
 		using GLThreads_t			= Set< ModulePtr >;
@@ -43,7 +43,6 @@ namespace Platforms
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 		
@@ -70,7 +69,6 @@ namespace Platforms
 
 
 	
-	const TypeIdList	OpenGLContext::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	OpenGLContext::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -79,7 +77,7 @@ namespace Platforms
 =================================================
 */
 	OpenGLContext::OpenGLContext (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GpuContext &ci) :
-		Module( gs, ModuleConfig{ id, 1 }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, 1 }, &_eventTypes ),
 		_createInfo( ci )
 	{
 		SetDebugName( "OpenGLContext" );
@@ -98,7 +96,7 @@ namespace Platforms
 		_SubscribeOnMsg( this, &OpenGLContext::_RemoveFromManager );
 		_SubscribeOnMsg( this, &OpenGLContext::_GetGraphicsModules );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 	}
 	
 /*
@@ -108,7 +106,7 @@ namespace Platforms
 */
 	OpenGLContext::~OpenGLContext ()
 	{
-		LOG( "OpenGLContext finalized", ELog::Debug );
+		//LOG( "OpenGLContext finalized", ELog::Debug );
 
 		ASSERT( _threads.Empty() );
 	}
@@ -121,7 +119,7 @@ namespace Platforms
 	bool OpenGLContext::_AddToManager (const ModuleMsg::AddToManager &msg)
 	{
 		CHECK_ERR( msg.module );
-		CHECK_ERR( msg.module->GetSupportedMessages().HasAllTypes< GLThreadMsgList_t >() );
+		CHECK_ERR( msg.module->SupportsAllMessages< GLThreadMsgList_t >() );
 		CHECK_ERR( msg.module->GetSupportedEvents().HasAllTypes< GLThreadEventList_t >() );
 		ASSERT( not _threads.IsExist( msg.module ) );
 
@@ -156,8 +154,8 @@ namespace Platforms
 */	
 	bool OpenGLContext::_GetGraphicsModules (const GpuMsg::GetGraphicsModules &msg)
 	{
-		msg.compute.Set( OpenGLObjectsConstructor::GetComputeModules() );
-		msg.graphics.Set( OpenGLObjectsConstructor::GetGraphicsModules() );
+		msg.result.Set({ OpenGLObjectsConstructor::GetComputeModules(),
+						 OpenGLObjectsConstructor::GetGraphicsModules() });
 		return true;
 	}
 //-----------------------------------------------------------------------------

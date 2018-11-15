@@ -17,23 +17,16 @@ namespace Base
 	{
 	// types
 	private:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::OnManagerChanged,
 											DSMsg::GetDataSourceDescription,
-											DSMsg::ReadRegion,
+											DSMsg::ReadMemRange,
 											DSMsg::ReleaseData
-										> >;
-
-		//using SupportedEvents_t		= Module::SupportedEvents_t::Append< MessageListFrom<
-		//									DSMsg::DataRegionChanged
-		//								> >;
+										>;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
@@ -55,8 +48,8 @@ namespace Base
 		bool _Delete (const ModuleMsg::Delete &);
 
 		bool _GetDataSourceDescription (const DSMsg::GetDataSourceDescription &);
-		bool _ReadRegion_Empty (const DSMsg::ReadRegion &);
-		bool _ReadRegion (const DSMsg::ReadRegion &);
+		bool _ReadMemRange_Empty (const DSMsg::ReadMemRange &);
+		bool _ReadMemRange (const DSMsg::ReadMemRange &);
 		bool _ReleaseData (const DSMsg::ReleaseData &);
 
 
@@ -66,7 +59,6 @@ namespace Base
 
 
 	
-	const TypeIdList	FileDataInput::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	FileDataInput::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -75,9 +67,11 @@ namespace Base
 =================================================
 */
 	FileDataInput::FileDataInput (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::DataInput &ci) :
-		Module( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
+		Module( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
 		_filename{ ci.uri }
 	{
+		SetDebugName( "FileDataInput: "_str << _filename );
+
 		_SubscribeOnMsg( this, &FileDataInput::_OnModuleAttached_Impl );
 		_SubscribeOnMsg( this, &FileDataInput::_OnModuleDetached_Impl );
 		_SubscribeOnMsg( this, &FileDataInput::_AttachModule_Empty );
@@ -89,10 +83,10 @@ namespace Base
 		_SubscribeOnMsg( this, &FileDataInput::_Compose );
 		_SubscribeOnMsg( this, &FileDataInput::_Delete );
 		_SubscribeOnMsg( this, &FileDataInput::_GetDataSourceDescription );
-		_SubscribeOnMsg( this, &FileDataInput::_ReadRegion_Empty );
+		_SubscribeOnMsg( this, &FileDataInput::_ReadMemRange_Empty );
 		_SubscribeOnMsg( this, &FileDataInput::_ReleaseData );
 
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( ci.provider, LocalStorageDataProviderModuleID, true );
 	}
@@ -153,8 +147,8 @@ namespace Base
 		DataSourceDescription	descr;
 
 		descr.memoryFlags	|= EMemoryAccess::CpuRead | EMemoryAccess::SequentialOnly;
-		descr.available		 = BytesUL();	// data is not cached
-		descr.totalSize		 = BytesUL( _file->Size() );
+		descr.available		 = 0_b;	// data is not cached
+		descr.totalSize		 = _file->Size();
 
 		msg.result.Set( descr );
 		return true;
@@ -162,16 +156,16 @@ namespace Base
 	
 /*
 =================================================
-	_ReadRegion_Empty
+	_ReadMemRange_Empty
 =================================================
 */
-	bool FileDataInput::_ReadRegion_Empty (const DSMsg::ReadRegion &msg)
+	bool FileDataInput::_ReadMemRange_Empty (const DSMsg::ReadMemRange &msg)
 	{
 		if ( not _IsComposedState( GetState() ) )
 			return false;
 
-		Unsubscribe( this, &FileDataInput::_ReadRegion_Empty );
-		_SubscribeOnMsg( this, &FileDataInput::_ReadRegion );
+		Unsubscribe( this, &FileDataInput::_ReadMemRange_Empty );
+		_SubscribeOnMsg( this, &FileDataInput::_ReadMemRange );
 
 		DSMsg::OpenFileForRead	open_file{ _filename };
 		CHECK( _GetManager()->Send( open_file ) );
@@ -179,15 +173,15 @@ namespace Base
 		_file = *open_file.result;
 		CHECK_ERR( _file );
 
-		return _ReadRegion( msg );
+		return _ReadMemRange( msg );
 	}
 
 /*
 =================================================
-	_ReadRegion
+	_ReadMemRange
 =================================================
 */
-	bool FileDataInput::_ReadRegion (const DSMsg::ReadRegion &msg)
+	bool FileDataInput::_ReadMemRange (const DSMsg::ReadMemRange &msg)
 	{
 		BytesU	readn = _file->ReadBuf( msg.writableBuffer->RawPtr(), msg.writableBuffer->Size() );
 		
@@ -207,8 +201,8 @@ namespace Base
 			_file = null;
 		}
 		
-		Unsubscribe( this, &FileDataInput::_ReadRegion );
-		_SubscribeOnMsg( this, &FileDataInput::_ReadRegion_Empty );
+		Unsubscribe( this, &FileDataInput::_ReadMemRange );
+		_SubscribeOnMsg( this, &FileDataInput::_ReadMemRange_Empty );
 
 		return true;
 	}

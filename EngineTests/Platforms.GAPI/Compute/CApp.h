@@ -12,6 +12,8 @@ private:
 	using TestFunc_t	= bool (CApp::*) ();
 	using TestQueue_t	= Queue< TestFunc_t >;
 
+	using ImageRange	= GpuMsg::ImageRange;
+
 
 // variables
 private:
@@ -20,6 +22,8 @@ private:
 	ComputeModuleIDs	gpuIDs;
 	
 	ModulePtr			gpuThread;
+	ModulePtr			cmdQueue;
+	ModulePtr			cmdQueue2;
 	ModulePtr			syncManager;
 	ModulePtr			cmdBuilder;
 
@@ -33,7 +37,7 @@ public:
 	CApp ();
 	~CApp ();
 
-	bool Initialize (GAPI::type api, StringCRef dev);
+	bool Initialize (GAPI::type api, StringCRef dev, bool debug);
 	void Quit ();
 	bool Update ();
 

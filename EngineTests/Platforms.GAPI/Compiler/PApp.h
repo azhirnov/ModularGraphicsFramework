@@ -12,6 +12,8 @@ private:
 	using TestFunc_t	= bool (PApp::*) ();
 	using TestQueue_t	= Queue< TestFunc_t >;
 
+	using ImageRange	= GpuMsg::ImageRange;
+
 
 // variables
 private:
@@ -33,7 +35,7 @@ public:
 	PApp ();
 	~PApp ();
 
-	bool Initialize (GAPI::type api, StringCRef dev);
+	bool Initialize (GAPI::type api, StringCRef dev, bool debug);
 	void Quit ();
 	bool Update ();
 

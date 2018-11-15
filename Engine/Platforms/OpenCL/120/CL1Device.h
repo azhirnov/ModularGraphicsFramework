@@ -30,7 +30,7 @@ namespace PlatformCL
 			cl::cl_device_id	id					= null;
 			String				vendor;
 			String				device;
-			BytesUL				globalMemory;
+			BytesU				globalMemory;
 			uint				version				= 0;
 			uint				frequencyMHz		= 0;		// processor frequency, indicates performance
 			uint				computeUnits		= 0;		// number of processors, indicates performance
@@ -76,7 +76,7 @@ namespace PlatformCL
 		SharedMemMap_t			_acquiredSharedObjects;
 		ESharing::type			_sharedApi;
 
-		Bytes<ulong>			_totalMemory;
+		BytesU					_totalMemory;
 		uint					_version;
 
 		mutable bool			_clLibInitialized;
@@ -111,8 +111,8 @@ namespace PlatformCL
 		ND_ ESharing::type			GetSharedApi ()			const	{ return _sharedApi; }
 		ND_ uint					GetVersion ()			const	{ return _version; }
 
-		ND_ Bytes<ulong>			GetTotalMemory ()		const	{ return _totalMemory; }
-		ND_ Bytes<ulong>			GetAvailableMemory ()	const;
+		ND_ BytesU					GetTotalMemory ()		const	{ return _totalMemory; }
+		ND_ BytesU					GetAvailableMemory ()	const;
 
 		ND_ cl::cl_platform_id		GetPlatform ()			const	{ return _platform; }
 		ND_ cl::cl_device_id		GetDevice ()			const	{ return _device; }

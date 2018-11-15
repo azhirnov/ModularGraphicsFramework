@@ -343,47 +343,88 @@ namespace glm
 
 		friend T atomicAdd (INOUT Atomic<T> &mem, const T data) noexcept
 		{
-			return mem._value.fetch_add( data );
+			return mem._value.fetch_add( data );	// TODO: relaxed ?
 		}
 
 		friend T atomicAnd (INOUT Atomic<T> &mem, const T data) noexcept
 		{
-			return mem._value.fetch_and( data );
+			return mem._value.fetch_and( data );	// TODO: relaxed ?
 		}
 
 		friend T atomicCompSwap (INOUT Atomic<T> &mem, T compare, const T data) noexcept
 		{
-			mem._value.compare_exchange_strong( INOUT compare, data );
+			mem._value.compare_exchange_strong( INOUT compare, data );	// TODO: relaxed ?
 			return compare;
 		}
 
 		friend T atomicExchange (INOUT Atomic<T> &mem, const T data) noexcept
 		{
-			return mem._value.exchange( data );
+			return mem._value.exchange( data );	// TODO: relaxed ?
 		}
 		
 		friend T atomicMax (INOUT Atomic<T> &mem, const T data) noexcept
 		{
-			return std::max( mem._value.load(), data );
+			return std::max( mem._value.load(), data );	// TODO: relaxed ?
 		}
 
 		friend T atomicMin (INOUT Atomic<T> &mem, const T data) noexcept
 		{
-			return std::min( mem._value.load(), data );
+			return std::min( mem._value.load(), data );	// TODO: relaxed ?
 		}
 
 		friend T atomicOr (INOUT Atomic<T> &mem, const T data) noexcept
 		{
-			return mem._value.fetch_or( data );
+			return mem._value.fetch_or( data );	// TODO: relaxed ?
 		}
 
 		friend T atomicXor (INOUT Atomic<T> &mem, const T data) noexcept
 		{
-			return mem._value.fetch_xor( data );
+			return mem._value.fetch_xor( data );	// TODO: relaxed ?
 		}
 
 		static_assert( std::is_integral_v<T>, "atomic type must be integer scalar!" );
 	};
+	
+	
+/*
+=================================================
+	memory barriers
+=================================================
+*/
+	inline void memoryBarrier ()
+	{
+		std::atomic_thread_fence( std::memory_order_acq_rel );	// TODO: check mem order
+	}
+
+	inline void memoryBarrierAtomicCounter ()
+	{
+		// in CPU there is only one memory fence type
+		memoryBarrier();
+	}
+
+	inline void memoryBarrierBuffer ()
+	{
+		// in CPU there is only one memory fence type
+		memoryBarrier();
+	}
+
+	inline void memoryBarrierImage ()
+	{
+		// in CPU there is only one memory fence type
+		memoryBarrier();
+	}
+
+	inline void memoryBarrierShared ()
+	{
+		// in CPU there is only one memory fence type
+		memoryBarrier();
+	}
+
+	inline void groupMemoryBarrier ()
+	{
+		// in CPU there is only one memory fence type
+		memoryBarrier();
+	}
 
 }	// glm
 

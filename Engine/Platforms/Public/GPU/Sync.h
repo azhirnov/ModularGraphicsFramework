@@ -60,19 +60,25 @@ namespace GpuMsg
 	//
 	// Wait Device Idle (sync with GPU in client side)
 	//
-	struct ClientWaitDeviceIdle : _MessageBase_
+	struct ClientWaitDeviceIdle : _MsgBase_
 	{};
 
 
 	//
 	// Create / Destroy Fence
 	//
-	struct CreateFence : _MessageBase_
+	struct CreateFence : _MsgBase_
 	{
+	// variables
+		StaticString<64>				name;
 		Out< Platforms::GpuFenceId >	result;
+
+	// methods
+		CreateFence () {}
+		explicit CreateFence (StringCRef name) : name{name} {}
 	};
 
-	struct DestroyFence : _MessageBase_
+	struct DestroyFence : _MsgBase_
 	{
 	// variables
 		Platforms::GpuFenceId			id;
@@ -85,7 +91,7 @@ namespace GpuMsg
 	//
 	// Wait Fence
 	//
-	struct ClientWaitFence : _MessageBase_
+	struct ClientWaitFence : _MsgBase_
 	{
 	// types
 		using Time_t	= Platforms::TimeL;
@@ -107,13 +113,19 @@ namespace GpuMsg
 	//
 	// Create / Destroy Event
 	//
-	struct CreateEvent : _MessageBase_
+	struct CreateEvent : _MsgBase_
 	{
+	// variables
+		StaticString<64>				name;
 		Out< Platforms::GpuEventId >	result;
+
+	// methods
+		CreateEvent () {}
+		explicit CreateEvent (StringCRef name) : name{name} {}
 	};
 
 
-	struct DestroyEvent : _MessageBase_
+	struct DestroyEvent : _MsgBase_
 	{
 	// variables
 		Platforms::GpuEventId			id;
@@ -126,7 +138,7 @@ namespace GpuMsg
 	//
 	// Set Event State (signaled / non-signaled)
 	//
-	struct SetEvent : _MessageBase_
+	struct SetEvent : _MsgBase_
 	{
 	// variables
 		Platforms::GpuEventId			id;
@@ -136,7 +148,7 @@ namespace GpuMsg
 	};
 
 
-	struct ResetEvent : _MessageBase_
+	struct ResetEvent : _MsgBase_
 	{
 	// variables
 		Platforms::GpuEventId			id;
@@ -149,13 +161,19 @@ namespace GpuMsg
 	//
 	// Create / Destroy Semaphore
 	//
-	struct CreateSemaphore : _MessageBase_
+	struct CreateSemaphore : _MsgBase_
 	{
+	// variables
+		StaticString<64>					name;
 		Out< Platforms::GpuSemaphoreId >	result;
+
+	// methods
+		CreateSemaphore () {}
+		explicit CreateSemaphore (StringCRef name) : name{name} {}
 	};
 
 
-	struct DestroySemaphore : _MessageBase_
+	struct DestroySemaphore : _MsgBase_
 	{
 	// variables
 		Platforms::GpuSemaphoreId		id;

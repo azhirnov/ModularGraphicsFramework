@@ -76,9 +76,11 @@ namespace Platforms
 */
 	bool PipelineLayoutDescription::SubpassInput::operator == (const SubpassInput &right) const
 	{
-		return	stageFlags		== right.stageFlags		and
-				binding			== right.binding		and
-				uniqueIndex		== right.uniqueIndex	and
+		return	stageFlags		== right.stageFlags			and
+				binding			== right.binding			and
+				uniqueIndex		== right.uniqueIndex		and
+				attachmentIndex	== right.attachmentIndex	and
+				isMultisample	== right.isMultisample		and
 				name			== right.name;
 	}
 	
@@ -89,10 +91,12 @@ namespace Platforms
 */
 	bool PipelineLayoutDescription::SubpassInput::operator >  (const SubpassInput &right) const
 	{
-		return	stageFlags		!= right.stageFlags		?	stageFlags		> right.stageFlags		:
-				binding			!= right.binding		?	binding			> right.binding			:
-				uniqueIndex		!= right.uniqueIndex	?	uniqueIndex		< right.uniqueIndex		:
-															name			> right.name;
+		return	stageFlags		!= right.stageFlags			?	stageFlags		> right.stageFlags		:
+				binding			!= right.binding			?	binding			> right.binding			:
+				uniqueIndex		!= right.uniqueIndex		?	uniqueIndex		< right.uniqueIndex		:
+				attachmentIndex	!= right.attachmentIndex	?	attachmentIndex	< right.attachmentIndex	:
+				isMultisample	!= right.isMultisample		?	isMultisample	< right.isMultisample	:
+																name			> right.name;
 	}
 //-----------------------------------------------------------------------------
 			
@@ -308,6 +312,27 @@ namespace Platforms
 	
 /*
 =================================================
+	AddSubpass
+=================================================
+*/
+	PipelineLayoutDescription::Builder&
+		PipelineLayoutDescription::Builder::AddSubpass (StringCRef name, uint attachmentIndex, bool isMultisample, uint binding, uint uniqueIndex, EShader::bits stageFlags)
+	{
+		SubpassInput	spi;
+		spi.name			= name;
+		spi.attachmentIndex	= attachmentIndex;
+		spi.isMultisample	= isMultisample;
+		spi.binding			= binding;
+		spi.uniqueIndex		= uniqueIndex;
+		spi.stageFlags		= stageFlags;
+
+		_descr._uniforms.PushBack(Uniform_t( RVREF(spi) ));
+		_changed = true;
+		return *this;
+	}
+
+/*
+=================================================
 	AddUniformBuffer
 =================================================
 */
@@ -337,8 +362,8 @@ namespace Platforms
 	{
 		StorageBuffer	buf;
 		buf.name			= name;
-		buf.staticSize		= BytesUL(size);
-		buf.arrayStride		= BytesUL(stride);
+		buf.staticSize		= size;
+		buf.arrayStride		= stride;
 		buf.access			= access;
 		buf.binding			= binding;
 		buf.uniqueIndex		= uniqueIndex;

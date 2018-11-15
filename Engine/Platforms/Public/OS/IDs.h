@@ -37,7 +37,7 @@ namespace Platforms
 		OModID::type	keyInput	= OModID::type(0);
 		OModID::type	mouseInput	= OModID::type(0);
 
-		// TODO: touch input, joystick input, gamepad input, desctop window, wallpaper window ...
+		// TODO: touch input, joystick input, gamepad input, desktop window, wallpaper window ...
 		// output devices?
 	};
 

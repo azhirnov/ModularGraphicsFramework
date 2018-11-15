@@ -58,6 +58,24 @@ namespace PipelineCompiler
 	
 /*
 =================================================
+	SubpassInput::ToString
+=================================================
+*/
+	String DeserializedShader::SubpassInput::ToString () const
+	{
+		String	str;
+		str << "SubpassInput {"
+			<< "\n	name:             " << name
+			<< "\n	unit:             " << unit
+			<< "\n  descriptorSet:    " << descriptorSet
+			<< "\n	attachmentIndex:  " << attachmentIndex
+			<< "\n	isMultisample:    " << isMultisample
+			<< "\n}";
+		return str;
+	}
+
+/*
+=================================================
 	_Variable::_ToString
 =================================================
 */
@@ -245,7 +263,7 @@ namespace PipelineCompiler
 		FOR( i, values )
 		{
 			str << (i ? ",\n" : "");
-			values[i].Apply( func );
+			values[i].Accept( func );
 		}
 		str << "\n}";
 		return str;
@@ -402,6 +420,15 @@ namespace PipelineCompiler
 			str << "\n  images = {";
 			FOR( i, _images ) {
 				str << "\n" << IncIndent( _images[i].ToString(), "    " );
+			}
+			str << "\n  }";
+		}
+
+		if ( not _subpassInputs.Empty() )
+		{
+			str << "\n  subpassInput = {";
+			FOR( i, _subpassInputs ) {
+				str << "\n" << IncIndent( _subpassInputs[i].ToString(), "    " );
 			}
 			str << "\n  }";
 		}

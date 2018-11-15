@@ -18,7 +18,7 @@ namespace OSMsg
 	//
 	// Request Window Handle
 	//
-	struct GetSDLWindowHandle : _MessageBase_
+	struct GetSDLWindowHandle : _MsgBase_
 	{
 		Out< SDL_Window *>	result;
 	};
@@ -27,7 +27,7 @@ namespace OSMsg
 	//
 	// Window Raw Message from OS
 	//
-	struct OnSDLWindowRawMessage : _MessageBase_
+	struct OnSDLWindowRawMessage : _MsgBase_
 	{
 	// variables
 		SDL_Event		event;
@@ -42,7 +42,7 @@ namespace OSMsg
 	//
 	// Platform Created Message
 	//
-	struct OnSDLPlatformCreated : _MessageBase_
+	struct OnSDLPlatformCreated : _MsgBase_
 	{
 	// variables
 		// TODO

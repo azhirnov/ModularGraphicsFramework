@@ -350,7 +350,7 @@ namespace PlatformVK
 		outState.flags					= 0;
 
 		// depth
-		outState.depthTestEnable		= depth.enabled;
+		outState.depthTestEnable		= depth.test;
 		outState.depthWriteEnable		= depth.write;
 		outState.depthCompareOp			= Vk1Enum( depth.func );
 		outState.depthBoundsTestEnable	= depth.range.IsDefined();

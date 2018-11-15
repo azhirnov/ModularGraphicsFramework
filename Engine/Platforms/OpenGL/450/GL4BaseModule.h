@@ -24,7 +24,7 @@ namespace GpuMsg
 	//
 	// Get Private Classes
 	//
-	struct GetGLPrivateClasses : _MessageBase_
+	struct GetGLPrivateClasses : _MsgBase_
 	{
 		struct Classes {
 			PlatformGL::GL4Device *			device			= null;
@@ -50,15 +50,12 @@ namespace PlatformGL
 	{
 	// types
 	protected:
-		using SupportedMessages_t	= Module::SupportedMessages_t::Erase< MessageListFrom<
-											ModuleMsg::Update
-										> >
-										::Append< MessageListFrom<
+		using SupportedMessages_t	= MessageListFrom<
 											ModuleMsg::OnManagerChanged,
 											GpuMsg::GetDeviceInfo,
 											GpuMsg::GetGLDeviceInfo,
 											GpuMsg::GetGLPrivateClasses
-										> >;
+										>;
 
 		using SupportedEvents_t		= MessageListFrom<
 											ModuleMsg::Link,
@@ -80,7 +77,6 @@ namespace PlatformGL
 	protected:
 		GL4BaseModule (const GlobalSystemsRef gs,
 					   const ModuleConfig &config,
-					   const TypeIdList *msgTypes,
 					   const TypeIdList *eventTypes);
 		
 		ND_ ModulePtr _GetGPUThread (const ModulePtr &);

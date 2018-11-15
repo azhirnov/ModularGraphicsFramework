@@ -41,7 +41,7 @@ PApp::~PApp ()
 	Initialize
 =================================================
 */
-bool PApp::Initialize (GAPI::type api, StringCRef dev)
+bool PApp::Initialize (GAPI::type api, StringCRef dev, bool debug)
 {
 	auto	factory	= ms->GlobalSystems()->modulesFactory;
 
@@ -50,16 +50,14 @@ bool PApp::Initialize (GAPI::type api, StringCRef dev)
 	ComputeSettings	settings;
 	settings.version	= api;
 	settings.device		= dev;
-	settings.isDebug	= true;
+	settings.isDebug	= debug;
 
 	{
 		ModulePtr	context;
 		CHECK_ERR( factory->Create( 0, ms->GlobalSystems(), CreateInfo::GpuContext{ settings }, OUT context ) );
 		ms->Send( ModuleMsg::AttachModule{ context });
 
-		GpuMsg::GetGraphicsModules	req_ids;
-		context->Send( req_ids );
-		gpuIDs = *req_ids.compute;
+		gpuIDs = context->Request( GpuMsg::GetGraphicsModules{} ).compute;
 	}
 
 	auto		thread	= ms->GlobalSystems()->parallelThread;

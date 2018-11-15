@@ -39,7 +39,7 @@ namespace GraphicsMsg
 	//
 	// Begin / End Frame
 	//
-	struct CmdBeginFrame : _MessageBase_
+	struct CmdBeginFrame : _MsgBase_
 	{
 		struct Data {
 			ModulePtr	framebuffer;		// returns current framebuffer, same as in 'ThreadBeginFrame'
@@ -50,7 +50,7 @@ namespace GraphicsMsg
 		Out< Data >		result;
 	};
 
-	struct CmdEndFrame : _MessageBase_
+	struct CmdEndFrame : _MsgBase_
 	{
 	// variables
 		ModulePtr		framebuffer;		// (optional) must be null or framebuffer returned by 'CmdBeginFrame'
@@ -64,7 +64,7 @@ namespace GraphicsMsg
 	//
 	// Begin / End VR Frame
 	//
-	struct CmdBeginVRFrame : _MessageBase_
+	struct CmdBeginVRFrame : _MsgBase_
 	{
 	// types
 		using PerEye_t	= GpuMsg::ThreadBeginVRFrame::PerEye;
@@ -81,14 +81,14 @@ namespace GraphicsMsg
 		Out< Data >		result;
 	};
 
-	struct CmdEndVRFrame : _MessageBase_
+	struct CmdEndVRFrame : _MsgBase_
 	{};
 
 
 	//
 	// Frame Begin / End Event
 	//
-	struct OnCmdBeginFrame : _MessageBase_
+	struct OnCmdBeginFrame : _MsgBase_
 	{
 	// variables
 		uint	cmdIndex;
@@ -97,7 +97,7 @@ namespace GraphicsMsg
 		explicit OnCmdBeginFrame (uint idx) : cmdIndex{idx} {}
 	};
 
-	struct OnCmdEndFrame : _MessageBase_
+	struct OnCmdEndFrame : _MsgBase_
 	{
 	// variables
 		uint	cmdIndex;
@@ -110,7 +110,7 @@ namespace GraphicsMsg
 	//
 	// Add Frame Dependency
 	//
-	struct CmdAddFrameDependency : _MessageBase_
+	struct CmdAddFrameDependency : _MsgBase_
 	{
 	// types
 		using Fence_t			= Platforms::GpuFenceId;
@@ -139,7 +139,7 @@ namespace GraphicsMsg
 	//
 	// Append Command Buffers
 	//
-	struct CmdAppend : _MessageBase_
+	struct CmdAppend : _MsgBase_
 	{
 	// types
 		using Commands_t	= FixedSizeArray< ModulePtr, 16 >;
@@ -158,14 +158,14 @@ namespace GraphicsMsg
 	//
 	// Subscribe On Frame Completed
 	//
-	struct SubscribeOnFrameCompleted : _MessageBase_
+	struct SubscribeOnFrameCompleted : _MsgBase_
 	{
 	// types
 		using Callback_t	= Function< void (uint) >;
 
 	// variables
-		Callback_t		callback;		// callback that will be triggered when executing of all command buffers in current frame completed
-		Out< uint >		index;			// (optional) returns implementation defined frame index
+		Callback_t			callback;		// callback that will be triggered when executing of all command buffers in current frame completed
+		Out_opt< uint >		index;			// (optional) returns implementation defined frame index
 
 	// methods
 		SubscribeOnFrameCompleted () {}
@@ -178,18 +178,19 @@ namespace GraphicsMsg
 	//
 	// Begin / End Commands Recording
 	//
-	struct CmdBegin : _MessageBase_
+	struct CmdBegin : _MsgBase_
 	{};
 
-	struct CmdEnd : _MessageBase_
+	struct CmdEnd : _MsgBase_
 	{};
 
 
 	//
 	// Get Current State
 	//
-	struct CmdGetCurrentState : _MessageBase_
+	struct CmdGetCurrentState : _MsgBase_
 	{
+	// types
 		enum class EScope {
 			None,
 			Frame,
@@ -206,6 +207,7 @@ namespace GraphicsMsg
 			// TODO: max frame index, max command index
 		};
 
+	// variables
 		Out< Data >		result;
 	};
 	
@@ -219,7 +221,7 @@ namespace GraphicsMsg
 	//
 	// Begin / End Async Commands Recording
 	//
-	struct CmdBeginAsync : _MessageBase_
+	struct CmdBeginAsync : _MsgBase_
 	{
 	// types
 		enum class EMode {
@@ -253,7 +255,7 @@ namespace GraphicsMsg
 	//
 	// End Async Commands Recording
 	//
-	struct CmdEndAsync : _MessageBase_
+	struct CmdEndAsync : _MsgBase_
 	{};
 
 

@@ -39,19 +39,20 @@ namespace PlatformVK
 		using ShadersMsgList_t		= MessageListFrom< GpuMsg::GetVkShaderModuleIDs >;
 		using RenderPassMsgList_t	= MessageListFrom< GpuMsg::GetVkRenderPassID, GpuMsg::GetRenderPassDescription >;
 
-		using Description			= GraphicsPipelineDescription;
+		using Description_t			= GraphicsPipelineDescription;
+		using LayoutDesc_t			= PipelineLayoutDescription;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
 	// variables
 	private:
 		vk::VkPipeline			_pipelineId;
-		Description				_descr;
+		Description_t			_descr;
+		LayoutDesc_t			_layoutDesc;
 		Vk1PipelineLayoutPtr	_layout;
 
 
@@ -86,7 +87,6 @@ namespace PlatformVK
 
 
 
-	const TypeIdList	Vk1GraphicsPipeline::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1GraphicsPipeline::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -95,9 +95,9 @@ namespace PlatformVK
 =================================================
 */
 	Vk1GraphicsPipeline::Vk1GraphicsPipeline (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::GraphicsPipeline &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
-		_pipelineId( VK_NULL_HANDLE ),
-		_descr( ci.descr )
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
+		_pipelineId{ VK_NULL_HANDLE },	_descr{ ci.descr },
+		_layoutDesc{ ci.layout }
 	{
 		SetDebugName( "Vk1GraphicsPipeline" );
 
@@ -121,7 +121,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkPipelineLayoutID );
 		_SubscribeOnMsg( this, &Vk1GraphicsPipeline::_GetVkPipelineLayoutPushConstants );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -201,8 +201,8 @@ namespace PlatformVK
 		CHECK_ERR( msg.newModule );
 
 		// render pass and shader must be unique
-		const bool	is_dependent =  msg.newModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >() or
-									msg.newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		const bool	is_dependent =  msg.newModule->SupportsAllMessages< RenderPassMsgList_t >() or
+									msg.newModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		CHECK( _Attach( msg.name, msg.newModule ) );
 
@@ -223,8 +223,8 @@ namespace PlatformVK
 	{
 		CHECK_ERR( msg.oldModule );
 		
-		const bool	is_dependent =  msg.oldModule->GetSupportedMessages().HasAllTypes< RenderPassMsgList_t >() or
-									msg.oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		const bool	is_dependent =  msg.oldModule->SupportsAllMessages< RenderPassMsgList_t >() or
+									msg.oldModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		if ( _Detach( msg.oldModule ) and is_dependent )
 		{
@@ -371,9 +371,9 @@ namespace PlatformVK
 		
 		// create layout
 		GpuMsg::GetVkPrivateClasses		req_cache;
-		_SendMsg( req_cache );
+		Send( req_cache );
 
-		CHECK_ERR(( _layout = req_cache.result->layoutCache->Create( _descr.layout ) ));
+		CHECK_ERR(( _layout = req_cache.result->layoutCache->Create( _layoutDesc ) ));
 
 		// create graphics pipeline
 		CHECK_ERR( req_cache.result->pipelineCache->
@@ -466,19 +466,20 @@ namespace PlatformVK
 		
 		using ShadersMsgList_t		= MessageListFrom< GpuMsg::GetVkShaderModuleIDs >;
 
-		using Description			= ComputePipelineDescription;
+		using Description_t			= ComputePipelineDescription;
+		using LayoutDesc_t			= PipelineLayoutDescription;
 
 
 	// constants
 	private:
-		static const TypeIdList		_msgTypes;
 		static const TypeIdList		_eventTypes;
 
 
 	// variables
 	private:
 		vk::VkPipeline			_pipelineId;
-		Description				_descr;
+		Description_t			_descr;
+		LayoutDesc_t			_layoutDesc;
 		Vk1PipelineLayoutPtr	_layout;
 
 
@@ -512,7 +513,6 @@ namespace PlatformVK
 
 
 
-	const TypeIdList	Vk1ComputePipeline::_msgTypes{ UninitializedT< SupportedMessages_t >() };
 	const TypeIdList	Vk1ComputePipeline::_eventTypes{ UninitializedT< SupportedEvents_t >() };
 
 /*
@@ -521,9 +521,9 @@ namespace PlatformVK
 =================================================
 */
 	Vk1ComputePipeline::Vk1ComputePipeline (UntypedID_t id, GlobalSystemsRef gs, const CreateInfo::ComputePipeline &ci) :
-		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_msgTypes, &_eventTypes ),
-		_pipelineId( VK_NULL_HANDLE ),
-		_descr( ci.descr )
+		Vk1BaseModule( gs, ModuleConfig{ id, UMax }, &_eventTypes ),
+		_pipelineId{ VK_NULL_HANDLE },		_descr{ ci.descr },
+		_layoutDesc{ ci.layout }
 	{
 		SetDebugName( "Vk1ComputePipeline" );
 
@@ -547,7 +547,7 @@ namespace PlatformVK
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkPipelineLayoutID );
 		_SubscribeOnMsg( this, &Vk1ComputePipeline::_GetVkPipelineLayoutPushConstants );
 		
-		CHECK( _ValidateMsgSubscriptions() );
+		ASSERT( _ValidateMsgSubscriptions< SupportedMessages_t >() );
 
 		_AttachSelfToManager( _GetGPUThread( ci.gpuThread ), UntypedID_t(0), true );
 	}
@@ -612,7 +612,7 @@ namespace PlatformVK
 		CHECK_ERR( msg.newModule );
 
 		// render pass and shader must be unique
-		const bool	is_dependent = msg.newModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		const bool	is_dependent = msg.newModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		CHECK( _Attach( msg.name, msg.newModule ) );
 
@@ -633,7 +633,7 @@ namespace PlatformVK
 	{
 		CHECK_ERR( msg.oldModule );
 		
-		const bool	is_dependent = msg.oldModule->GetSupportedMessages().HasAllTypes< ShadersMsgList_t >();
+		const bool	is_dependent = msg.oldModule->SupportsAllMessages< ShadersMsgList_t >();
 
 		if ( _Detach( msg.oldModule ) and is_dependent )
 		{
@@ -771,9 +771,9 @@ namespace PlatformVK
 
 		// create layout
 		GpuMsg::GetVkPrivateClasses		req_cache;
-		_SendMsg( req_cache );
+		Send( req_cache );
 
-		CHECK_ERR(( _layout = req_cache.result->layoutCache->Create( _descr.layout ) ));
+		CHECK_ERR(( _layout = req_cache.result->layoutCache->Create( _layoutDesc ) ));
 
 		// create compute pipeline
 		CHECK_ERR( req_cache.result->pipelineCache->

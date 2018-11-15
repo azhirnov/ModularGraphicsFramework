@@ -50,6 +50,18 @@ namespace Platforms
 			return _value == ImageSwizzle().Get();
 		}
 
+		DEBUG_ONLY(
+		ND_ String ToString () const
+		{
+			const char	sw_values[8] = { ' ', 'R', 'G', 'B', 'A', '0', '1' };
+			String	str;
+			str << sw_values[ (_value >> 12) & 7 ];
+			str << sw_values[ (_value >> 8) & 7 ];
+			str << sw_values[ (_value >> 4) & 7 ];
+			str << sw_values[ (_value >> 0) & 7 ];
+			return str;
+		})
+
 		_GX_DIM_CMP_OPERATORS_SELF( _value )
 	};
 

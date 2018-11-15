@@ -26,6 +26,7 @@ namespace PipelineCompiler
 		ND_ virtual String  ToString (StringCRef name, EPrimitive::bits value) const = 0;
 		ND_ virtual String  ToString (StringCRef name, EShader::bits value) const = 0;
 		ND_ virtual String	ToString (StringCRef name, const uint3 &value) const = 0;
+		ND_ virtual String	ToString (StringCRef name, bool value) const = 0;
 
 		ND_ virtual String  ToString (StringCRef value) const = 0;
 		ND_ virtual String	ToString (EShaderVariable::type value) const = 0;
@@ -54,20 +55,9 @@ namespace PipelineCompiler
 		ND_ virtual String	Include (StringCRef filename) const = 0;
 		ND_ virtual String	Comment (StringCRef comment) const = 0;
 
-		ND_ virtual String	ShaderSrcGLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile = false) const = 0;
-		ND_ virtual String	ShaderBinGLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile = false) const = 0;
-
-		ND_ virtual String	ShaderBinSPIRV (StringCRef name, BinArrayCRef shaderSrc, bool inFile = false) const = 0;
-		ND_ virtual String	ShaderSrcSPIRV (StringCRef name, BinArrayCRef shaderSrc, bool inFile = false) const = 0;
-		
-		ND_ virtual String	ShaderBinCL (StringCRef name, BinArrayCRef shaderSrc, bool inFile = false) const = 0;
-		ND_ virtual String	ShaderSrcCL (StringCRef name, BinArrayCRef shaderSrc, bool inFile = false) const = 0;
-		
+		ND_ virtual String	ShaderToString (EShaderFormat::type fmt, StringCRef name, BinArrayCRef shaderSrc, bool inFile = false) const = 0;
 		ND_ virtual String	ShaderSrcCPP_Impl (StringCRef name, BinArrayCRef shaderSrc, StringCRef funcName) const = 0;
 		ND_ virtual String	ShaderSrcCPP (StringCRef name, StringCRef funcName) const = 0;
-		
-		ND_ virtual String	ShaderBinHLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile = false) const = 0;
-		ND_ virtual String	ShaderSrcHLSL (StringCRef name, BinArrayCRef shaderSrc, bool inFile = false) const = 0;
 
 		ND_ virtual String	GetSourceFileExt () const = 0;
 		ND_ virtual String	GetHeaderFileExt () const = 0;
